@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CONCODE — We Code. You Grow.</title>
+  <meta name="description" content="CONCODE is a premium web development agency specializing in immersive 3D experiences, AI integration, scalable cloud architecture, and high-performance digital platforms.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="src/style.css?v=2.4">
+</head>
+<body>
+  <!-- Fullscreen WebGL Canvas — Interactive 3D Animation -->
+  <canvas id="webgl-canvas"></canvas>
+  <div class="canvas-fade" id="canvas-fade"></div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- NAVIGATION -->
+  <!-- ═══════════════════════════════════════════ -->
+  <nav class="nav" id="main-nav">
+    <div class="nav-inner">
+      <a href="#" class="nav-logo" id="nav-logo">
+        <svg class="nav-logo-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Eye outer bracket path -->
+          <path d="M 15 50 C 30 20, 70 20, 85 50" stroke="#00f0ff" stroke-width="8" stroke-linecap="round"/>
+          <path d="M 15 50 C 30 80, 70 80, 85 50" stroke="#00f0ff" stroke-width="8" stroke-linecap="round"/>
+          <!-- Central glowing core circular nucleus -->
+          <circle cx="50" cy="50" r="14" fill="#00f0ff" class="logo-nucleus-svg"/>
+          <!-- Internal bracket </> code symbol -->
+          <path d="M 45 44 L 39 50 L 45 56 M 55 44 L 61 50 L 55 56 M 52 42 L 48 58" stroke="#121c26" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="nav-logo-text scramble-logo" data-scramble="CONCODE">CONCODE</span>
+      </a>
+      <ul class="nav-menu" id="nav-menu">
+        <li><a href="#services">Services</a></li>
+        <li><a href="#work">Work</a></li>
+        <li><a href="#process">Process</a></li>
+        <li><a href="#pricing">Pricing</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+      <button class="nav-cta" id="btn-onboard">Start a Project</button>
+      <button class="nav-hamburger" id="nav-toggle" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- HERO -->
+  <!-- ═══════════════════════════════════════════ -->
+  <section class="hero" id="hero">
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <div class="hero-badge">Next-Generation Digital Agency</div>
+      <h1 class="hero-title">
+        <span class="hero-title-line char-flip">We Build Systems</span><br>
+        <span class="hero-title-accent char-flip">That Scale.</span><span class="terminal-cursor"></span>
+      </h1>
+      <p class="hero-subtitle">
+        High-performance web platforms, immersive 3D experiences, and AI-powered solutions — engineered for companies that refuse to settle.
+      </p>
+      <div class="hero-actions">
+        <a href="#contact" class="btn btn-primary">Get in Touch</a>
+        <a href="#work" class="btn btn-ghost">View Our Work</a>
+      </div>
+    </div>
+    <div class="hero-scroll-indicator">
+      <span>Scroll to explore</span>
+      <div class="scroll-arrow"></div>
+    </div>
+  </section>
+
+
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- SERVICES -->
+  <!-- ═══════════════════════════════════════════ -->
+  <section class="section" id="services">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-label">What We Do</span>
+        <h2 class="section-title scramble-text">Capabilities that<br>drive real results.</h2>
+        <p class="section-desc scroll-highlight">We don't build templates. We architect anti-fragile, high-concurrency digital platforms that give you an unfair advantage.</p>
+      </div>
+
+      <div class="services-grid">
+        <div class="service-card reveal-item">
+          <div class="service-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/><path d="M7 12l3-3 2 2 5-5"/></svg>
+          </div>
+          <h3>Automated Growth</h3>
+          <p>Programmatic scaling scripts, marketing pipelines, and growth engines built natively into your platform.</p>
+        </div>
+
+        <div class="service-card reveal-item">
+          <div class="service-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M12 2a10 10 0 0110 10 10 10 0 01-10 10A10 10 0 012 12 10 10 0 0112 2z"/><path d="M2 12h4m12 0h4M12 2v4m0 12v4"/></svg>
+          </div>
+          <h3>Integrative AI</h3>
+          <p>Advanced LLM routing, custom embeddings, and structured neural output layers for workflow automation.</p>
+        </div>
+
+        <div class="service-card reveal-item">
+          <div class="service-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><path d="M3.27 6.96L12 12.01l8.73-5.05M12 22.08V12"/></svg>
+          </div>
+          <h3>WebGL & WebGPU</h3>
+          <p>Cinematic, interactive 3D frontend scenes powered by hardware acceleration that captivate instantly.</p>
+        </div>
+
+        <div class="service-card reveal-item">
+          <div class="service-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          </div>
+          <h3>DevOps & Cloud</h3>
+          <p>Kubernetes clusters, serverless computing, and self-healing container architectures deployed globally.</p>
+        </div>
+
+        <div class="service-card reveal-item">
+          <div class="service-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/><circle cx="12" cy="16" r="1"/></svg>
+          </div>
+          <h3>Security & Compliance</h3>
+          <p>End-to-end encryption, SOC 2 readiness, penetration testing, and zero-trust architecture from day one.</p>
+        </div>
+
+        <div class="service-card reveal-item">
+          <div class="service-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+          </div>
+          <h3>Data Engineering</h3>
+          <p>Real-time data pipelines, vector databases, ETL workflows, and analytics dashboards for actionable insights.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- PORTFOLIO / WORK -->
+  <!-- ═══════════════════════════════════════════ -->
+  <section class="section section-dark" id="work">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-label">Selected Work</span>
+        <h2 class="section-title scramble-text">Projects that<br>move the needle.</h2>
+        <p class="section-desc scroll-highlight">Real systems generating value for real businesses. Not mockups — production engines.</p>
+      </div>
+
+      <div class="portfolio-grid">
+        <div class="portfolio-card reveal-item btn-inspect-project" style="--accent: #00f0ff; cursor: pointer;" data-project="sigmacore">
+          <div class="portfolio-visual">
+            <div class="portfolio-gradient"></div>
+            <div class="portfolio-number">01</div>
+          </div>
+          <div class="portfolio-info">
+            <h3>Project Sigma Core</h3>
+            <p>A unified multi-agent orchestration layer that reduced task latency by 45% for a logistics enterprise handling 2M+ daily requests.</p>
+            <div class="portfolio-tags">
+              <span>Node.js</span>
+              <span>AI Router</span>
+              <span>Rust</span>
+              <span>Redis</span>
+            </div>
+            <div class="portfolio-inspect-cta">Inspect Subsystem Specs &rarr;</div>
+          </div>
+        </div>
+
+        <div class="portfolio-card reveal-item btn-inspect-project" style="--accent: #a855f7; cursor: pointer;" data-project="threescene">
+          <div class="portfolio-visual">
+            <div class="portfolio-gradient"></div>
+            <div class="portfolio-number">02</div>
+          </div>
+          <div class="portfolio-info">
+            <h3>ThreeScene Dashboard</h3>
+            <p>An interactive WebGL-driven supply chain visualizer presenting real-time asset movements across 12 global warehouses.</p>
+            <div class="portfolio-tags">
+              <span>Three.js</span>
+              <span>WebGL</span>
+              <span>GSAP</span>
+              <span>D3.js</span>
+            </div>
+            <div class="portfolio-inspect-cta">Inspect Subsystem Specs &rarr;</div>
+          </div>
+        </div>
+
+        <div class="portfolio-card reveal-item btn-inspect-project" style="--accent: #f97316; cursor: pointer;" data-project="devops">
+          <div class="portfolio-visual">
+            <div class="portfolio-gradient"></div>
+            <div class="portfolio-number">03</div>
+          </div>
+          <div class="portfolio-info">
+            <h3>DevOps Launchpad</h3>
+            <p>A cloud provisioning portal automating multi-region Kubernetes deployments in under 3 minutes with zero-downtime rollbacks.</p>
+            <div class="portfolio-tags">
+              <span>Kubernetes</span>
+              <span>Docker</span>
+              <span>AWS</span>
+              <span>Terraform</span>
+            </div>
+            <div class="portfolio-inspect-cta">Inspect Subsystem Specs &rarr;</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- PROCESS -->
+  <!-- ═══════════════════════════════════════════ -->
+  <section class="section" id="process">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-label">How We Work</span>
+        <h2 class="section-title scramble-text">From idea to<br>production in weeks.</h2>
+        <p class="section-desc scroll-highlight">A battle-tested process refined over 50+ builds. No surprises, no scope creep — just clear milestones and shipping.</p>
+      </div>
+
+      <div class="process-timeline">
+        <div class="process-step reveal-item">
+          <div class="step-number">01</div>
+          <div class="step-content">
+            <h3>Discovery</h3>
+            <p>Deep-dive into your business, users, and technical requirements. We map the entire system before writing a single line.</p>
+          </div>
+        </div>
+        <div class="process-connector"></div>
+        <div class="process-step reveal-item">
+          <div class="step-number">02</div>
+          <div class="step-content">
+            <h3>Design</h3>
+            <p>High-fidelity prototypes with motion design. You see and feel the product before development begins.</p>
+          </div>
+        </div>
+        <div class="process-connector"></div>
+        <div class="process-step reveal-item">
+          <div class="step-number">03</div>
+          <div class="step-content">
+            <h3>Develop</h3>
+            <p>Agile sprints with weekly demos. Full-stack engineering with CI/CD, automated testing, and code reviews.</p>
+          </div>
+        </div>
+        <div class="process-connector"></div>
+        <div class="process-step reveal-item">
+          <div class="step-number">04</div>
+          <div class="step-content">
+            <h3>Deploy & Scale</h3>
+            <p>Zero-downtime launches with monitoring, alerting, and performance optimization. We stay on after launch.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- PRICING -->
+  <!-- ═══════════════════════════════════════════ -->
+  <section class="section section-dark" id="pricing">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-label">Pricing</span>
+        <h2 class="section-title scramble-text">Transparent plans,<br>no hidden costs.</h2>
+        <p class="section-desc scroll-highlight">Choose the engagement model that fits your scale. Every plan includes dedicated support.</p>
+      </div>
+
+      <!-- Pricing View Switcher -->
+      <div class="pricing-toggle-container">
+        <button class="pricing-toggle-btn active" id="btn-show-tiers">Standard Plans</button>
+        <button class="pricing-toggle-btn" id="btn-show-planner">Interactive Architecture Planner</button>
+      </div>
+
+      <!-- Pane 1: Standard Plans -->
+      <div class="pricing-pane active" id="pricing-pane-tiers">
+        <div class="pricing-grid">
+          <div class="pricing-card reveal-item">
+            <div class="pricing-header">
+              <h3>Starter</h3>
+              <p class="pricing-desc">For clean, responsive custom landing pages and basic structures.</p>
+            </div>
+            <div class="pricing-amount">
+              <span class="price-currency">$</span>
+              <span class="price-value">99</span>
+              <span class="price-period">flat</span>
+            </div>
+            <ul class="pricing-features">
+              <li>Full Custom Layout Development</li>
+              <li>Responsive Design (Mobile & Desktop)</li>
+              <li>Standard Form / Lead Capture Integration</li>
+              <li>Standard Support (12h SLA)</li>
+              <li>Deploy Readiness Optimization</li>
+            </ul>
+            <button class="btn btn-outline btn-select-tier" data-tier="Starter">Get Started</button>
+          </div>
+
+          <div class="pricing-card featured reveal-item">
+            <div class="pricing-badge">Most Popular</div>
+            <div class="pricing-header">
+              <h3>Professional</h3>
+              <p class="pricing-desc">Premium multi-page custom business platforms with 3D styling & database dashboard.</p>
+            </div>
+            <div class="pricing-amount">
+              <span class="price-currency">$</span>
+              <span class="price-value">299</span>
+              <span class="price-period">flat</span>
+            </div>
+            <ul class="pricing-features">
+              <li>Everything in Starter</li>
+              <li>Cinematic 3D WebGL / Canvas Scenes</li>
+              <li>Interactive User Dashboard & Forms</li>
+              <li>Database Schema + Caching Layer</li>
+              <li>Priority Support (4h SLA)</li>
+            </ul>
+            <button class="btn btn-primary btn-select-tier" data-tier="Professional">Get Started</button>
+          </div>
+
+          <div class="pricing-card reveal-item">
+            <div class="pricing-header">
+              <h3>Enterprise</h3>
+              <p class="pricing-desc">Full-scale custom bespoke systems with high-concurrency microservices.</p>
+            </div>
+            <div class="pricing-amount">
+              <span class="price-currency">$</span>
+              <span class="price-value">799</span>
+              <span class="price-period">flat</span>
+            </div>
+            <ul class="pricing-features">
+              <li>Everything in Professional</li>
+              <li>High-Performance Rust / Go Backend</li>
+              <li>Vector Database & Advanced AI Workflows</li>
+              <li>Cloud Kubernetes Cluster Deployments</li>
+              <li>Dedicated Developer Priority Support</li>
+            </ul>
+            <button class="btn btn-outline btn-select-tier" data-tier="Enterprise">Contact Sales</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pane 2: Custom Architect Planner -->
+      <div class="pricing-pane" id="pricing-pane-planner">
+        <div class="planner-layout">
+          <!-- Left Controls Column -->
+          <div class="planner-controls">
+            <h3 class="planner-section-title">Configure Core Subsystems</h3>
+            
+            <!-- Control 1: Core API -->
+            <div class="planner-control-group">
+              <label for="plan-api">Core Gateway Infrastructure</label>
+              <select id="plan-api" class="planner-select">
+                <option value="starter" data-price="0" data-time="0">Single-Instance Gateway (Standard HTTP)</option>
+                <option value="professional" data-price="100" data-time="1" selected>Cluster Load-Balanced Gateway (+$100)</option>
+                <option value="enterprise" data-price="300" data-time="2">Multi-Region Edge Network (+$300)</option>
+              </select>
+              <div class="control-help">Determines request routing capacity and network latency thresholds.</div>
+            </div>
+
+            <!-- Control 2: DB -->
+            <div class="planner-control-group">
+              <label for="plan-db">Database & Storage Engine</label>
+              <select id="plan-db" class="planner-select">
+                <option value="starter" data-price="0" data-time="0">Standard SQL Instance (Postgres/MySQL)</option>
+                <option value="professional" data-price="150" data-time="1" selected>High-Availability DB + Redis Caching (+$150)</option>
+                <option value="enterprise" data-price="400" data-time="2">Distributed Vector DB Cluster (+$400)</option>
+              </select>
+              <div class="control-help">Configures data access latency, caching patterns, and vectors for AI models.</div>
+            </div>
+
+            <!-- Control 3: WebGL -->
+            <div class="planner-control-group">
+              <label for="plan-webgl">Visual Experience & Frontend</label>
+              <select id="plan-webgl" class="planner-select">
+                <option value="starter" data-price="0" data-time="0">Standard Web Responsive Layout</option>
+                <option value="professional" data-price="200" data-time="2" selected>Cinematic 3D WebGL Canvas Scene (+$200)</option>
+                <option value="enterprise" data-price="500" data-time="3">Custom WebGPU Simulation Engine (+$500)</option>
+              </select>
+              <div class="control-help">Defines hardware-accelerated presentation capabilities and client-side graphics quality.</div>
+            </div>
+
+            <!-- Control 4: AI -->
+            <div class="planner-control-group">
+              <label for="plan-ai">AI Integration & Cognitive Engine</label>
+              <select id="plan-ai" class="planner-select">
+                <option value="starter" data-price="0" data-time="0">None (Pure Deterministic logic)</option>
+                <option value="professional" data-price="150" data-time="2">Structured Assistant API Gateway (+$150)</option>
+                <option value="enterprise" data-price="400" data-time="3" selected>Multi-Agent Autonomous RAG Orchestrator (+$400)</option>
+              </select>
+              <div class="control-help">Selects neural routing structures and agentic workflow complexities.</div>
+            </div>
+
+            <!-- Control 5: DevOps -->
+            <div class="planner-control-group">
+              <label for="plan-devops">Cloud Deployment & DevOps</label>
+              <select id="plan-devops" class="planner-select">
+                <option value="starter" data-price="0" data-time="0">Standard Containerized Deployment (Docker Compose)</option>
+                <option value="professional" data-price="200" data-time="2" selected>Scalable Kubernetes Cloud Orchestration (+$200)</option>
+                <option value="enterprise" data-price="500" data-time="3">Multi-Cloud IaC (Terraform Setup) (+$500)</option>
+              </select>
+              <div class="control-help">Infrastructure configuration for scaling, monitoring, and automated rollouts.</div>
+            </div>
+
+            <!-- Control 6: SLA Support -->
+            <div class="planner-control-group">
+              <label for="plan-sla">SLA & Support Tier</label>
+              <select id="plan-sla" class="planner-select">
+                <option value="starter" data-price="0" data-time="0">Standard Developer Support (Next Business Day)</option>
+                <option value="professional" data-price="100" data-time="0" selected>Priority Email & Slack SLA (+$100)</option>
+                <option value="enterprise" data-price="300" data-time="1">24/7 Dedicated On-Call Engineering Hotline (+$300)</option>
+              </select>
+              <div class="control-help">Response timing commitments for server issues and code hotfixes.</div>
+            </div>
+          </div>
+
+          <!-- Right Topology Map & Quote Box Column -->
+          <div class="planner-display">
+            <div class="diagram-container">
+              <div class="diagram-header">
+                <span>Ecosystem Architecture Map</span>
+                <span class="pulse-indicator">Active Connection Streams</span>
+              </div>
+              <div class="diagram-svg-wrapper">
+                <svg id="architecture-diagram" viewBox="0 0 300 350" width="100%" height="100%">
+                  <defs>
+                    <filter id="glow-cyan" x="-30%" y="-30%" width="160%" height="160%">
+                      <feGaussianBlur stdDeviation="3" result="blur" />
+                      <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+                    <filter id="glow-purple" x="-30%" y="-30%" width="160%" height="160%">
+                      <feGaussianBlur stdDeviation="3" result="blur" />
+                      <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+                    <filter id="glow-orange" x="-30%" y="-30%" width="160%" height="160%">
+                      <feGaussianBlur stdDeviation="3" result="blur" />
+                      <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+                    <filter id="glow-green" x="-30%" y="-30%" width="160%" height="160%">
+                      <feGaussianBlur stdDeviation="3" result="blur" />
+                      <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+                    <filter id="glow-indigo" x="-30%" y="-30%" width="160%" height="160%">
+                      <feGaussianBlur stdDeviation="3" result="blur" />
+                      <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+                  </defs>
+
+                  <!-- Connections -->
+                  <path id="path-client-gateway" d="M150 65 L150 115" stroke="#1e293b" stroke-width="2.5" fill="none" stroke-dasharray="6,4" />
+                  <path id="path-gateway-webgl" d="M140 135 L80 195" stroke="#1e293b" stroke-width="2" fill="none" stroke-dasharray="6,4" />
+                  <path id="path-gateway-ai" d="M160 135 L220 195" stroke="#1e293b" stroke-width="2" fill="none" stroke-dasharray="6,4" />
+                  <path id="path-gateway-db" d="M135 145 L85 275" stroke="#1e293b" stroke-width="2" fill="none" stroke-dasharray="6,4" />
+                  <path id="path-webgl-db" d="M70 225 L70 275" stroke="#1e293b" stroke-width="2.5" fill="none" stroke-dasharray="6,4" />
+                  <path id="path-ai-devops" d="M230 225 L230 275" stroke="#1e293b" stroke-width="2.5" fill="none" stroke-dasharray="6,4" />
+                  <path id="path-db-devops" d="M88 290 L212 290" stroke="#1e293b" stroke-width="2" fill="none" stroke-dasharray="6,4" />
+
+                  <!-- Nodes -->
+                  <!-- Client Node (Always glowing indigo) -->
+                  <g id="node-client" class="node-group active">
+                    <circle cx="150" cy="50" r="17" fill="#0b0e14" stroke="#6366f1" stroke-width="2" filter="url(#glow-indigo)" />
+                    <text x="150" y="53" fill="#f0f4f8" font-size="7" font-family="Outfit" font-weight="800" text-anchor="middle">CLIENT</text>
+                  </g>
+
+                  <!-- API Node -->
+                  <g id="node-gateway" class="node-group">
+                    <circle cx="150" cy="130" r="17" fill="#0b0e14" stroke="#1e293b" stroke-width="2" />
+                    <text x="150" y="133" fill="#64748b" font-size="7" font-family="Outfit" font-weight="800" text-anchor="middle">GATEWAY</text>
+                  </g>
+
+                  <!-- WebGL Node -->
+                  <g id="node-webgl" class="node-group">
+                    <circle cx="70" cy="210" r="17" fill="#0b0e14" stroke="#1e293b" stroke-width="2" />
+                    <text x="70" y="213" fill="#64748b" font-size="7" font-family="Outfit" font-weight="800" text-anchor="middle">RENDER</text>
+                  </g>
+
+                  <!-- AI Node -->
+                  <g id="node-ai" class="node-group">
+                    <circle cx="230" cy="210" r="17" fill="#0b0e14" stroke="#1e293b" stroke-width="2" />
+                    <text x="230" y="213" fill="#64748b" font-size="7" font-family="Outfit" font-weight="800" text-anchor="middle">NEURAL</text>
+                  </g>
+
+                  <!-- DB Node -->
+                  <g id="node-db" class="node-group">
+                    <circle cx="70" cy="290" r="17" fill="#0b0e14" stroke="#1e293b" stroke-width="2" />
+                    <text x="70" y="293" fill="#64748b" font-size="7" font-family="Outfit" font-weight="800" text-anchor="middle">STORAGE</text>
+                  </g>
+
+                  <!-- DevOps Node -->
+                  <g id="node-devops" class="node-group">
+                    <circle cx="230" cy="290" r="17" fill="#0b0e14" stroke="#1e293b" stroke-width="2" />
+                    <text x="230" y="293" fill="#64748b" font-size="7" font-family="Outfit" font-weight="800" text-anchor="middle">DEVOPS</text>
+                  </g>
+                </svg>
+              </div>
+            </div>
+
+            <!-- Quote/Estimation Dashboard -->
+            <div class="planner-quote-box">
+              <div class="quote-header">Custom Configuration Estimate</div>
+              <div class="quote-price-container">
+                <span class="price-currency">$</span>
+                <span class="price-value" id="planner-cost">299</span>
+                <span class="price-period">total</span>
+              </div>
+              <div class="quote-stats">
+                <div class="quote-stat">
+                  <span class="quote-stat-label">Estimated Delivery</span>
+                  <span class="quote-stat-value" id="planner-delivery">6 weeks</span>
+                </div>
+                <div class="quote-stat">
+                  <span class="quote-stat-label">SLA Tier</span>
+                  <span class="quote-stat-value" id="planner-sla-name">Priority (4h)</span>
+                </div>
+              </div>
+              <button class="btn btn-primary" id="btn-planner-submit" style="width: 100%; justify-content: center; margin-top: 16px;">
+                Request Architecture Proposal
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- CTA BANNER -->
+  <!-- ═══════════════════════════════════════════ -->
+  <section class="cta-banner" id="cta-banner">
+    <div class="container">
+      <div class="cta-content">
+        <h2 class="scramble-text">The Age of Passive<br>Web Agencies is Dead.</h2>
+        <p>We don't just build websites. We engineer competitive advantages.</p>
+        <div class="cta-actions">
+          <button class="btn btn-primary btn-lg" id="btn-cta-onboard">Start Your Project</button>
+          <button class="btn btn-ghost btn-lg" id="btn-chat">Talk to AI Assistant</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- CONTACT -->
+  <!-- ═══════════════════════════════════════════ -->
+  <section class="section" id="contact">
+    <div class="container">
+      <div class="contact-layout">
+        <div class="contact-info">
+          <span class="section-label">Get in Touch</span>
+          <h2 class="section-title scramble-text">Let's build<br>something great.</h2>
+          <p class="section-desc scroll-highlight">Ready to scale your platform or launch something new? Reach out and we'll respond within 12 hours.</p>
+
+          <div class="contact-details">
+            <div class="contact-detail">
+              <div class="contact-detail-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              </div>
+              <div>
+                <div class="contact-detail-label">Email</div>
+                <div class="contact-detail-value">ms.concode@gmail.com</div>
+              </div>
+            </div>
+            <div class="contact-detail">
+              <div class="contact-detail-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>
+              </div>
+              <div>
+                <div class="contact-detail-label">Phone</div>
+                <div class="contact-detail-value">+91 9904717666</div>
+              </div>
+            </div>
+            <div class="contact-detail">
+              <div class="contact-detail-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              </div>
+              <div>
+                <div class="contact-detail-label">Location</div>
+                <div class="contact-detail-value">Vadodara, India</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <form id="contact-form" class="contact-form">
+          <div class="form-group">
+            <label for="contact-name">Name</label>
+            <input type="text" id="contact-name" required placeholder="Your full name">
+          </div>
+          <div class="form-group">
+            <label for="contact-email">Email</label>
+            <input type="email" id="contact-email" required placeholder="you@company.com">
+          </div>
+          <div class="form-group">
+            <label for="contact-message">Message</label>
+            <textarea id="contact-message" required placeholder="Tell us about your project..." rows="5"></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary">Send Message</button>
+          <div id="contact-console" class="form-console hidden">
+            <div class="console-output"></div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- FOOTER -->
+  <!-- ═══════════════════════════════════════════ -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="#" class="nav-logo" id="footer-logo">
+            <svg class="nav-logo-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <!-- Eye outer bracket path -->
+              <path d="M 15 50 C 30 20, 70 20, 85 50" stroke="#00f0ff" stroke-width="8" stroke-linecap="round"/>
+              <path d="M 15 50 C 30 80, 70 80, 85 50" stroke="#00f0ff" stroke-width="8" stroke-linecap="round"/>
+              <!-- Central glowing core circular nucleus -->
+              <circle cx="50" cy="50" r="14" fill="#00f0ff" class="logo-nucleus-svg"/>
+              <!-- Internal bracket </> code symbol -->
+              <path d="M 45 44 L 39 50 L 45 56 M 55 44 L 61 50 L 55 56 M 52 42 L 48 58" stroke="#121c26" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span class="nav-logo-text scramble-logo" data-scramble="CONCODE">CONCODE</span>
+          </a>
+          <p>High-performance digital platforms engineered for companies that refuse to settle.</p>
+        </div>
+        <div class="footer-col">
+          <h4>Company</h4>
+          <ul>
+            <li><a href="#services">Services</a></li>
+            <li><a href="#work">Work</a></li>
+            <li><a href="#process">Process</a></li>
+            <li><a href="#pricing">Pricing</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Connect</h4>
+          <ul>
+            <li><a href="#contact">Contact</a></li>
+            <li><a href="mailto:ms.concode@gmail.com">Email Us</a></li>
+            <li><a href="tel:+919904717666">Call Us</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2025 CONCODE. All rights reserved.</p>
+        <p>We Code. You Grow.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- MODALS (kept from original) -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div id="onboard-modal" class="modal-overlay">
+    <div class="modal-panel">
+      <button class="modal-close" id="modal-close">&times;</button>
+      <h2 class="modal-title">Start Your Project</h2>
+      <p class="modal-desc">Tell us what you're building. We'll get back within 12 hours.</p>
+      <form id="onboard-form">
+        <div class="form-group">
+          <label for="client-name">Name</label>
+          <input type="text" id="client-name" required placeholder="Your full name">
+        </div>
+        <div class="form-group">
+          <label for="client-email">Email</label>
+          <input type="email" id="client-email" required placeholder="you@company.com">
+        </div>
+        <div class="form-group">
+          <label for="client-module">Plan</label>
+          <select id="client-module">
+            <option value="Starter">Starter ($99 flat)</option>
+            <option value="Professional" selected>Professional ($299 flat)</option>
+            <option value="Enterprise">Enterprise ($799 flat)</option>
+            <option value="Custom">Custom Architecture Configuration</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="project-desc">Project Details</label>
+          <textarea id="project-desc" required placeholder="Describe your project goals..." rows="4"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Submit Inquiry</button>
+      </form>
+      <div id="sync-console" class="form-console hidden">
+        <div class="console-output"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Case Study / System Inspector Drawer -->
+  <div id="inspector-drawer" class="drawer-overlay">
+    <div class="drawer-panel drawer-panel-lg">
+      <div class="drawer-header">
+        <span class="drawer-title" id="inspector-title">System Subsystem Specs</span>
+        <button class="modal-close" id="inspector-close">&times;</button>
+      </div>
+      
+      <div class="inspector-content">
+        <!-- Left Panel: Specs -->
+        <div class="inspector-specs">
+          <h3 class="inspector-section-label">Subsystem Telemetry</h3>
+          
+          <div class="metrics-grid">
+            <div class="metric-card">
+              <div class="metric-value" id="metric-latency">--</div>
+              <div class="metric-label">Latency Reduction</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-value" id="metric-concurrency">--</div>
+              <div class="metric-label">Req/Sec Capacity</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-value" id="metric-saving">--</div>
+              <div class="metric-label">DevOps Automation</div>
+            </div>
+          </div>
+
+          <div class="inspector-description-block">
+            <h4 class="specs-subheader">Architectural Overview</h4>
+            <p id="inspector-summary">Loading specs...</p>
+          </div>
+
+          <div class="inspector-simulation-block">
+            <h4 class="specs-subheader">Live Network Load Testing</h4>
+            <p class="control-help">Simulate high-concurrency request packets on this custom node segment.</p>
+            <div class="simulation-actions">
+              <button class="btn btn-primary btn-sm" id="btn-simulate-load">Simulate Load (10k req/s)</button>
+              <span class="sim-status-label" id="sim-status">Idle</span>
+            </div>
+            <div class="sim-progress-bar-container">
+              <div class="sim-progress-bar" id="sim-progress"></div>
+            </div>
+            
+            <div class="sim-console-output" id="sim-console">
+              <div>// Ready to launch thread pool simulator...</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Panel: IDE Inspector -->
+        <div class="inspector-ide">
+          <div class="ide-tab-bar" id="ide-tabs">
+            <!-- Dynamic tabs go here -->
+          </div>
+          <div class="ide-editor-container">
+            <pre class="ide-code-block"><code id="ide-code-content">// Code contents here...</code></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI Chat Drawer -->
+  <div id="chat-drawer" class="drawer-overlay">
+    <div class="drawer-panel">
+      <div class="drawer-header">
+        <span class="drawer-title">AI Assistant</span>
+        <button class="modal-close" id="chat-close">&times;</button>
+      </div>
+      <div class="chat-log" id="chat-output">
+        <p class="bot-msg">Hi! I'm CONCODE's AI assistant. How can I help you today?</p>
+      </div>
+      <div class="chat-input-bar">
+        <input type="text" id="chat-input" placeholder="Ask me anything...">
+        <button class="btn btn-primary btn-sm" id="chat-send">Send</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CDNs -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+  <script src="src/three-scene.js?v=2.4"></script>
+  <script src="src/main.js?v=2.4"></script>
+</body>
+</html>

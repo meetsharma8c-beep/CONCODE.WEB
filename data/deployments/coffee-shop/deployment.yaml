@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dynamic-site-coffee-shop
+  namespace: concode-apps
+  labels:
+    app: dynamic-site-coffee-shop
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: dynamic-site-coffee-shop
+  template:
+    metadata:
+      labels:
+        app: dynamic-site-coffee-shop
+    spec:
+      containers:
+      - name: web
+        image: registry.concode.io/apps/coffee-shop:latest
+        ports:
+        - containerPort: 3000
+        resources:
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+          requests:
+            cpu: "100m"
+            memory: "128Mi"

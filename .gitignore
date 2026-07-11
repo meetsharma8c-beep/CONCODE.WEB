@@ -1,0 +1,39 @@
+# Dependency directories
+node_modules/
+jspm_packages/
+web_modules/
+
+# Environment files (API Keys & Secrets)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Database fallbacks (User leads, chats, routes)
+data/*.json
+!data/.gitkeep
+
+# System files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Log files
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Dynamic generated client layouts in studio
+public/projects/*
+!public/projects/terminal-portfolio/
+
+# Firebase configuration caches
+.firebase/
+firebase-debug.log
+ firestore-debug.log

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Developer Portfolio — Command Line Interface</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <!-- CRT screen scanline effects overlay -->
+  <div class="scanlines"></div>
+  <div class="crt-glow"></div>
+
+  <!-- Terminal Frame -->
+  <div class="terminal-container">
+    <!-- Window Title Bar -->
+    <div class="title-bar">
+      <div class="buttons">
+        <span class="close"></span>
+        <span class="minimize"></span>
+        <span class="maximize"></span>
+      </div>
+      <div class="title-text">ms@concode-node-01:~</div>
+    </div>
+
+    <!-- Active Terminal Console Screen -->
+    <div class="terminal-screen" id="terminal-screen">
+      <!-- ASCII Welcome Header & Intro -->
+      <div class="output-log" id="output-log">
+        <pre class="ascii-banner">
+███╗   ███╗███████╗   ██████╗  ██████╗ ██████╗████████╗
+████╗ ████║██╔════╝   ██╔══██╗██╔═══██╗██╔══██╗╚══██╔══╝
+██╔████╔██║███████╗   ██████╔╝██║   ██║██████╔╝   ██║   
+██║╚██╔╝██║╚════██║   ██╔═══╝ ██║   ██║██╔══██╗   ██║   
+██║ ╚═╝ ██║███████║   ██║     ╚██████╔╝██║  ██║   ██║   
+╚═╝     ╚═╝╚══════╝   ╚═╝      ╚═════╝ ╚═╝  ╚═╝   ╚═╝   
+        </pre>
+        <div class="welcome-text">
+          <p>CONCODE Core CLI (v2.8.5-stable)</p>
+          <p>System status: <span class="text-success">ONLINE</span> | Security protocol: <span class="text-cyan">ZERO-TRUST</span></p>
+          <p>Welcome, guest client! Type <span class="text-warning">help</span> to list available commands and start exploring my interactive portfolio.</p>
+          <p class="timestamp">Session opened: <span id="session-time"></span></p>
+          <br>
+        </div>
+      </div>
+
+      <!-- Command Input line -->
+      <div class="input-line">
+        <span class="prompt">visitor@concode:~$</span>
+        <input type="text" id="terminal-input" autofocus autocomplete="off" spellcheck="false" aria-label="Terminal input">
+      </div>
+    </div>
+  </div>
+
+  <!-- Matrix Screen Overlay for Easter Egg -->
+  <canvas id="matrix-canvas"></canvas>
+</body>
+</html>
