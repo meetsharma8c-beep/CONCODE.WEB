@@ -145,32 +145,29 @@ class TextScrambler {
 // TEXT ANIMATION INITIALIZATION
 // ═══════════════════════════════════════
 
-// 1. Setup 3D Character Flipping for Hero Titles and marked elements
-document.querySelectorAll('.char-flip').forEach(el => {
-  const text = el.innerText.trim();
-  el.innerHTML = '';
-  
-  // Split words to keep proper wrapping
-  const words = text.split(' ');
-  words.forEach((word, wordIdx) => {
-    const wordSpan = document.createElement('span');
-    wordSpan.style.display = 'inline-block';
-    wordSpan.style.whiteSpace = 'nowrap';
-    
-    for (let char of word) {
-      const charSpan = document.createElement('span');
-      charSpan.className = 'flip-letter';
-      charSpan.innerText = char;
-      charSpan.style.display = 'inline-block';
-      wordSpan.appendChild(charSpan);
+// 1. Setup Typewriter Animation for Hero Title
+const line1 = document.getElementById('typewriter-line-1');
+const line2 = document.getElementById('typewriter-line-2');
+const cursor = document.getElementById('typewriter-cursor');
+
+const line1Text = "We Build Systems";
+const line2Text = "That Scale.";
+
+function typeWriter(el, text, speed, callback) {
+  let i = 0;
+  function type() {
+    if (i < text.length) {
+      el.textContent += text.charAt(i);
+      i++;
+      // Human-like typing rhythm (random variable timing)
+      const delay = speed + (Math.random() * 40 - 20);
+      setTimeout(type, Math.max(30, delay));
+    } else if (callback) {
+      callback();
     }
-    
-    el.appendChild(wordSpan);
-    if (wordIdx < words.length - 1) {
-      el.appendChild(document.createTextNode(' '));
-    }
-  });
-});
+  }
+  type();
+}
 
 // Animate Hero badge, subtitle, actions
 gsap.from('.hero-badge', {
@@ -181,37 +178,18 @@ gsap.from('.hero-badge', {
   ease: 'power2.out'
 });
 
-// Animate Hero Title characters using 3D flipping
-if (document.querySelectorAll('#hero .flip-letter').length > 0) {
-  gsap.fromTo('#hero .flip-letter', 
-    { 
-      opacity: 0, 
-      rotationX: -90, 
-      y: 40,
-      scale: 0.7
-    },
-    {
-      opacity: 1,
-      rotationX: 0,
-      y: 0,
-      scale: 1,
-      stagger: 0.02,
-      duration: 0.9,
-      delay: 0.4,
-      ease: 'back.out(1.8)',
+// Trigger typewriter after badge mounts
+setTimeout(() => {
+  typeWriter(line1, line1Text, 70, () => {
+    // Move cursor to line 2
+    if (cursor && line2) {
+      line2.parentNode.appendChild(cursor);
     }
-  );
-} else {
-  // Fallback
-  gsap.from(['.hero-title-line', '.hero-title-accent'], {
-    opacity: 0,
-    y: 35,
-    stagger: 0.18,
-    duration: 1.2,
-    delay: 0.5,
-    ease: 'power3.out'
+    setTimeout(() => {
+      typeWriter(line2, line2Text, 85);
+    }, 300);
   });
-}
+}, 700);
 
 gsap.from('.hero-subtitle', {
   opacity: 0,
@@ -454,12 +432,12 @@ async function sendChatMessage() {
     });
     const result = await res.json();
     if (result.success) {
-      logEl.innerHTML += `<p class="bot-msg">${result.data.reply}</p>`;
+      logEl.innerHTML += `<div class="bot-msg">${marked.parse(result.data.reply)}</div>`;
     } else {
-      logEl.innerHTML += `<p class="bot-msg" style="color: #ef4444">${result.error.message}</p>`;
+      logEl.innerHTML += `<div class="bot-msg" style="color: #ef4444">${result.error.message}</div>`;
     }
   } catch (err) {
-    logEl.innerHTML += `<p class="bot-msg">Couldn't reach the server. Please try again.</p>`;
+    logEl.innerHTML += `<div class="bot-msg" style="color: #ef4444">Couldn't reach the server. Please try again.</div>`;
   }
   logEl.scrollTop = logEl.scrollHeight;
 }
@@ -963,221 +941,142 @@ updatePlannerEstimate();
 // CASE STUDY & SYSTEM INSPECTOR DRAWER
 // ═══════════════════════════════════════
 const INSPECTOR_DATA = {
-  sigmacore: {
-    title: "System Inspector — Project Sigma Core",
-    latency: "-45%",
-    concurrency: "50k/s",
-    saving: "35%",
-    summary: "Project Sigma Core orchestrates microservice routing via a highly-optimized Rust-based intelligent load distribution mesh. It caches active nodes in a Redis instance, bypassing high-latency middleware bottlenecks and reducing end-to-end routing latency by 45%.",
+  antigravity: {
+    title: "System Inspector — Antigravity Dashboard",
+    latency: "Direct Inject",
+    concurrency: "Local Hooks",
+    saving: "No copy-paste",
+    summary: "Antigravity operates as a glassmorphic stealth desktop overlay written in Python (PySide6) that hooks into Microsoft Word, Excel, and Notepad using Win32 API and COM automation. It detects hotkeys (Ctrl+Shift+I) and streams Gemini 3.5 Flash responses directly at the active cursor position.",
     tabs: [
       {
-        name: "Router (Rust)",
-        code: `// src/router.rs - Intelligent Load Balancer Mesh
-use tokio::sync::mpsc;
+        name: "Hotkey Listener (Python)",
+        code: `# main.py - Win32 Hotkey Listener & Injection Worker
+import win32con
+import win32api
+import time
+from PySide6.QtCore import QThread, Signal
 
-pub struct Router {
-    latency_threshold_ms: u64,
-    active_nodes: Vec<String>,
-}
-
-impl Router {
-    pub async fn route_task(&self, task: Task) -> Result<NodeResponse, RouteError> {
-        let optimal_node = self.select_least_loaded_node().await?;
-        println!("[ROUTE] Sending task {} to node {}", task.id, optimal_node);
-        
-        let start = std::time::Instant::now();
-        let response = optimal_node.execute(task).await?;
-        let latency = start.elapsed().as_millis();
-        
-        if latency > self.latency_threshold_ms {
-            println!("[WARN] Latency threshold exceeded: {}ms", latency);
-        }
-        Ok(response)
-    }
-}`
+class HotkeyWorker(QThread):
+    triggered = Signal()
+    
+    def run(self):
+        # Poll Ctrl+Shift+I hotkey state using Win32 API GetAsyncKeyState
+        while True:
+            ctrl = win32api.GetAsyncKeyState(win32con.VK_CONTROL) & 0x8000
+            shift = win32api.GetAsyncKeyState(win32con.VK_SHIFT) & 0x8000
+            i_key = win32api.GetAsyncKeyState(ord('I')) & 0x8000
+            
+            if ctrl and shift and i_key:
+                self.triggered.emit()
+                time.sleep(0.5)  # Prevent repeat triggers
+            time.sleep(0.05)`
       },
       {
-        name: "Config (Docker)",
-        code: `version: '3.8'
-services:
-  agent-router:
-    build: ./router
-    ports:
-      - "8080:8080"
-    environment:
-      - REDIS_URL=redis://cache:6379
-      - MAX_CONCURRENCY=50000
-    deploy:
-      replicas: 3
-      resources:
-        limits:
-          cpus: '2.0'
-          memory: 4G
-  cache:
-    image: redis:7-alpine
-    command: redis-server --appendonly yes`
+        name: "Word COM (Python)",
+        code: `# connector.py - Microsoft Word COM Automation
+import win32com.client
+
+class WordConnector:
+    def __init__(self):
+        self.app = None
+        
+    def get_active_document(self):
+        try:
+            # Connect to active Word COM instance
+            self.app = win32com.client.GetActiveObject("Word.Application")
+            return self.app.ActiveDocument
+        except Exception as e:
+            print(f"COM connection failed: {e}")
+            return None
+            
+    def inject_text(self, text):
+        doc = self.get_active_document()
+        if doc:
+            selection = self.app.Selection
+            selection.TypeText(text)
+            print("Injected text at active cursor.")`
       }
     ],
     simLogs: [
-      "Starting load testing simulation on Sigma Core network...",
-      "Initializing tokio thread pools... OK",
-      "Spinning up 3x replicas of agent-router cluster...",
-      "Connection to Redis cache established at redis://cache:6379",
-      "Pushing concurrent telemetry packet streams (10,000 tasks/sec)...",
-      "[ROUTE] Task 0x9fa1 -> Node 2 (ping: 4ms)",
-      "[ROUTE] Task 0x3ab8 -> Node 1 (ping: 2ms)",
-      "[ROUTE] Task 0x22cf -> Node 3 (ping: 3ms)",
-      "[METRIC] Latency average: 3.1ms. Cpu load: 48%.",
-      "Simulation completed successfully with 0 lost packets."
+      "Starting Antigravity system hooks simulation...",
+      "Binding Win32 API hotkey listener thread... OK",
+      "Scanning for Microsoft Word running process... CONNECTED",
+      "Active cursor handle hooked via win32com.client.ActiveDocument",
+      "Injecting mock hotkey trigger event [Ctrl+Shift+I]...",
+      "Reading preceding paragraph context: 'How does photosynthesis work?'",
+      "Sending prompt package to Google Gemini API core...",
+      "Receiving response data stream (skipping thinking steps)... OK",
+      "Streaming inline text tokens directly into document range...",
+      "Simulation complete. Text injected at target cursor."
     ]
   },
-  threescene: {
-    title: "System Inspector — ThreeScene Dashboard",
-    latency: "-30%",
-    concurrency: "12k/s",
-    saving: "20%",
-    summary: "ThreeScene Dashboard renders real-time logistics tracking overlays over 3D warehouse floorplans. Powered by custom WebGL shaders and optimized vertex buffers, it visualizes up to 10,000 moving assets at 60 FPS directly in client browsers.",
+  aisigma: {
+    title: "System Inspector — AI Sigma Gateway",
+    latency: "8ms",
+    concurrency: "20k/s",
+    saving: "Firestore Core",
+    summary: "AI Sigma is a secure, cross-platform AI gateway combining an Expo Router (React Native) client, a secure Express.js proxy server with Helmet/Rate-Limit protection, and Firestore/Firebase Functions for automated news seeding.",
     tabs: [
       {
-        name: "Renderer (JS)",
-        code: `// src/three-dashboard.js - Immersive Warehouse Render Engine
-import * as THREE from 'three';
+        name: "Server Proxy (JS)",
+        code: `// server/index.js - Secure API Proxy Gateway
+const express = require('express');
+const cors = require('cors');
+const rateLimit = require('express-rate-limit');
 
-export function initDashboard(canvasElement) {
-  const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-  const renderer = new THREE.WebGLRenderer({ canvas: canvasElement, antialias: true });
-  
-  // Build interactive node warehouse plinths
-  const nodesGroup = new THREE.Group();
-  for (let i = 0; i < 12; i++) {
-    const geom = new THREE.SphereGeometry(1.5, 32, 32);
-    const mat = new THREE.MeshStandardMaterial({ color: 0x00f0ff, metalness: 0.8, roughness: 0.1 });
-    const mesh = new THREE.Mesh(geom, mat);
-    mesh.position.set((i % 4) * 8 - 12, 0, Math.floor(i / 4) * 8 - 8);
-    nodesGroup.add(mesh);
-  }
-  scene.add(nodesGroup);
-  
-  function render() {
-    requestAnimationFrame(render);
-    nodesGroup.rotation.y += 0.005;
-    renderer.render(scene, camera);
-  }
-  render();
-}`
+const app = express();
+app.use(cors({ origin: process.env.ALLOWED_ORIGINS.split(',') }));
+
+const limiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 100, // 100 requests per minute
+  message: { error: "Rate limit exceeded" }
+});
+
+app.post('/api/gateway/chat', limiter, async (req, res) => {
+  const { message, model } = req.body;
+  console.log(\`[PROXY] Routing prompt to OpenRouter model: \${model}\`);
+  // Proxy requests securely to prevent exposing client keys
+  // ...
+});`
       },
       {
-        name: "Data Sync",
-        code: `// src/data-bridge.js - WebSocket telemetry streams
-export class TelemetryBridge {
-  constructor(url) {
-    this.ws = new WebSocket(url);
-    this.ws.onmessage = (event) => {
-      const telemetry = JSON.parse(event.data);
-      this.updateNodePositions(telemetry);
-    };
-  }
-  
-  updateNodePositions(data) {
-    // Dynamic rendering updates triggered in WebGL buffer
-    console.log(\`[TELEMETRY] Sync node \${data.nodeId}: Latency \${data.ping}ms\`);
-  }
-}`
-      }
-    ],
-    simLogs: [
-      "Starting load testing simulation on ThreeScene telemetry buffer...",
-      "Initializing WebSocket server at ws://localhost:8080/telemetry...",
-      "Connecting to Canvas WebGL 3D context... Found context.",
-      "Injecting mock node asset coordinates (12,000 updates/sec)...",
-      "[TELEMETRY] Sync node 01: Latency 8ms",
-      "[TELEMETRY] Sync node 02: Latency 7ms",
-      "[TELEMETRY] Sync node 03: Latency 6ms",
-      "[RENDER] Frame update cycle: 16.67ms (60 FPS stable)",
-      "[GL_BUFFER] Pushing coordinates data to GPU vertex shaders...",
-      "Simulation completed successfully. 3D context active."
-    ]
-  },
-  devops: {
-    title: "System Inspector — DevOps Launchpad",
-    latency: "-80%",
-    concurrency: "100k/s",
-    saving: "60%",
-    summary: "DevOps Launchpad automates multi-region cluster creation, load distribution routing, and database replication setups. Built with modular Terraform blueprints and Kubernetes declarations, it deploys isolated workspaces within 3 minutes.",
-    tabs: [
-      {
-        name: "Terraform (IaC)",
-        code: `# main.tf - AWS EKS Cluster Provisioner
-resource "aws_eks_cluster" "concode_core" {
-  name     = "concode-prod-cluster"
-  role_arn = aws_iam_role.eks_master.arn
+        name: "Client Hook (TS)",
+        code: `// lib/useChat.ts - React Native Chat Hook with Zustand
+import { create } from 'zustand';
 
-  vpc_config {
-    subnet_ids = [aws_subnet.private_a.id, aws_subnet.private_b.id]
-    endpoint_private_access = true
-    endpoint_public_access  = false
-  }
+interface ChatState {
+  messages: Array<{ id: string; text: string; role: 'user' | 'bot' }>;
+  isLoading: boolean;
+  sendMessage: (text: string) => Promise<void>;
 }
 
-resource "aws_eks_node_group" "agent_workers" {
-  cluster_name    = aws_eks_cluster.concode_core.name
-  node_group_name = "agent-compute-nodes"
-  node_role_arn   = aws_iam_role.eks_nodes.arn
-  subnet_ids      = [aws_subnet.private_a.id]
-
-  scaling_config {
-    desired_size = 6
-    max_size     = 30
-    min_size     = 4
+export const useChatStore = create<ChatState>((set, get) => ({
+  messages: [],
+  isLoading: false,
+  sendMessage: async (text) => {
+    set(state => ({ messages: [...state.messages, { id: Math.random().toString(), text, role: 'user' }], isLoading: true }));
+    const res = await fetch('/api/gateway/chat', {
+      method: 'POST',
+      body: JSON.stringify({ message: text })
+    });
+    const data = await res.json();
+    set(state => ({ messages: [...state.messages, { id: Math.random().toString(), text: data.reply, role: 'bot' }], isLoading: false }));
   }
-  instance_types = ["c6i.xlarge"]
-}`
-      },
-      {
-        name: "Kubernetes",
-        code: `# deployment.yaml - Declarative Container Setup
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: api-edge-deployment
-  labels:
-    app: api-edge
-spec:
-  replicas: 12
-  selector:
-    matchLabels:
-      app: api-edge
-  template:
-    metadata:
-      labels:
-        app: api-edge
-    spec:
-      containers:
-      - name: node-api
-        image: concode/api-edge:v2.1.4
-        ports:
-        - containerPort: 3000
-        resources:
-          requests:
-            memory: "512Mi"
-            cpu: "250m"
-          limits:
-            memory: "2Gi"
-            cpu: "1000m"`
+}));`
       }
     ],
     simLogs: [
-      "Starting load testing simulation on DevOps Launchpad cluster...",
-      "Parsing Terraform state file main.tfstate...",
-      "Querying AWS CLI endpoints for active nodes... Found 6 EC2 instances.",
-      "Deploying api-edge pods (replicas: 12) across nodes...",
-      "Launching stress testing harness (100,000 HTTP requests/sec)...",
-      "[KUBE] Pod api-edge-7f89b: cpu load 72%, memory 1.4GB",
-      "[KUBE] Pod api-edge-a2bc4: cpu load 68%, memory 1.2GB",
-      "[AUTOSCALE] Scaling node group agent-workers desired_size to 8 (CPU load > 70%)",
-      "[ROUTE] Edge-ingress router routing traffic: 0.04% error rate",
-      "Simulation completed. Cluster autoscaling and health verification OK."
+      "Initializing AI Sigma dev server stream...",
+      "Reading environment configs (Firebase PROJECT_ID: ai-sigma)...",
+      "Spinning up secure Express proxy server on localhost:3001... OK",
+      "Binding Router gates for OpenRouter & Anthropic models...",
+      "Simulating client connection burst (15,000 requests/sec)...",
+      "Gateway Rate Limit verification check: 100% SUCCESS",
+      "[PROXY] Claude-3.5-Sonnet routed (latency: 180ms)",
+      "[PROXY] Gemini-1.5-Pro routed (latency: 95ms)",
+      "[FUNCTIONS] Executing scheduled news API sync... 5 articles seeded.",
+      "AI Sigma API gateway telemetry verified."
     ]
   }
 };
@@ -1313,3 +1212,14 @@ document.querySelectorAll('.scramble-logo').forEach(logoText => {
     });
   });
 });
+
+// ═══════════════════════════════════════
+// SERVICE CARDS TOGGLE
+// ═══════════════════════════════════════
+document.querySelectorAll('.service-card').forEach(card => {
+  card.addEventListener('click', (e) => {
+    if (e.target.closest('a') || e.target.closest('button')) return;
+    card.classList.toggle('active');
+  });
+});
+

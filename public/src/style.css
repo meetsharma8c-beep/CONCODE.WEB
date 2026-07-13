@@ -513,6 +513,7 @@ body {
   backdrop-filter: blur(10px);
   position: relative;
   overflow: hidden;
+  cursor: pointer;
 }
 
 .service-card::before {
@@ -1184,16 +1185,36 @@ body {
   gap: 16px;
 }
 
-.chat-log p {
+.chat-log .bot-msg,
+.chat-log .user-msg {
   margin-bottom: 0;
   max-width: 82%;
-  padding: 12px 16px;
+  padding: 14px 18px;
   border-radius: 16px;
   font-family: var(--font-body);
   word-wrap: break-word;
   position: relative;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.12);
   transition: all 0.3s ease;
+}
+
+.chat-log .bot-msg p,
+.chat-log .user-msg p {
+  margin-top: 0;
+  margin-bottom: 10px;
+  padding: 0 !important;
+  box-shadow: none !important;
+  background: none !important;
+  border: none !important;
+  max-width: 100% !important;
+  border-radius: 0 !important;
+  font-family: var(--font-body) !important;
+  color: inherit !important;
+}
+
+.chat-log .bot-msg p:last-child,
+.chat-log .user-msg p:last-child {
+  margin-bottom: 0;
 }
 
 .bot-msg {
@@ -1205,6 +1226,34 @@ body {
   backdrop-filter: blur(8px);
 }
 
+.bot-msg h1,
+.bot-msg h2,
+.bot-msg h3 {
+  font-family: var(--font-display);
+  color: var(--accent);
+  margin-top: 16px;
+  margin-bottom: 8px;
+  font-weight: 700;
+}
+
+.bot-msg h1 { font-size: 1.25em; }
+.bot-msg h2 { font-size: 1.15em; }
+.bot-msg h3 { font-size: 1.05em; }
+
+.bot-msg ul,
+.bot-msg ol {
+  margin-top: 0;
+  margin-bottom: 10px;
+  padding-left: 20px;
+}
+
+.bot-msg li {
+  margin-bottom: 4px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
 .bot-msg code {
   font-family: var(--font-mono);
   background: rgba(0, 240, 255, 0.1);
@@ -1212,6 +1261,29 @@ body {
   padding: 2px 6px;
   border-radius: 4px;
   font-size: 0.9em;
+}
+
+.bot-msg pre {
+  background: rgba(0, 0, 0, 0.35) !important;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  padding: 12px;
+  margin: 12px 0;
+  overflow-x: auto;
+}
+
+.bot-msg pre code {
+  background: none !important;
+  padding: 0 !important;
+  color: #adbac7 !important;
+  font-size: 0.85em;
+  display: block;
+}
+
+.bot-msg hr {
+  border: none;
+  border-top: 1px dashed rgba(255, 255, 255, 0.1);
+  margin: 14px 0;
 }
 
 .user-msg {
@@ -2007,3 +2079,74 @@ path.active {
   height: 100%;
   border: none;
 }
+
+/* Service Details Styles */
+.service-details {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 1px dashed rgba(255, 255, 255, 0);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transition: max-height 0.4s var(--ease), opacity 0.3s ease, margin-top 0.4s ease, padding-top 0.4s ease, border-color 0.4s ease;
+}
+
+.service-card.active .service-details {
+  max-height: 500px;
+  opacity: 1;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.08);
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.detail-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--cyan);
+  font-weight: 700;
+  opacity: 0.85;
+  transition: color 0.3s ease;
+}
+
+.service-card.active .detail-label {
+  color: var(--accent);
+  opacity: 1;
+}
+
+.detail-text {
+  font-size: 13px !important;
+  color: var(--text-secondary) !important;
+  line-height: 1.5 !important;
+  margin: 0 !important;
+}
+
+.expand-icon {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--cyan);
+  transition: transform 0.3s var(--ease), color 0.3s ease;
+  float: right;
+  margin-top: 4px;
+}
+
+.service-card:hover .expand-icon {
+  color: var(--accent);
+}
+
+.service-card.active .expand-icon {
+  transform: rotate(45deg);
+  color: var(--orange);
+}
+
+

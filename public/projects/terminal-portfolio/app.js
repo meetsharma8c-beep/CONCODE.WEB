@@ -38,14 +38,14 @@ document.addEventListener('DOMContentLoaded', () => {
         tech: "Node.js, Express, WebGL, CSS Grid"
       },
       {
-        name: "ThreeScene WebGL Dashboard",
-        desc: "A 3D hardware-accelerated warehouse inventory routing dashboard tracking logistics movements.",
-        tech: "Three.js, WebGL, GSAP, D3.js"
+        name: "Antigravity Dashboard",
+        desc: "A next-generation desktop AI assistant that injects itself directly into Microsoft Word, Excel, and Notepad via Win32 COM APIs.",
+        tech: "Python, PySide6, Win32 API, Gemini 3.5 Flash"
       },
       {
-        name: "Sigma Load-Balancer Mesh",
-        desc: "A high-performance cluster router mesh engineered in Rust reducing pipeline task latency by 45%.",
-        tech: "Rust, Tokio Async, Redis Sharding"
+        name: "AI Sigma (AI Σ) Gateway",
+        desc: "A secure, cross-platform AI gateway combining an Expo Router mobile/web app with a secure Express proxy backend and Firebase Functions.",
+        tech: "React Native, Expo, Zustand, Express.js, Firestore"
       }
     ],
     contact: {
@@ -65,6 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
     about: "Get an overview of my professional background.",
     skills: "View categorized developer technical skills and progress.",
     projects: "Inspect the collection of recent project rollouts.",
+    github: "Fetch and list my public GitHub repositories in real-time.",
     contact: "Display contact email, channels, or submit a message to the developer.",
     color: "Switch theme colors. Usage: color [matrix|amber|cyan|classic]",
     clear: "Clear the terminal console history.",
@@ -170,6 +171,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <p style="padding-left:15px; font-size:12px; margin-bottom:12px;"><span class="text-warning">Stack:</span> <code class="text-muted">${proj.tech}</code></p>
           `;
         });
+        outputHtml += `<p class="text-muted" style="margin-top:10px;">Tip: Type <span class="text-warning">github</span> to fetch live public repositories from GitHub!</p>`;
         break;
 
       case 'contact':
@@ -231,6 +233,14 @@ document.addEventListener('DOMContentLoaded', () => {
         outputHtml = '<p class="text-success">Toggled Matrix digital rain background simulation.</p>';
         break;
 
+      case 'github':
+        outputHtml = '<p class="text-cyan">Connecting to GitHub API... Retrieving repositories...</p>';
+        fetchGitHubRepos(logBox);
+        logBox.innerHTML = outputHtml;
+        outputLog.appendChild(logBox);
+        scrollToBottom();
+        return;
+
       default:
         outputHtml = `<p class="text-danger">Command not found: "${cmd}". Type <span class="text-warning">help</span> to list commands.</p>`;
     }
@@ -276,6 +286,57 @@ document.addEventListener('DOMContentLoaded', () => {
         logBox.innerHTML = '<p class="text-danger">Network error: Failed to reach API gateways.</p>';
         scrollToBottom();
       });
+  }
+
+  // GitHub Repositories Live Fetching
+  let cachedRepos = null;
+
+  function fetchGitHubRepos(logBox) {
+    if (cachedRepos) {
+      renderRepos(cachedRepos, logBox);
+      return;
+    }
+
+    fetch('https://api.github.com/users/meetsharma8c-beep/repos?sort=updated&per_page=10')
+      .then(res => {
+        if (!res.ok) {
+          throw new Error(`GitHub API returned status ${res.status}`);
+        }
+        return res.json();
+      })
+      .then(data => {
+        cachedRepos = data.filter(repo => !repo.fork); // exclude forks
+        renderRepos(cachedRepos, logBox);
+      })
+      .catch(err => {
+        logBox.innerHTML = `<p class="text-danger">Failed to fetch repositories: ${err.message}</p>
+                            <p class="text-muted">You can view my repositories directly on GitHub: <a href="https://github.com/meetsharma8c-beep" target="_blank" style="color:var(--cyan-color); text-decoration:underline;">github.com/meetsharma8c-beep</a></p>`;
+        scrollToBottom();
+      });
+  }
+
+  function renderRepos(repos, logBox) {
+    if (repos.length === 0) {
+      logBox.innerHTML = '<p class="text-warning">No public repositories found for this account.</p>';
+      scrollToBottom();
+      return;
+    }
+
+    let html = '<p class="text-muted">Live public GitHub repositories:</p><br>';
+    repos.forEach((repo, idx) => {
+      const languageText = repo.language ? ` [${repo.language}]` : '';
+      const stars = repo.stargazers_count > 0 ? ` ★ ${repo.stargazers_count}` : '';
+      const forks = repo.forks_count > 0 ? ` ⇅ ${repo.forks_count}` : '';
+      const description = repo.description || 'No description provided.';
+      
+      html += `
+        <p><span class="text-success">[0${idx + 1}] ${repo.name}</span><span class="text-cyan">${languageText}</span><span class="text-warning">${stars}${forks}</span></p>
+        <p style="padding-left:15px; margin-bottom:5px;">${description}</p>
+        <p style="padding-left:15px; font-size:12px; margin-bottom:12px;"><span class="text-warning">Link:</span> <a href="${repo.html_url}" target="_blank" style="color:inherit; text-decoration:underline;">${repo.html_url.replace('https://', '')}</a></p>
+      `;
+    });
+    logBox.innerHTML = html;
+    scrollToBottom();
   }
 
   // Matrix Digital Rain Logic

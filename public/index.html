@@ -57,8 +57,8 @@
     <div class="hero-content">
       <div class="hero-badge">Next-Generation Digital Agency</div>
       <h1 class="hero-title">
-        <span class="hero-title-line char-flip">We Build Systems</span><br>
-        <span class="hero-title-accent char-flip">That Scale.</span><span class="terminal-cursor"></span>
+        <span id="typewriter-line-1" class="hero-title-line"></span><span id="typewriter-cursor" class="terminal-cursor"></span><br>
+        <span id="typewriter-line-2" class="hero-title-accent"></span>
       </h1>
       <p class="hero-subtitle">
         High-performance web platforms, immersive 3D experiences, and AI-powered solutions — engineered for companies that refuse to settle.
@@ -92,48 +92,132 @@
           <div class="service-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/><path d="M7 12l3-3 2 2 5-5"/></svg>
           </div>
-          <h3>Automated Growth</h3>
+          <h3>Automated Growth <span class="expand-icon">+</span></h3>
           <p>Programmatic scaling scripts, marketing pipelines, and growth engines built natively into your platform.</p>
+          <div class="service-details">
+            <div class="detail-item">
+              <span class="detail-label">Function</span>
+              <span class="detail-text">User acquisition automation, programmatic funnels, and target data extraction.</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Backend Integration</span>
+              <span class="detail-text">Redis-backed task queues (BullMQ), headless scraping (Puppeteer), and webhook ingestion.</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Business Result</span>
+              <span class="detail-text">Zero-overhead customer pipeline scaling and 10x faster lead response rates.</span>
+            </div>
+          </div>
         </div>
 
         <div class="service-card reveal-item">
           <div class="service-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M12 2a10 10 0 0110 10 10 10 0 01-10 10A10 10 0 012 12 10 10 0 0112 2z"/><path d="M2 12h4m12 0h4M12 2v4m0 12v4"/></svg>
           </div>
-          <h3>Integrative AI</h3>
+          <h3>Integrative AI <span class="expand-icon">+</span></h3>
           <p>Advanced LLM routing, custom embeddings, and structured neural output layers for workflow automation.</p>
+          <div class="service-details">
+            <div class="detail-item">
+              <span class="detail-label">Function</span>
+              <span class="detail-text">Multi-LLM intent routing, prompt template engines, and semantic search integration.</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Backend Integration</span>
+              <span class="detail-text">Google Gemini API, pgvector/Pinecone vector sharding, and structured JSON output parsing.</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Business Result</span>
+              <span class="detail-text">Automated customer agent response scaling and intelligent hands-free operations.</span>
+            </div>
+          </div>
         </div>
 
         <div class="service-card reveal-item">
           <div class="service-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><path d="M3.27 6.96L12 12.01l8.73-5.05M12 22.08V12"/></svg>
           </div>
-          <h3>WebGL & WebGPU</h3>
+          <h3>WebGL & WebGPU <span class="expand-icon">+</span></h3>
           <p>Cinematic, interactive 3D frontend scenes powered by hardware acceleration that captivate instantly.</p>
+          <div class="service-details">
+            <div class="detail-item">
+              <span class="detail-label">Function</span>
+              <span class="detail-text">Physics-based graphic loops, custom shaders, and interactive 3D canvas controls.</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Backend Integration</span>
+              <span class="detail-text">Brotli-compressed asset servers, CDN caching, and automated shader deployment workflows.</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Business Result</span>
+              <span class="detail-text">Significant bounce-rate reduction and top-tier product premium presentation.</span>
+            </div>
+          </div>
         </div>
 
         <div class="service-card reveal-item">
           <div class="service-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
           </div>
-          <h3>DevOps & Cloud</h3>
+          <h3>DevOps & Cloud <span class="expand-icon">+</span></h3>
           <p>Kubernetes clusters, serverless computing, and self-healing container architectures deployed globally.</p>
+          <div class="service-details">
+            <div class="detail-item">
+              <span class="detail-label">Function</span>
+              <span class="detail-text">Automated CI/CD build scripts, server orchestration, SSL certificate rotations, and auto-scaling.</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Backend Integration</span>
+              <span class="detail-text">Docker, Google Cloud Run/EKS, GitHub Actions workflows, and health-check daemons.</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Business Result</span>
+              <span class="detail-text">Reduced hosting costs by up to 40%, automated rollback protection, and faster code deployments.</span>
+            </div>
+          </div>
         </div>
 
         <div class="service-card reveal-item">
           <div class="service-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/><circle cx="12" cy="16" r="1"/></svg>
           </div>
-          <h3>Security & Compliance</h3>
+          <h3>Security & Compliance <span class="expand-icon">+</span></h3>
           <p>End-to-end encryption, SOC 2 readiness, penetration testing, and zero-trust architecture from day one.</p>
+          <div class="service-details">
+            <div class="detail-item">
+              <span class="detail-label">Function</span>
+              <span class="detail-text">Secure request authentication, endpoint rate-limiting, and penetration vulnerability mitigation.</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Backend Integration</span>
+              <span class="detail-text">JWT session handling, Helmet middleware protection, bcrypt password hashing, and encrypted secrets.</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Business Result</span>
+              <span class="detail-text">SOC 2 compliance readiness, bulletproof user privacy, and zero data leakage.</span>
+            </div>
+          </div>
         </div>
 
         <div class="service-card reveal-item">
           <div class="service-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
           </div>
-          <h3>Data Engineering</h3>
+          <h3>Data Engineering <span class="expand-icon">+</span></h3>
           <p>Real-time data pipelines, vector databases, ETL workflows, and analytics dashboards for actionable insights.</p>
+          <div class="service-details">
+            <div class="detail-item">
+              <span class="detail-label">Function</span>
+              <span class="detail-text">Data pipeline mapping (ETL), real-time query optimization, and structured analytic reporting.</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Backend Integration</span>
+              <span class="detail-text">Firestore real-time listeners, PostgreSQL relational database sharding, and cron synchronization scripts.</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Business Result</span>
+              <span class="detail-text">Instant complex record lookups and real-time data-driven business analytics.</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -169,55 +253,37 @@
       </div>
 
       <div class="portfolio-grid">
-        <div class="portfolio-card reveal-item btn-inspect-project" style="--accent: #00f0ff; cursor: pointer;" data-project="sigmacore">
+        <div class="portfolio-card reveal-item btn-inspect-project" style="--accent: #00f0ff; cursor: pointer;" data-project="antigravity">
           <div class="portfolio-visual">
             <div class="portfolio-gradient"></div>
             <div class="portfolio-number">01</div>
           </div>
           <div class="portfolio-info">
-            <h3>Project Sigma Core</h3>
-            <p>A unified multi-agent orchestration layer that reduced task latency by 45% for a logistics enterprise handling 2M+ daily requests.</p>
+            <h3>Antigravity Dashboard</h3>
+            <p>A next-generation desktop AI assistant that injects itself directly into Microsoft Word, Excel, and Notepad using Win32 API and COM automation.</p>
             <div class="portfolio-tags">
-              <span>Node.js</span>
-              <span>AI Router</span>
-              <span>Rust</span>
-              <span>Redis</span>
+              <span>Python</span>
+              <span>Win32 COM</span>
+              <span>Gemini API</span>
+              <span>PySide6</span>
             </div>
             <div class="portfolio-inspect-cta">Inspect Subsystem Specs &rarr;</div>
           </div>
         </div>
 
-        <div class="portfolio-card reveal-item btn-inspect-project" style="--accent: #a855f7; cursor: pointer;" data-project="threescene">
+        <div class="portfolio-card reveal-item btn-inspect-project" style="--accent: #a855f7; cursor: pointer;" data-project="aisigma">
           <div class="portfolio-visual">
             <div class="portfolio-gradient"></div>
             <div class="portfolio-number">02</div>
           </div>
           <div class="portfolio-info">
-            <h3>ThreeScene Dashboard</h3>
-            <p>An interactive WebGL-driven supply chain visualizer presenting real-time asset movements across 12 global warehouses.</p>
+            <h3>AI Sigma (AI Σ) Gateway</h3>
+            <p>A secure, cross-platform AI gateway combining an Expo mobile/web client with a secure Express proxy server and Firebase Functions.</p>
             <div class="portfolio-tags">
-              <span>Three.js</span>
-              <span>WebGL</span>
-              <span>GSAP</span>
-              <span>D3.js</span>
-            </div>
-            <div class="portfolio-inspect-cta">Inspect Subsystem Specs &rarr;</div>
-          </div>
-        </div>
-
-        <div class="portfolio-card reveal-item btn-inspect-project" style="--accent: #f97316; cursor: pointer;" data-project="devops">
-          <div class="portfolio-visual">
-            <div class="portfolio-gradient"></div>
-            <div class="portfolio-number">03</div>
-          </div>
-          <div class="portfolio-info">
-            <h3>DevOps Launchpad</h3>
-            <p>A cloud provisioning portal automating multi-region Kubernetes deployments in under 3 minutes with zero-downtime rollbacks.</p>
-            <div class="portfolio-tags">
-              <span>Kubernetes</span>
-              <span>Docker</span>
-              <span>AWS</span>
-              <span>Terraform</span>
+              <span>React Native</span>
+              <span>Expo Router</span>
+              <span>Express.js</span>
+              <span>Firebase</span>
             </div>
             <div class="portfolio-inspect-cta">Inspect Subsystem Specs &rarr;</div>
           </div>
@@ -789,7 +855,7 @@
         <button class="modal-close" id="chat-close">&times;</button>
       </div>
       <div class="chat-log" id="chat-output">
-        <p class="bot-msg">Hi! I'm CONCODE's AI assistant. How can I help you today?</p>
+        <div class="bot-msg">Hi! I'm CONCODE's AI assistant. How can I help you today?</div>
       </div>
       <div class="chat-input-bar">
         <input type="text" id="chat-input" placeholder="Ask me anything...">
@@ -802,6 +868,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
   <script src="src/three-scene.js?v=2.4"></script>
   <script src="src/main.js?v=2.4"></script>
