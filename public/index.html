@@ -252,7 +252,7 @@
         <p class="section-desc scroll-highlight">Real systems generating value for real businesses. Not mockups — production engines.</p>
       </div>
 
-      <div class="portfolio-grid">
+      <div class="portfolio-grid" id="github-portfolio-grid">
         <div class="portfolio-card reveal-item btn-inspect-project" style="--accent: #00f0ff; cursor: pointer;" data-project="antigravity">
           <div class="portfolio-visual">
             <div class="portfolio-gradient"></div>
@@ -286,6 +286,124 @@
               <span>Firebase</span>
             </div>
             <div class="portfolio-inspect-cta">Inspect Subsystem Specs &rarr;</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- DYNAMIC DEVELOPER WORKSPACE -->
+  <!-- ═══════════════════════════════════════════ -->
+  <section class="section" id="workspace">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-label">Developer Console</span>
+        <h2 class="section-title scramble-text">Build & Deploy<br>Your Nodes Live.</h2>
+        <p class="section-desc scroll-highlight">Experiment with our engineering backend. Generate prototypes, simulate cloud cluster deployments, or run database ETL pipelines in real-time.</p>
+      </div>
+
+      <div class="workspace-wrapper">
+        <!-- Control Panel (Left Pane) -->
+        <div class="workspace-control-panel">
+          <div class="workspace-tabs">
+            <button class="workspace-tab active" data-tab="studio">🛠️ Studio</button>
+            <button class="workspace-tab" data-tab="devops">🚀 DevOps</button>
+            <button class="workspace-tab" data-tab="etl">🔄 ETL Migration</button>
+          </div>
+
+          <div class="workspace-tab-contents">
+            <!-- AI STUDIO BUILDER -->
+            <div class="workspace-content active" id="content-studio">
+              <div class="form-group">
+                <label for="studio-project-id">Project ID</label>
+                <input type="text" id="studio-project-id" placeholder="e.g. cafe-shop" value="my-cafe-site">
+              </div>
+              <div class="form-group">
+                <label for="studio-prompt">Design Prompt</label>
+                <textarea id="studio-prompt" rows="4" placeholder="Describe the layout, colors, and content details... e.g. A gorgeous dark themed cafe page with menu items."></textarea>
+              </div>
+              <div class="form-group">
+                <label for="studio-accent">Accent Color</label>
+                <select id="studio-accent">
+                  <option value="#00f0ff">Neon Cyan</option>
+                  <option value="#a855f7">Vibrant Purple</option>
+                  <option value="#f97316">Sun Orange</option>
+                  <option value="#10b981">Emerald Green</option>
+                </select>
+              </div>
+              <button class="btn btn-primary" id="btn-studio-build" style="width: 100%;">Build System &rarr;</button>
+            </div>
+
+            <!-- DEVOPS PIPELINES -->
+            <div class="workspace-content" id="content-devops">
+              <div class="form-group">
+                <label for="devops-project-select">Active Project Node</label>
+                <select id="devops-project-select">
+                  <option value="">-- No Active Projects --</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="devops-cloud-target">Cloud Orchestrator</label>
+                <select id="devops-cloud-target">
+                  <option value="aws">AWS (EKS Kubernetes Cluster)</option>
+                  <option value="gcp">Google Cloud (GKE Cluster)</option>
+                  <option value="vercel">Vercel (Edge Serverless)</option>
+                </select>
+              </div>
+              <button class="btn btn-primary" id="btn-devops-deploy" style="width: 100%;">Execute Release &rarr;</button>
+            </div>
+
+            <!-- DATA ETL MIGRATION -->
+            <div class="workspace-content" id="content-etl">
+              <div class="form-group">
+                <label for="etl-collection-target">Target Collection</label>
+                <select id="etl-collection-target">
+                  <option value="inquiries">inquiries (Client proposals / Leads)</option>
+                  <option value="contacts">contacts (General inquiries)</option>
+                  <option value="chats">chats (Conversation logs)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="etl-format">Data Format</label>
+                <select id="etl-format">
+                  <option value="json">JSON format</option>
+                  <option value="csv">CSV format</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="etl-raw-data">Raw Data Input</label>
+                <textarea id="etl-raw-data" rows="6" placeholder="Paste JSON or CSV content here..."></textarea>
+              </div>
+              <button class="btn btn-primary" id="btn-etl-migrate" style="width: 100%;">Run Integrity Audit &rarr;</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Viewport Monitor (Right Pane) -->
+        <div class="workspace-monitor-panel">
+          <div class="monitor-header">
+            <div class="monitor-status">
+              <span class="status-indicator live"></span>
+              <span class="status-label">CONSOLE LIVE</span>
+            </div>
+            <div class="monitor-project-info" id="monitor-project-label">Project: Idle</div>
+          </div>
+          
+          <div class="monitor-body">
+            <!-- HTML preview iframe -->
+            <div class="monitor-view-iframe" id="monitor-iframe-wrapper" style="display: none;">
+              <iframe id="workspace-preview-iframe" src="about:blank" title="Prototype Viewport"></iframe>
+            </div>
+
+            <!-- Terminal output window -->
+            <div class="monitor-view-terminal" id="monitor-terminal-wrapper">
+              <div class="terminal-shell" id="workspace-terminal-logs">
+                <div class="terminal-line system">ConCode AI Control Workspace initialized.</div>
+                <div class="terminal-line system">All endpoints active. Awaiting operator input...</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

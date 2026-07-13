@@ -1223,3 +1223,397 @@ document.querySelectorAll('.service-card').forEach(card => {
   });
 });
 
+// ═══════════════════════════════════════
+// GITHUB REPOSITORIES DYNAMIC LOADING
+// ═══════════════════════════════════════
+async function loadGitHubRepos() {
+  const grid = document.getElementById('github-portfolio-grid');
+  if (!grid) return;
+
+  try {
+    const response = await fetch('https://api.github.com/users/meetsharma8c-beep/repos?sort=updated&per_page=10');
+    if (!response.ok) throw new Error('API request failed');
+    const repos = await response.json();
+    
+    // Exclude forks and limit to top 3 active repos
+    const publicRepos = repos.filter(repo => !repo.fork).slice(0, 3);
+    
+    const colors = ['#f97316', '#10b981', '#3b82f6']; // Dynamic accents (Orange, Emerald, Blue)
+
+    publicRepos.forEach((repo, index) => {
+      const card = document.createElement('div');
+      card.className = 'portfolio-card reveal-item';
+      card.style.cssText = `--accent: ${colors[index % colors.length]}; cursor: pointer;`;
+      
+      const number = String(index + 3).padStart(2, '0');
+      const language = repo.language || 'Code';
+      const description = repo.description || 'Live repository on GitHub. Click to inspect source, stars, and commit telemetry.';
+
+      card.innerHTML = `
+        <div class="portfolio-visual">
+          <div class="portfolio-gradient"></div>
+          <div class="portfolio-number">${number}</div>
+        </div>
+        <div class="portfolio-info">
+          <h3>${repo.name}</h3>
+          <p>${description}</p>
+          <div class="portfolio-tags">
+            <span>${language}</span>
+            <span>★ ${repo.stargazers_count}</span>
+            <span>⇅ ${repo.forks_count}</span>
+          </div>
+          <div class="portfolio-inspect-cta">View Repository &rarr;</div>
+        </div>
+      `;
+
+      card.addEventListener('click', () => {
+        window.open(repo.html_url, '_blank');
+      });
+
+      grid.appendChild(card);
+
+      // Register ScrollTrigger for the new element
+      if (typeof ScrollTrigger !== 'undefined') {
+        ScrollTrigger.create({
+          trigger: card,
+          start: 'top 88%',
+          onEnter: () => {
+            const siblings = grid.querySelectorAll('.reveal-item');
+            const siblingIndex = Array.from(siblings).indexOf(card);
+            setTimeout(() => {
+              card.classList.add('revealed');
+            }, siblingIndex * 100);
+          }
+        });
+      } else {
+        card.classList.add('revealed');
+      }
+    });
+  } catch (error) {
+    console.error('Failed to load GitHub repositories:', error);
+  }
+}
+
+// Call on load
+window.addEventListener('DOMContentLoaded', loadGitHubRepos);
+
+// ═══════════════════════════════════════
+// DEVELOPER WORKSPACE CONTROL CENTER LOGIC
+// ═══════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  const tabs = document.querySelectorAll('.workspace-tab');
+  const contents = document.querySelectorAll('.workspace-content');
+  const terminalLogs = document.getElementById('workspace-terminal-logs');
+  const monitorIframeWrapper = document.getElementById('monitor-iframe-wrapper');
+  const monitorTerminalWrapper = document.getElementById('monitor-terminal-wrapper');
+  const previewIframe = document.getElementById('workspace-preview-iframe');
+  const monitorProjectLabel = document.getElementById('monitor-project-label');
+  const statusIndicator = document.querySelector('.monitor-status .status-indicator');
+  const statusLabel = document.querySelector('.monitor-status .status-label');
+
+  const devopsProjectSelect = document.getElementById('devops-project-select');
+
+  // Utility to clear console logs
+  function clearTerminal() {
+    terminalLogs.innerHTML = '';
+  }
+
+  // Utility to append log lines
+  function printLog(text, type = 'system') {
+    const line = document.createElement('div');
+    line.className = `terminal-line ${type}`;
+    line.innerText = `[${new Date().toLocaleTimeString()}] ${text}`;
+    terminalLogs.appendChild(line);
+    monitorTerminalWrapper.scrollTop = monitorTerminalWrapper.scrollHeight;
+  }
+
+  // Swap display panel (iframe or terminal console)
+  function showView(viewType) {
+    if (viewType === 'iframe') {
+      monitorIframeWrapper.style.display = 'block';
+      monitorTerminalWrapper.style.display = 'none';
+    } else {
+      monitorIframeWrapper.style.display = 'none';
+      monitorTerminalWrapper.style.display = 'block';
+    }
+  }
+
+  // Tab switcher
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      contents.forEach(c => c.classList.remove('active'));
+
+      tab.classList.add('active');
+      const activeTabId = `content-${tab.getAttribute('data-tab')}`;
+      document.getElementById(activeTabId).classList.add('active');
+
+      printLog(`Switched view context to module: ${tab.innerText.trim().toUpperCase()}`, 'system');
+      
+      // Auto-toggle views based on tab context
+      if (tab.getAttribute('data-tab') === 'studio' && previewIframe.src !== 'about:blank') {
+        showView('iframe');
+      } else {
+        showView('terminal');
+      }
+    });
+  });
+
+  // Fetch active gateway routes to populate devops projects dropdown
+  async function syncProjectDropdown() {
+    try {
+      const res = await fetch('/api/gateway/routes');
+      const data = await res.json();
+      if (data.success && Array.isArray(data.data)) {
+        devopsProjectSelect.innerHTML = '<option value="">-- Select Active Project --</option>';
+        data.data.forEach(route => {
+          const opt = document.createElement('option');
+          opt.value = route.projectId;
+          opt.innerText = `${route.projectId} (/project/${route.path}/)`;
+          devopsProjectSelect.appendChild(opt);
+        });
+      }
+    } catch (e) {
+      console.error('Failed to sync workspace project dropdown:', e);
+    }
+  }
+
+  // Sync initially
+  syncProjectDropdown();
+
+  // 1. AI WEBSITE STUDIO HANDLER
+  const btnStudioBuild = document.getElementById('btn-studio-build');
+  const inputProjectId = document.getElementById('studio-project-id');
+  const textareaPrompt = document.getElementById('studio-prompt');
+  const selectAccent = document.getElementById('studio-accent');
+
+  btnStudioBuild.addEventListener('click', async () => {
+    const projectId = inputProjectId.value.trim();
+    const prompt = textareaPrompt.value.trim();
+    const accent = selectAccent.value;
+
+    if (!projectId || !prompt) {
+      alert('Please fill out the Project ID and Design Prompt.');
+      return;
+    }
+
+    showView('terminal');
+    clearTerminal();
+    statusIndicator.className = 'status-indicator working';
+    statusLabel.innerText = 'BUILDING PROJECT...';
+    monitorProjectLabel.innerText = `Project: ${projectId}`;
+
+    printLog(`Initializing AI Studio layout generator for Node ID: "${projectId}"...`, 'system');
+    printLog(`Accent styling set to: ${accent}`, 'system');
+    printLog(`Prompt: "${prompt}"`, 'input');
+
+    try {
+      // Step 1: Generate layout prototype
+      const genRes = await fetch('/api/studio/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projectId, prompt, options: { accentColor: accent } })
+      });
+      const genData = await genRes.json();
+
+      if (!genData.success) {
+        throw new Error(genData.error || 'Prototype generation failed');
+      }
+
+      printLog(`✓ Web prototype files generated successfully in public workspace.`, 'success');
+      printLog(`Pages created: index.html, about.html, contact.html, style.css, app.js`, 'system');
+      printLog(`Connecting routing gateways... Registering path: /project/${projectId}/`, 'system');
+
+      // Step 2: Register gateway route
+      const regRes = await fetch('/api/gateway/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projectId, customPath: projectId, rateLimitRpm: 100 })
+      });
+      const regData = await regRes.json();
+
+      if (!regData.success) {
+        throw new Error(regData.error || 'API routing registration failed');
+      }
+
+      printLog(`✓ API gateway route mapped active. Port 3000 mapping live.`, 'success');
+      printLog(`Launching live interactive layout viewport...`, 'system');
+
+      // Sync the devops select dropdown immediately
+      syncProjectDropdown();
+
+      // Show iframe preview
+      setTimeout(() => {
+        statusIndicator.className = 'status-indicator live';
+        statusLabel.innerText = 'MONITOR LIVE';
+        previewIframe.src = `/project/${projectId}/`;
+        showView('iframe');
+      }, 1000);
+
+    } catch (err) {
+      printLog(`❌ Construction error: ${err.message}`, 'error');
+      statusIndicator.className = 'status-indicator live';
+      statusLabel.innerText = 'CONSOLE LIVE';
+    }
+  });
+
+  // 2. CLOUD DEVOPS PIPELINES HANDLER
+  const btnDevopsDeploy = document.getElementById('btn-devops-deploy');
+  const selectDevopsProject = document.getElementById('devops-project-select');
+  const selectCloudTarget = document.getElementById('devops-cloud-target');
+
+  let pollIntervalId = null;
+
+  btnDevopsDeploy.addEventListener('click', async () => {
+    const projectId = selectDevopsProject.value;
+    const cloudTarget = selectCloudTarget.value;
+
+    if (!projectId) {
+      alert('Please select an active project node to deploy.');
+      return;
+    }
+
+    if (pollIntervalId) clearInterval(pollIntervalId);
+
+    showView('terminal');
+    clearTerminal();
+    statusIndicator.className = 'status-indicator working';
+    statusLabel.innerText = 'DEPLOYING PIPELINE...';
+    monitorProjectLabel.innerText = `Project: ${projectId}`;
+
+    printLog(`Triggering secure DevOps pipeline build sequence for "${projectId}"...`, 'system');
+    printLog(`Target Cloud: ${cloudTarget.toUpperCase()}`, 'system');
+
+    try {
+      const deployRes = await fetch('/api/devops/deploy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projectId, cloudTarget })
+      });
+      const deployData = await deployRes.json();
+
+      if (!deployData.success) {
+        throw new Error(deployData.error || 'Pipeline queue execution failed');
+      }
+
+      printLog(deployData.data.message, 'success');
+      printLog(`Generated deployments data file under data/deployments/${projectId}/`, 'system');
+      printLog(`Files: ${deployData.data.filesGenerated.join(', ')}`, 'system');
+      printLog(`Streaming deployment output sequence telemetry...`, 'system');
+
+      // Poll deployment logs
+      const deploymentId = deployData.data.deploymentId;
+      let lastLogIndex = 0;
+      pollIntervalId = setInterval(async () => {
+        try {
+          const logRes = await fetch(`/api/devops/logs/${projectId}`);
+          const logData = await logRes.json();
+
+          if (logData.success && Array.isArray(logData.data)) {
+            const logs = logData.data.filter(l => l.deploymentId === deploymentId);
+            if (logs.length > lastLogIndex) {
+              for (let i = lastLogIndex; i < logs.length; i++) {
+                const log = logs[i];
+                const logMsg = log.message || '';
+                let lineType = 'system';
+                if (logMsg.includes('OK') || logMsg.includes('SUCCESS') || logMsg.includes('Success') || logMsg.includes('complete') || logMsg.includes('completed')) {
+                  lineType = 'success';
+                } else if (logMsg.includes('error') || logMsg.includes('failed')) {
+                  lineType = 'error';
+                } else if (logMsg.includes('warning')) {
+                  lineType = 'warning';
+                }
+                
+                printLog(logMsg, lineType);
+              }
+              lastLogIndex = logs.length;
+
+              // Check if completed
+              if (logs.length > 0) {
+                const lastLog = logs[logs.length - 1];
+                const lastLogMsg = lastLog.message || '';
+                if (lastLogMsg.includes('completed') || lastLogMsg.includes('complete') || lastLogMsg.includes('failed')) {
+                  clearInterval(pollIntervalId);
+                  pollIntervalId = null;
+                  statusIndicator.className = 'status-indicator live';
+                  statusLabel.innerText = 'CONSOLE LIVE';
+                  printLog(`DevOps Pipeline run complete. Status: ${lastLogMsg.includes('failed') ? 'FAILED' : 'SUCCESS'}.`, lastLogMsg.includes('failed') ? 'error' : 'success');
+                }
+              }
+            }
+          }
+        } catch (pollErr) {
+          console.error('Error polling deployment logs:', pollErr);
+        }
+      }, 700);
+
+    } catch (err) {
+      printLog(`❌ Deployment trigger failed: ${err.message}`, 'error');
+      statusIndicator.className = 'status-indicator live';
+      statusLabel.innerText = 'CONSOLE LIVE';
+    }
+  });
+
+  // 3. DATA ETL MIGRATION HANDLER
+  const btnEtlMigrate = document.getElementById('btn-etl-migrate');
+  const selectEtlCollection = document.getElementById('etl-collection-target');
+  const selectEtlFormat = document.getElementById('etl-format');
+  const textareaEtlRaw = document.getElementById('etl-raw-data');
+
+  btnEtlMigrate.addEventListener('click', async () => {
+    const collection = selectEtlCollection.value;
+    const format = selectEtlFormat.value;
+    const rawData = textareaEtlRaw.value.trim();
+
+    if (!rawData) {
+      alert('Please paste some raw JSON or CSV data first.');
+      return;
+    }
+
+    showView('terminal');
+    clearTerminal();
+    statusIndicator.className = 'status-indicator working';
+    statusLabel.innerText = 'MIGRATING DATA...';
+    monitorProjectLabel.innerText = `ETL: ${collection}`;
+
+    printLog(`Initializing ETL mapping pipeline targeted at database: "${collection}"...`, 'system');
+    printLog(`Data Format: ${format.toUpperCase()}`, 'system');
+
+    try {
+      const migrateRes = await fetch('/api/migration/migrate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ collection, rawData, format })
+      });
+      const migrateData = await migrateRes.json();
+
+      if (!migrateData.success) {
+        throw new Error(migrateData.error || 'Migration pipeline execution failed');
+      }
+
+      const report = migrateData.data;
+      printLog(`✓ ETL Data Migration Job finished. Job ID: ${report.jobId}`, 'success');
+      printLog(`Records Processed: ${report.totalRecords}`, 'system');
+      printLog(`Successful Imports: ${report.successCount}`, 'success');
+      printLog(`Failed Records: ${report.failCount}`, report.failCount > 0 ? 'warning' : 'system');
+
+      if (report.warnings && report.warnings.length > 0) {
+        printLog(`Data integrity warnings generated:`, 'warning');
+        report.warnings.forEach(warn => printLog(` - ${warn}`, 'warning'));
+      } else {
+        printLog(`✓ Zero integrity constraints violated. DB indexing complete.`, 'success');
+      }
+
+      statusIndicator.className = 'status-indicator live';
+      statusLabel.innerText = 'CONSOLE LIVE';
+
+    } catch (err) {
+      printLog(`❌ ETL Migration failed: ${err.message}`, 'error');
+      statusIndicator.className = 'status-indicator live';
+      statusLabel.innerText = 'CONSOLE LIVE';
+    }
+  });
+});
+
+
+
