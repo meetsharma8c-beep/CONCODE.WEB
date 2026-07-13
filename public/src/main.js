@@ -1451,7 +1451,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }, 1000);
 
     } catch (err) {
-      printLog(`❌ Construction error: ${err.message}`, 'error');
+      printLog(`Error: Construction error: ${err.message}`, 'error');
       statusIndicator.className = 'status-indicator live';
       statusLabel.innerText = 'CONSOLE LIVE';
     }
@@ -1548,7 +1548,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }, 700);
 
     } catch (err) {
-      printLog(`❌ Deployment trigger failed: ${err.message}`, 'error');
+      printLog(`Error: Deployment trigger failed: ${err.message}`, 'error');
       statusIndicator.className = 'status-indicator live';
       statusLabel.innerText = 'CONSOLE LIVE';
     }
@@ -1608,7 +1608,7 @@ document.addEventListener('DOMContentLoaded', () => {
       statusLabel.innerText = 'CONSOLE LIVE';
 
     } catch (err) {
-      printLog(`❌ ETL Migration failed: ${err.message}`, 'error');
+      printLog(`Error: ETL Migration failed: ${err.message}`, 'error');
       statusIndicator.className = 'status-indicator live';
       statusLabel.innerText = 'CONSOLE LIVE';
     }
