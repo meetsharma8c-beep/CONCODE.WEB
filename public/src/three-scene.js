@@ -24,6 +24,10 @@ let orchestratorPanel = null;
 let logoNucleus = null;
 let nucleusLight = null;
 let holographicCage = null;
+let dirLight;
+let platformLights = [];
+let pulseRings = [];
+let holographicMaterials = [];
 
 
 // Logo animation component references
@@ -97,6 +101,73 @@ const PLATFORMS = {
   data:    { x:  12, y: 0, z:  10, color: 0xff3300, label: 'LEGACY DATA MIGRATION' }
 };
 
+function getHologramMaterial(colorHex, baseOpacity = 0.25, wireframe = false) {
+  const material = new THREE.ShaderMaterial({
+    uniforms: {
+      uTime: { value: 0 },
+      uColor: { value: new THREE.Color(colorHex) },
+      uOpacity: { value: baseOpacity },
+      uScanlineFrequency: { value: 12.0 },
+      uScanlineSpeed: { value: 3.0 },
+      uGlowPower: { value: 1.8 },
+      uGlowIntensity: { value: 1.4 }
+    },
+    vertexShader: `
+      varying vec3 vNormal;
+      varying vec3 vViewPosition;
+      varying vec3 vWorldPosition;
+      
+      void main() {
+        vNormal = normalize(normalMatrix * normal);
+        vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+        vViewPosition = -mvPosition.xyz;
+        vWorldPosition = (modelMatrix * vec4(position, 1.0)).xyz;
+        gl_Position = projectionMatrix * mvPosition;
+      }
+    `,
+    fragmentShader: `
+      uniform vec3 uColor;
+      uniform float uOpacity;
+      uniform float uTime;
+      uniform float uScanlineFrequency;
+      uniform float uScanlineSpeed;
+      uniform float uGlowPower;
+      uniform float uGlowIntensity;
+      
+      varying vec3 vNormal;
+      varying vec3 vViewPosition;
+      varying vec3 vWorldPosition;
+      
+      void main() {
+        // Fresnel edge glow
+        vec3 normal = normalize(vNormal);
+        vec3 viewDir = normalize(vViewPosition);
+        float fresnel = pow(1.0 - max(dot(normal, viewDir), 0.0), uGlowPower) * uGlowIntensity;
+        
+        // Scanlines based on world Y position
+        float scanline = sin(vWorldPosition.y * uScanlineFrequency - uTime * uScanlineSpeed) * 0.5 + 0.5;
+        scanline = pow(scanline, 2.0) * 0.5 + 0.5;
+        
+        // Flicker effect
+        float flicker = 0.94 + 0.06 * sin(uTime * 40.0) * cos(uTime * 20.0);
+        
+        // Combine
+        vec3 finalColor = uColor * (0.35 + fresnel * 0.75);
+        float finalOpacity = uOpacity * scanline * (0.25 + fresnel * 0.75) * flicker;
+        
+        gl_FragColor = vec4(finalColor, finalOpacity);
+      }
+    `,
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    side: THREE.DoubleSide,
+    wireframe: wireframe
+  });
+  holographicMaterials.push(material);
+  return material;
+}
+
 function init3DScene() {
   const canvas = document.getElementById('webgl-canvas');
   if (!canvas) return;
@@ -147,7 +218,7 @@ function setupLighting() {
   scene.add(ambient);
 
   // Key directional light — from top-right
-  const dirLight = new THREE.DirectionalLight(0xd0f4ff, 0.6);
+  dirLight = new THREE.DirectionalLight(0xd0f4ff, 0.6);
   dirLight.position.set(15, 25, 10);
   dirLight.castShadow = true;
   dirLight.shadow.mapSize.width = 1024;
@@ -170,23 +241,45 @@ function setupLighting() {
   scene.add(plinthOrangeLight);
 
   // Platform accent lights
+  platformLights = [];
   Object.values(PLATFORMS).forEach(p => {
     const light = new THREE.PointLight(p.color, 0.8, 12, 2);
     light.position.set(p.x, 2, p.z);
     scene.add(light);
+    platformLights.push({ light, baseIntensity: 0.8, speed: 2 + Math.random() * 2, offset: Math.random() * 5 });
   });
+}
+
+function createRadialFadeTexture() {
+  const canvas = document.createElement('canvas');
+  canvas.width = 256;
+  canvas.height = 256;
+  const ctx = canvas.getContext('2d');
+  
+  const grad = ctx.createRadialGradient(128, 128, 0, 128, 128, 128);
+  grad.addColorStop(0, 'rgba(255, 255, 255, 1)');
+  grad.addColorStop(0.5, 'rgba(255, 255, 255, 0.7)');
+  grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
+  
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, 256, 256);
+  
+  const texture = new THREE.CanvasTexture(canvas);
+  return texture;
 }
 
 // ==========================================
 // GRID FLOOR
 // ==========================================
 function buildGridFloor() {
-  // Dark ground plane
-  const groundGeom = new THREE.PlaneGeometry(80, 80);
+  // Circular ground plane expanded significantly to spread the base color
+  const groundGeom = new THREE.CircleGeometry(120, 64);
   const groundMat = new THREE.MeshStandardMaterial({
-    color: 0x040a12,
+    color: 0x030712,
     roughness: 0.95,
-    metalness: 0.1
+    metalness: 0.1,
+    alphaMap: createRadialFadeTexture(),
+    transparent: true
   });
   const ground = new THREE.Mesh(groundGeom, groundMat);
   ground.rotation.x = -Math.PI / 2;
@@ -194,11 +287,37 @@ function buildGridFloor() {
   ground.receiveShadow = true;
   scene.add(ground);
 
-  // Grid lines
-  const gridHelper = new THREE.GridHelper(60, 60, 0x0a2040, 0x061020);
+  // Expanded fading grid lines helper (size 240 with 240 grid lines)
+  const gridHelper = new THREE.GridHelper(240, 240, 0x0a2040, 0x061020);
   gridHelper.position.y = -1.49;
-  gridHelper.material.opacity = 0.4;
-  gridHelper.material.transparent = true;
+  
+  // Custom shader for grid lines to fade out smoothly at the boundaries
+  gridHelper.material = new THREE.ShaderMaterial({
+    uniforms: {
+      uColor: { value: new THREE.Color(0x0a2040) }
+    },
+    vertexShader: `
+      varying vec3 vWorldPosition;
+      void main() {
+        vWorldPosition = (modelMatrix * vec4(position, 1.0)).xyz;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      varying vec3 vWorldPosition;
+      uniform vec3 uColor;
+      void main() {
+        float dist = length(vWorldPosition.xz);
+        // Start fading at radius 50 and completely disappear at 115
+        float fade = 1.0 - smoothstep(50.0, 115.0, dist);
+        gl_FragColor = vec4(uColor, fade * 0.45);
+      }
+    `,
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending
+  });
+  
   scene.add(gridHelper);
 }
 
@@ -235,15 +354,10 @@ function buildStarfield() {
 function createDualLayerBar(w, h, d, glowColor, metalColor) {
   const barGroup = new THREE.Group();
   
-  // 1. Outer dark metallic casing
+  // 1. Outer holographic casing
   const outerGeom = new THREE.BoxGeometry(w, h, d);
-  const outerMat = new THREE.MeshStandardMaterial({
-    color: metalColor || 0x121c26,
-    roughness: 0.15,
-    metalness: 0.9
-  });
+  const outerMat = getHologramMaterial(glowColor, 0.08);
   const outerMesh = new THREE.Mesh(outerGeom, outerMat);
-  outerMesh.castShadow = true;
   barGroup.add(outerMesh);
   
   // 2. Inner glowing core (slightly thinned but slightly taller to peek out)
@@ -260,7 +374,7 @@ function createDualLayerBar(w, h, d, glowColor, metalColor) {
   // 3. Glowing edge outline
   const edges = new THREE.LineSegments(
     new THREE.EdgesGeometry(outerGeom),
-    new THREE.LineBasicMaterial({ color: glowColor, transparent: true, opacity: 0.45 })
+    new THREE.LineBasicMaterial({ color: glowColor, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending })
   );
   barGroup.add(edges);
   
@@ -285,24 +399,19 @@ function buildCentralPlinth() {
     cragPos.setZ(i, cragPos.getZ(i) + (Math.random() - 0.5) * 0.8);
   }
   cragGeom.computeVertexNormals();
-  const cragMat = new THREE.MeshStandardMaterial({
-    color: 0x0c1520,
-    roughness: 0.85,
-    metalness: 0.2,
-    flatShading: true
-  });
+  const cragMat = getHologramMaterial(0x00f0ff, 0.08);
   const crag = new THREE.Mesh(cragGeom, cragMat);
   crag.position.y = -1.5;
-  crag.castShadow = true;
+  const cragEdges = new THREE.LineSegments(
+    new THREE.EdgesGeometry(cragGeom),
+    new THREE.LineBasicMaterial({ color: 0x00f0ff, transparent: true, opacity: 0.45, blending: THREE.AdditiveBlending })
+  );
+  crag.add(cragEdges);
   centralGroup.add(crag);
 
   // ─── Outer Shield / Eye Frame ───
-  // Primary metallic torus — the eye outline
-  const shieldMat = new THREE.MeshStandardMaterial({
-    color: 0x5a7a95,
-    roughness: 0.1,
-    metalness: 0.95
-  });
+  // Primary holographic torus — the eye outline
+  const shieldMat = getHologramMaterial(0x00f0ff, 0.15);
 
   // Stretched torus segments forming a split C-bracket frame
   const leftTorusGeom = new THREE.TorusGeometry(3.2, 0.45, 16, 64, Math.PI * 0.72);
@@ -310,6 +419,11 @@ function buildCentralPlinth() {
   eyeOuter.rotation.x = Math.PI / 2;
   eyeOuter.rotation.z = Math.PI * 0.64; // align on left
   eyeOuter.position.y = 1.5;
+  const leftEdges = new THREE.LineSegments(
+    new THREE.EdgesGeometry(leftTorusGeom),
+    new THREE.LineBasicMaterial({ color: 0x00f0ff, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending })
+  );
+  eyeOuter.add(leftEdges);
   centralGroup.add(eyeOuter);
 
   const rightTorusGeom = new THREE.TorusGeometry(3.2, 0.45, 16, 64, Math.PI * 0.72);
@@ -317,40 +431,47 @@ function buildCentralPlinth() {
   innerShield.rotation.x = Math.PI / 2;
   innerShield.rotation.z = -Math.PI * 0.36; // align on right
   innerShield.position.y = 1.5;
+  const rightEdges = new THREE.LineSegments(
+    new THREE.EdgesGeometry(rightTorusGeom),
+    new THREE.LineBasicMaterial({ color: 0x00f0ff, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending })
+  );
+  innerShield.add(rightEdges);
   centralGroup.add(innerShield);
 
   // Shield backplate — solid disc behind the code symbol
   const backplateGeom = new THREE.CylinderGeometry(2.8, 2.8, 0.1, 48);
-  const backplateMat = new THREE.MeshStandardMaterial({
-    color: 0x0a1520,
-    roughness: 0.3,
-    metalness: 0.8
-  });
+  const backplateMat = getHologramMaterial(0x005577, 0.08);
   backplate = new THREE.Mesh(backplateGeom, backplateMat);
   backplate.position.y = 1.5;
   backplate.scale.set(1.25, 1, 0.8);
+  const bpEdges = new THREE.LineSegments(
+    new THREE.EdgesGeometry(backplateGeom),
+    new THREE.LineBasicMaterial({ color: 0x00f0ff, transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending })
+  );
+  backplate.add(bpEdges);
   centralGroup.add(backplate);
 
   // ─── Glowing Cyan Inner Ring (iris) ───
   const irisGeom = new THREE.TorusGeometry(2.0, 0.1, 12, 48);
-  const irisMat = new THREE.MeshBasicMaterial({
-    color: 0x00f0ff,
-    transparent: true,
-    opacity: 0.6
-  });
+  const irisMat = getHologramMaterial(0x00f0ff, 0.25);
   iris = new THREE.Mesh(irisGeom, irisMat);
   iris.rotation.x = Math.PI / 2;
   iris.position.y = 1.5;
+  const irisEdges = new THREE.LineSegments(
+    new THREE.EdgesGeometry(irisGeom),
+    new THREE.LineBasicMaterial({ color: 0x00f0ff, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending })
+  );
+  iris.add(irisEdges);
   centralGroup.add(iris);
 
   // ─── Central </> Code Symbol ───
   // Left bracket < (two angled bars forming a chevron)
   leftBracket = new THREE.Group();
-  const lb1 = createDualLayerBar(0.18, 0.75, 0.4, 0x00f0ff, 0x121c26);
+  const lb1 = createDualLayerBar(0.18, 0.75, 0.4, 0x00f0ff);
   lb1.position.set(-0.2, 0.35, 0);
   lb1.rotation.z = Math.PI / 4.5;
   leftBracket.add(lb1);
-  const lb2 = createDualLayerBar(0.18, 0.75, 0.4, 0x00f0ff, 0x121c26);
+  const lb2 = createDualLayerBar(0.18, 0.75, 0.4, 0x00f0ff);
   lb2.position.set(-0.2, -0.35, 0);
   lb2.rotation.z = -Math.PI / 4.5;
   leftBracket.add(lb2);
@@ -358,18 +479,18 @@ function buildCentralPlinth() {
   centralGroup.add(leftBracket);
 
   // Center slash /
-  slash = createDualLayerBar(0.15, 1.6, 0.35, 0x00f0ff, 0x121c26);
+  slash = createDualLayerBar(0.15, 1.6, 0.35, 0x00f0ff);
   slash.position.set(0, 1.5, 0);
   slash.rotation.z = -Math.PI / 6;
   centralGroup.add(slash);
 
   // Right bracket > (two angled bars)
   rightBracket = new THREE.Group();
-  const rb1 = createDualLayerBar(0.18, 0.75, 0.4, 0x00f0ff, 0x121c26);
+  const rb1 = createDualLayerBar(0.18, 0.75, 0.4, 0x00f0ff);
   rb1.position.set(0.2, 0.35, 0);
   rb1.rotation.z = -Math.PI / 4.5;
   rightBracket.add(rb1);
-  const rb2 = createDualLayerBar(0.18, 0.75, 0.4, 0x00f0ff, 0x121c26);
+  const rb2 = createDualLayerBar(0.18, 0.75, 0.4, 0x00f0ff);
   rb2.position.set(0.2, -0.35, 0);
   rb2.rotation.z = Math.PI / 4.5;
   rightBracket.add(rb2);
@@ -425,24 +546,18 @@ function buildCentralPlinth() {
   holographicCage.add(cagePoints);
   centralGroup.add(holographicCage);
 
+  // Energy waves disabled
+
   // ─── Glowing Platform Disc ───
   const discGeom = new THREE.CylinderGeometry(2.5, 2.5, 0.06, 48);
-  const discMat = new THREE.MeshBasicMaterial({
-    color: 0x00f0ff,
-    transparent: true,
-    opacity: 0.12
-  });
+  const discMat = getHologramMaterial(0x00f0ff, 0.08);
   const disc = new THREE.Mesh(discGeom, discMat);
-  disc.position.y = 0.3;
+  disc.position.y = 1.0; // Rest perfectly under the eye torus frame bottom (1.05) to avoid clipping
   centralGroup.add(disc);
 
   // ─── Orange Base Emission Ring ───
   const orangeRingGeom = new THREE.TorusGeometry(4.5, 0.2, 8, 48);
-  const orangeRingMat = new THREE.MeshBasicMaterial({
-    color: 0xff7700,
-    transparent: true,
-    opacity: 0.45
-  });
+  const orangeRingMat = getHologramMaterial(0xff7700, 0.15);
   const orangeRing = new THREE.Mesh(orangeRingGeom, orangeRingMat);
   orangeRing.rotation.x = Math.PI / 2;
   orangeRing.position.y = -0.8;
@@ -450,18 +565,14 @@ function buildCentralPlinth() {
 
   // Secondary orange glow ring (wider, dimmer)
   const outerGlowGeom = new THREE.TorusGeometry(5.2, 0.1, 8, 48);
-  const outerGlowMat = new THREE.MeshBasicMaterial({
-    color: 0xff5500,
-    transparent: true,
-    opacity: 0.2
-  });
+  const outerGlowMat = getHologramMaterial(0xff5500, 0.08);
   const outerGlow = new THREE.Mesh(outerGlowGeom, outerGlowMat);
   outerGlow.rotation.x = Math.PI / 2;
   outerGlow.position.y = -1.0;
   centralGroup.add(outerGlow);
 
   // ─── "CONCODE" 3D Block Text Label (below plinth) ───
-  logoTextSprite = build3DText(centralGroup, 'CONCODE', 0, -2.4, 3.2, 0x8aa5c0);
+  logoTextSprite = build3DText(centralGroup, 'CONCODE', 0, -2.4, 3.2, 0x00f0ff);
 
   // ─── "WE CODE. YOU GROW." Tagline ───
   taglineSprite = buildLogoText(centralGroup, 'WE CODE. YOU GROW.', 0, -3.4, 3.2, 0xff7700, 22, 640);
@@ -475,12 +586,7 @@ function buildCentralPlinth() {
 
   // ─── Holographic Orbital Rings ───
   const ring1Geom = new THREE.TorusGeometry(4.0, 0.04, 8, 64);
-  const ring1Mat = new THREE.MeshBasicMaterial({
-    color: 0x00f0ff,
-    transparent: true,
-    opacity: 0.35,
-    blending: THREE.AdditiveBlending
-  });
+  const ring1Mat = getHologramMaterial(0x00f0ff, 0.2);
   const orbitRing1 = new THREE.Mesh(ring1Geom, ring1Mat);
   orbitRing1.position.y = 1.5;
   orbitRing1.rotation.x = Math.PI / 3;
@@ -489,12 +595,7 @@ function buildCentralPlinth() {
   centralOrbitRings.push({ mesh: orbitRing1, axisX: 0.15, axisY: 0.4, axisZ: 0.08 });
 
   const ring2Geom = new THREE.TorusGeometry(4.4, 0.03, 8, 64);
-  const ring2Mat = new THREE.MeshBasicMaterial({
-    color: 0xff7700,
-    transparent: true,
-    opacity: 0.25,
-    blending: THREE.AdditiveBlending
-  });
+  const ring2Mat = getHologramMaterial(0xff7700, 0.15);
   const orbitRing2 = new THREE.Mesh(ring2Geom, ring2Mat);
   orbitRing2.position.y = 1.5;
   orbitRing2.rotation.x = -Math.PI / 4;
@@ -780,11 +881,7 @@ function build3DText(parent, textStr, x, y, z, color) {
   const textGroup = new THREE.Group();
   textGroup.position.set(x, y, z);
 
-  const mat = new THREE.MeshStandardMaterial({
-    color: color,
-    metalness: 0.92,
-    roughness: 0.15
-  });
+  const mat = getHologramMaterial(color, 0.2);
 
   const letterSpacing = 0.65;
   const startX = -((textStr.length - 1) * letterSpacing) / 2;
@@ -793,6 +890,19 @@ function build3DText(parent, textStr, x, y, z, color) {
     const char = textStr[idx];
     const charGroup = new THREE.Group();
     charGroup.position.x = startX + idx * letterSpacing;
+
+    // Intercept additions to automatically append holographic wireframe outlines
+    const originalAdd = charGroup.add.bind(charGroup);
+    charGroup.add = function(mesh) {
+      if (mesh instanceof THREE.Mesh) {
+        const edges = new THREE.LineSegments(
+          new THREE.EdgesGeometry(mesh.geometry),
+          new THREE.LineBasicMaterial({ color: color, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending })
+        );
+        mesh.add(edges);
+      }
+      originalAdd(mesh);
+    };
 
     if (char === 'C') {
       const vL = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.6, 0.2), mat);
@@ -871,20 +981,13 @@ function buildDesignStudio() {
   group.position.set(cfg.x, 0, cfg.z);
 
   // Platform base
-  const base = createPlatformBase(4.5, 0.4, 4.5);
+  const base = createPlatformBase(4.5, 0.4, 4.5, cfg.color);
   group.add(base);
   addPlatformDetails(group, 'design', cfg.color);
 
   // Holographic floating screens (3 at different angles)
-  const screenMat = new THREE.MeshStandardMaterial({
-    color: 0x00f0ff,
-    transparent: true,
-    opacity: 0.15,
-    metalness: 0.5,
-    roughness: 0.3,
-    side: THREE.DoubleSide
-  });
-  const screenEdgeMat = new THREE.LineBasicMaterial({ color: 0x00f0ff, transparent: true, opacity: 0.7 });
+  const screenMat = getHologramMaterial(cfg.color, 0.15);
+  const screenEdgeMat = new THREE.LineBasicMaterial({ color: 0x00f0ff, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending });
 
   for (let i = 0; i < 3; i++) {
     const w = 1.2 + Math.random() * 0.5;
@@ -915,17 +1018,11 @@ function buildDesignStudio() {
 
   // Floating wireframe cube
   const cubeGeom = new THREE.BoxGeometry(0.7, 0.7, 0.7);
-  const cubeMat = new THREE.MeshStandardMaterial({
-    color: 0x00f0ff,
-    transparent: true,
-    opacity: 0.1,
-    metalness: 0.9,
-    roughness: 0.1
-  });
+  const cubeMat = getHologramMaterial(0x00f0ff, 0.1);
   const cube = new THREE.Mesh(cubeGeom, cubeMat);
   const cubeEdges = new THREE.LineSegments(
     new THREE.EdgesGeometry(cubeGeom),
-    new THREE.LineBasicMaterial({ color: 0x00f0ff })
+    new THREE.LineBasicMaterial({ color: 0x00f0ff, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending })
   );
   cube.add(cubeEdges);
   cube.position.set(1.5, 2.5, 0.8);
@@ -954,13 +1051,13 @@ function buildDevOpsPlatform() {
   group.position.set(cfg.x, 0, cfg.z);
 
   // Platform base
-  const base = createPlatformBase(5, 0.4, 5);
+  const base = createPlatformBase(5, 0.4, 5, cfg.color);
   group.add(base);
   addPlatformDetails(group, 'ops', cfg.color);
 
   // Dual rockets
   for (let i = 0; i < 2; i++) {
-    const rocket = buildRocket();
+    const rocket = buildRocket(cfg.color);
     rocket.position.set(-1.2 + i * 2.4, 0, -1.0);
     rocket.scale.set(1.2, 1.2, 1.2);
     group.add(rocket);
@@ -968,20 +1065,25 @@ function buildDevOpsPlatform() {
 
   // Satellite dish on mast
   const mastGeom = new THREE.CylinderGeometry(0.06, 0.06, 1.5, 8);
-  const mastMat = new THREE.MeshStandardMaterial({ color: 0x555555, metalness: 0.8 });
+  const mastMat = getHologramMaterial(cfg.color, 0.15);
   const mast = new THREE.Mesh(mastGeom, mastMat);
+  const mastEdges = new THREE.LineSegments(
+    new THREE.EdgesGeometry(mastGeom),
+    new THREE.LineBasicMaterial({ color: cfg.color, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending })
+  );
+  mast.add(mastEdges);
   mast.position.set(0, 0.75, 1.2);
   group.add(mast);
 
   // Dish
   const dishGeom = new THREE.SphereGeometry(0.6, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2);
-  const dishMat = new THREE.MeshStandardMaterial({
-    color: 0x00ff77,
-    metalness: 0.7,
-    roughness: 0.2,
-    side: THREE.DoubleSide
-  });
+  const dishMat = getHologramMaterial(cfg.color, 0.15);
   radarDish = new THREE.Mesh(dishGeom, dishMat);
+  const dishEdges = new THREE.LineSegments(
+    new THREE.EdgesGeometry(dishGeom),
+    new THREE.LineBasicMaterial({ color: cfg.color, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending })
+  );
+  radarDish.add(dishEdges);
   radarDish.position.set(0, 1.6, 1.2);
   radarDish.rotation.x = Math.PI / 4;
   
@@ -1004,25 +1106,38 @@ function buildDevOpsPlatform() {
   // Solar panel arms on satellite
   for (let side = -1; side <= 1; side += 2) {
     const armGeom = new THREE.BoxGeometry(0.8, 0.02, 0.4);
-    const armMat = new THREE.MeshStandardMaterial({ color: 0x1a3a5a, metalness: 0.6 });
+    const armMat = getHologramMaterial(cfg.color, 0.12);
     const arm = new THREE.Mesh(armGeom, armMat);
+    const armEdges = new THREE.LineSegments(
+      new THREE.EdgesGeometry(armGeom),
+      new THREE.LineBasicMaterial({ color: cfg.color, transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending })
+    );
+    arm.add(armEdges);
     arm.position.set(side * 0.8, 1.5, 1.2);
     group.add(arm);
 
     // Solar cells
     const cellGeom = new THREE.BoxGeometry(0.6, 0.04, 0.3);
-    const cellMat = new THREE.MeshStandardMaterial({ color: 0x2060aa, metalness: 0.9, roughness: 0.1 });
+    const cellMat = getHologramMaterial(0x00aaff, 0.2);
     const cell = new THREE.Mesh(cellGeom, cellMat);
+    const cellEdges = new THREE.LineSegments(
+      new THREE.EdgesGeometry(cellGeom),
+      new THREE.LineBasicMaterial({ color: 0x00f0ff, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending })
+    );
+    cell.add(cellEdges);
     cell.position.set(side * 0.8, 1.52, 1.2);
     group.add(cell);
   }
 
   // Monitoring screens (small floating rectangles)
-  const monitorMat = new THREE.MeshBasicMaterial({ color: 0x00ff77, transparent: true, opacity: 0.2, side: THREE.DoubleSide });
+  const monitorMat = getHologramMaterial(cfg.color, 0.2);
   for (let i = 0; i < 2; i++) {
     const monGeom = new THREE.PlaneGeometry(0.8, 0.5);
     const mon = new THREE.Mesh(monGeom, monitorMat);
-    const monEdges = new THREE.LineSegments(new THREE.EdgesGeometry(monGeom), new THREE.LineBasicMaterial({ color: 0x00ff77 }));
+    const monEdges = new THREE.LineSegments(
+      new THREE.EdgesGeometry(monGeom),
+      new THREE.LineBasicMaterial({ color: 0x00ff77, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending })
+    );
     mon.add(monEdges);
     mon.position.set(1.5, 1.5 + i * 0.7, -0.5 + i * 0.3);
     mon.rotation.y = -0.4;
@@ -1050,27 +1165,22 @@ function buildApiGateway() {
   group.position.set(cfg.x, 0, cfg.z);
 
   // Platform base
-  const base = createPlatformBase(5, 0.4, 5);
+  const base = createPlatformBase(5, 0.4, 5, cfg.color);
   group.add(base);
   addPlatformDetails(group, 'core', cfg.color);
 
   // Fortress monolith server stacks (3 boxes)
-  const monolithMat = new THREE.MeshStandardMaterial({
-    color: 0x121e2e,
-    roughness: 0.15,
-    metalness: 0.9
-  });
+  const monolithMat = getHologramMaterial(cfg.color, 0.15);
 
   for (let i = 0; i < 3; i++) {
     const h = 1.5 + i * 0.5;
     const monolith = new THREE.Mesh(new THREE.BoxGeometry(0.9, h, 0.9), monolithMat);
     monolith.position.set(-1.0 + i * 1.0, h / 2, -0.5);
-    monolith.castShadow = true;
 
     // Neon edge glow
     const edges = new THREE.LineSegments(
       new THREE.EdgesGeometry(new THREE.BoxGeometry(0.9, h, 0.9)),
-      new THREE.LineBasicMaterial({ color: 0xffaa00 })
+      new THREE.LineBasicMaterial({ color: cfg.color, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending })
     );
     monolith.add(edges);
 
@@ -1107,24 +1217,15 @@ function buildApiGateway() {
 
   // Glowing API orb
   const orbGeom = new THREE.SphereGeometry(0.6, 24, 24);
-  const orbMat = new THREE.MeshBasicMaterial({
-    color: 0x00ccff,
-    transparent: true,
-    opacity: 0.5
-  });
+  const orbMat = getHologramMaterial(0x00ccff, 0.35);
   const orb = new THREE.Mesh(orbGeom, orbMat);
   orb.position.set(-1.5, 1.5, 1.2);
   group.add(orb);
-  orbs.push({ mesh: orb, baseOpacity: 0.5 });
+  orbs.push({ mesh: orb, baseOpacity: 0.35 });
 
   // Orb glow halo
   const haloGeom = new THREE.RingGeometry(0.7, 1.0, 32);
-  const haloMat = new THREE.MeshBasicMaterial({
-    color: 0x00ccff,
-    transparent: true,
-    opacity: 0.15,
-    side: THREE.DoubleSide
-  });
+  const haloMat = getHologramMaterial(0x00ccff, 0.15);
   const halo = new THREE.Mesh(haloGeom, haloMat);
   halo.position.set(-1.5, 1.5, 1.2);
   halo.rotation.x = Math.PI / 2;
@@ -1132,16 +1233,26 @@ function buildApiGateway() {
 
   // Security vault door (cylinder)
   const vaultGeom = new THREE.CylinderGeometry(0.5, 0.5, 0.15, 24);
-  const vaultMat = new THREE.MeshStandardMaterial({ color: 0x3a3a3a, metalness: 0.95, roughness: 0.1 });
+  const vaultMat = getHologramMaterial(cfg.color, 0.15);
   const vault = new THREE.Mesh(vaultGeom, vaultMat);
+  const vaultEdges = new THREE.LineSegments(
+    new THREE.EdgesGeometry(vaultGeom),
+    new THREE.LineBasicMaterial({ color: cfg.color, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending })
+  );
+  vault.add(vaultEdges);
   vault.rotation.x = Math.PI / 2;
   vault.position.set(1.5, 0.5, 1.5);
   group.add(vault);
 
   // Vault handle
   const handleGeom = new THREE.TorusGeometry(0.15, 0.03, 8, 16);
-  const handleMat = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, metalness: 0.9 });
+  const handleMat = getHologramMaterial(0xffaa00, 0.2);
   const handle = new THREE.Mesh(handleGeom, handleMat);
+  const handleEdges = new THREE.LineSegments(
+    new THREE.EdgesGeometry(handleGeom),
+    new THREE.LineBasicMaterial({ color: 0xffaa00, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending })
+  );
+  handle.add(handleEdges);
   handle.position.set(1.5, 0.5, 1.59);
   group.add(handle);
 
@@ -1165,19 +1276,12 @@ function buildDataMigration() {
   group.position.set(cfg.x, 0, cfg.z);
 
   // Platform base
-  const base = createPlatformBase(5, 0.4, 5);
+  const base = createPlatformBase(5, 0.4, 5, cfg.color);
   group.add(base);
   addPlatformDetails(group, 'data', cfg.color);
 
   // Crystal city columns — translucent blue towers
-  const crystalMat = new THREE.MeshStandardMaterial({
-    color: 0x2080ff,
-    transparent: true,
-    opacity: 0.45,
-    metalness: 0.8,
-    roughness: 0.1,
-    side: THREE.DoubleSide
-  });
+  const crystalMat = getHologramMaterial(cfg.color, 0.25);
 
   const crystalPositions = [
     { x: -0.8, z: -0.6, h: 2.5, r: 0.18 },
@@ -1192,14 +1296,14 @@ function buildDataMigration() {
 
   crystalPositions.forEach((c, i) => {
     const geom = new THREE.CylinderGeometry(c.r * 0.7, c.r, c.h, 6);
-    const crystal = new THREE.Mesh(geom, crystalMat.clone());
-    crystal.material.opacity = 0.3 + Math.random() * 0.3;
+    // Clone material so each has its own instance if needed, or share the single custom material
+    const crystal = new THREE.Mesh(geom, crystalMat);
     crystal.position.set(c.x - 0.5, c.h / 2, c.z + 0.5);
 
     // Edge glow
     const edges = new THREE.LineSegments(
       new THREE.EdgesGeometry(geom),
-      new THREE.LineBasicMaterial({ color: 0x40a0ff, transparent: true, opacity: 0.6 })
+      new THREE.LineBasicMaterial({ color: 0x40a0ff, transparent: true, opacity: 0.75, blending: THREE.AdditiveBlending })
     );
     crystal.add(edges);
     group.add(crystal);
@@ -1216,16 +1320,12 @@ function buildDataMigration() {
 
   // Central processor cube
   const procGeom = new THREE.BoxGeometry(1, 1, 1);
-  const procMat = new THREE.MeshStandardMaterial({
-    color: 0x0a1a2a,
-    metalness: 0.95,
-    roughness: 0.1
-  });
+  const procMat = getHologramMaterial(cfg.color, 0.15);
   const processor = new THREE.Mesh(procGeom, procMat);
   processor.position.set(1.5, 0.7, -1.0);
   const procEdges = new THREE.LineSegments(
     new THREE.EdgesGeometry(procGeom),
-    new THREE.LineBasicMaterial({ color: 0xff3300 })
+    new THREE.LineBasicMaterial({ color: 0xff3300, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending })
   );
   processor.add(procEdges);
   group.add(processor);
@@ -1233,7 +1333,7 @@ function buildDataMigration() {
   // Small orbiting cubes around the processor
   for (let i = 0; i < 3; i++) {
     const miniGeom = new THREE.BoxGeometry(0.2, 0.2, 0.2);
-    const miniMat = new THREE.MeshBasicMaterial({ color: 0xff3300, transparent: true, opacity: 0.6 });
+    const miniMat = getHologramMaterial(cfg.color, 0.35);
     const miniCube = new THREE.Mesh(miniGeom, miniMat);
     miniCube.position.set(1.5, 0.7, -1.0);
     group.add(miniCube);
@@ -1322,22 +1422,7 @@ function createVerticalGradientTexture(colorHex) {
 }
 
 function addPlatformDetails(group, key, color) {
-  // 1. Light Column
-  const beamGeom = new THREE.CylinderGeometry(2.0, 2.0, 14, 16, 1, true);
-  const colorStr = '#' + new THREE.Color(color).getHexString();
-  const beamTexture = createVerticalGradientTexture(colorStr);
-  const beamMat = new THREE.MeshBasicMaterial({
-    map: beamTexture,
-    transparent: true,
-    opacity: 0,
-    side: THREE.DoubleSide,
-    blending: THREE.AdditiveBlending,
-    depthWrite: false
-  });
-  const beam = new THREE.Mesh(beamGeom, beamMat);
-  beam.position.y = 7;
-  group.add(beam);
-  lightColumns[key] = beam;
+  // 1. Light Column (disabled)
 
   // 2. Scan Ring
   const ringGeom = new THREE.RingGeometry(2.35, 2.45, 32);
@@ -1359,22 +1444,21 @@ function addPlatformDetails(group, key, color) {
 // ==========================================
 // HELPER: Create platform base
 // ==========================================
-function createPlatformBase(w, h, d) {
+function createPlatformBase(w, h, d, colorHex) {
   const baseGeom = new THREE.BoxGeometry(w, h, d);
-  const baseMat = new THREE.MeshStandardMaterial({
-    color: 0x0a1520,
-    roughness: 0.4,
-    metalness: 0.7
-  });
+  const baseMat = getHologramMaterial(colorHex || 0x00f0ff, 0.06);
   const baseMesh = new THREE.Mesh(baseGeom, baseMat);
   baseMesh.position.y = -h / 2 - 0.1;
-  baseMesh.receiveShadow = true;
-  baseMesh.castShadow = true;
+
+  // Add an inner wireframe overlay
+  const wireframeMat = getHologramMaterial(colorHex || 0x00f0ff, 0.1, true);
+  const wireframeMesh = new THREE.Mesh(baseGeom, wireframeMat);
+  baseMesh.add(wireframeMesh);
 
   // Glowing edge wireframe
   const edges = new THREE.LineSegments(
     new THREE.EdgesGeometry(baseGeom),
-    new THREE.LineBasicMaterial({ color: 0x0a3050, transparent: true, opacity: 0.5 })
+    new THREE.LineBasicMaterial({ color: colorHex || 0x00f0ff, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending })
   );
   baseMesh.add(edges);
 
@@ -1384,35 +1468,55 @@ function createPlatformBase(w, h, d) {
 // ==========================================
 // HELPER: Build a rocket
 // ==========================================
-function buildRocket() {
+function buildRocket(colorHex = 0x00ff77) {
   const rocketGroup = new THREE.Group();
 
   // Launch pad
   const padGeom = new THREE.CylinderGeometry(0.4, 0.45, 0.1, 12);
-  const padMat = new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.8 });
+  const padMat = getHologramMaterial(colorHex, 0.12);
   const pad = new THREE.Mesh(padGeom, padMat);
+  const padEdges = new THREE.LineSegments(
+    new THREE.EdgesGeometry(padGeom),
+    new THREE.LineBasicMaterial({ color: colorHex, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending })
+  );
+  pad.add(padEdges);
   pad.position.y = 0.05;
   rocketGroup.add(pad);
 
   // Body
   const bodyGeom = new THREE.CylinderGeometry(0.18, 0.2, 1.4, 8);
-  const bodyMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.85, roughness: 0.2 });
+  const bodyMat = getHologramMaterial(colorHex, 0.18);
   const body = new THREE.Mesh(bodyGeom, bodyMat);
+  const bodyEdges = new THREE.LineSegments(
+    new THREE.EdgesGeometry(bodyGeom),
+    new THREE.LineBasicMaterial({ color: colorHex, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending })
+  );
+  body.add(bodyEdges);
   body.position.y = 0.8;
   rocketGroup.add(body);
 
   // Nose cone
   const noseGeom = new THREE.ConeGeometry(0.18, 0.4, 8);
-  const noseMat = new THREE.MeshStandardMaterial({ color: 0xff4444, metalness: 0.8, roughness: 0.2 });
+  const noseMat = getHologramMaterial(0xff3333, 0.25);
   const nose = new THREE.Mesh(noseGeom, noseMat);
+  const noseEdges = new THREE.LineSegments(
+    new THREE.EdgesGeometry(noseGeom),
+    new THREE.LineBasicMaterial({ color: 0xff3333, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending })
+  );
+  nose.add(noseEdges);
   nose.position.y = 1.7;
   rocketGroup.add(nose);
 
   // Fins (4 fins)
-  const finMat = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.7 });
+  const finMat = getHologramMaterial(colorHex, 0.15);
   for (let i = 0; i < 4; i++) {
     const finGeom = new THREE.BoxGeometry(0.02, 0.3, 0.15);
     const fin = new THREE.Mesh(finGeom, finMat);
+    const finEdges = new THREE.LineSegments(
+      new THREE.EdgesGeometry(finGeom),
+      new THREE.LineBasicMaterial({ color: colorHex, transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending })
+    );
+    fin.add(finEdges);
     const angle = (i / 4) * Math.PI * 2;
     fin.position.set(Math.cos(angle) * 0.2, 0.2, Math.sin(angle) * 0.2);
     fin.rotation.y = angle;
@@ -1443,15 +1547,25 @@ function buildDrone(parent, x, y, z, color) {
 
   // Body
   const bodyGeom = new THREE.SphereGeometry(0.15, 8, 6);
-  const bodyMat = new THREE.MeshStandardMaterial({ color: 0x444444, metalness: 0.8 });
+  const bodyMat = getHologramMaterial(color, 0.2);
   const body = new THREE.Mesh(bodyGeom, bodyMat);
+  const bodyEdges = new THREE.LineSegments(
+    new THREE.EdgesGeometry(bodyGeom),
+    new THREE.LineBasicMaterial({ color: color, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending })
+  );
+  body.add(bodyEdges);
   droneGroup.add(body);
 
   // Rotors (4 arms)
-  const armMat = new THREE.MeshStandardMaterial({ color: 0x666666 });
+  const armMat = getHologramMaterial(color, 0.15);
   for (let i = 0; i < 4; i++) {
     const armGeom = new THREE.BoxGeometry(0.4, 0.02, 0.03);
     const arm = new THREE.Mesh(armGeom, armMat);
+    const armEdges = new THREE.LineSegments(
+      new THREE.EdgesGeometry(armGeom),
+      new THREE.LineBasicMaterial({ color: color, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending })
+    );
+    arm.add(armEdges);
     arm.rotation.y = (i / 4) * Math.PI * 2;
     droneGroup.add(arm);
 
@@ -1649,25 +1763,38 @@ function animate() {
   const delta = clock.getDelta();
   const elapsed = clock.getElapsedTime();
 
+  // Update uTime for all holographic materials to scroll scanlines
+  holographicMaterials.forEach(mat => {
+    if (mat.uniforms && mat.uniforms.uTime) {
+      mat.uniforms.uTime.value = elapsed;
+    }
+  });
+
   const viewport = SECTION_VIEWPORTS[activeSection] || SECTION_VIEWPORTS.hero;
 
   // Smoothly interpolate camera target look-at coordinates
   currentLookAt.lerp(viewport.lookAt, 0.05);
 
   // Handle auto-rotation vs. interactive drag camera positioning
+  const isMobile = window.innerWidth < 768;
+  const radiusMultiplier = isMobile ? (window.innerWidth < 480 ? 1.85 : 1.45) : 1.0;
+  const elevationMultiplier = isMobile ? 1.25 : 1.0;
+
   if (!isDragging) {
     cameraAngle += autoRotateSpeed * delta;
-    cameraElevation += (viewport.elevation - cameraElevation) * 0.05;
-    cameraRadius += (viewport.radius - cameraRadius) * 0.05;
+    cameraElevation += ((viewport.elevation * elevationMultiplier) - cameraElevation) * 0.05;
+    cameraRadius += ((viewport.radius * radiusMultiplier) - cameraRadius) * 0.05;
   }
 
   // Calculate final angle and position incorporating section-specific viewports
   const finalAngle = isDragging ? cameraAngle : cameraAngle + viewport.angleOffset;
   const finalElevation = isDragging ? cameraElevation : cameraElevation;
 
-  const targetX = currentLookAt.x + Math.sin(finalAngle) * cameraRadius + mouseX * 3;
-  const targetZ = currentLookAt.z + Math.cos(finalAngle) * cameraRadius + mouseX * 3;
-  const targetY = currentLookAt.y + finalElevation - mouseY * 3;
+  // Camera organic hover sway
+  const swayTime = elapsed * 0.4;
+  const targetX = currentLookAt.x + Math.sin(finalAngle) * cameraRadius + mouseX * 3 + Math.sin(swayTime) * 0.5;
+  const targetZ = currentLookAt.z + Math.cos(finalAngle) * cameraRadius + mouseX * 3 + Math.cos(swayTime * 1.3) * 0.5;
+  const targetY = currentLookAt.y + finalElevation - mouseY * 3 + Math.sin(swayTime * 0.7) * 0.4;
 
   camera.position.x += (targetX - camera.position.x) * 0.05;
   camera.position.z += (targetZ - camera.position.z) * 0.05;
@@ -1677,6 +1804,13 @@ function animate() {
   // Central plinth slow rotation
   if (centralGroup) {
     centralGroup.rotation.y = elapsed * 0.12;
+  }
+
+  // Slowly rotate main directional light to animate ground shadows dynamically
+  if (dirLight) {
+    const lightAngle = elapsed * 0.04;
+    dirLight.position.x = 15 * Math.cos(lightAngle) - 10 * Math.sin(lightAngle);
+    dirLight.position.z = 15 * Math.sin(lightAngle) + 10 * Math.cos(lightAngle);
   }
 
   // ─── Logo Component Animations ───
@@ -1689,8 +1823,10 @@ function animate() {
     innerShield.rotation.z = -Math.sin(elapsed * 1.5) * 0.05;
   }
   if (iris) {
-    // Rapid rotation of iris glow core
+    // Rapid rotation and breathing scale of iris glow core
     iris.rotation.z = -elapsed * 0.6;
+    iris.scale.setScalar(1.0 + Math.sin(elapsed * 3.5) * 0.05);
+    iris.material.opacity = 0.55 + Math.sin(elapsed * 3.5) * 0.15;
   }
   if (leftBracket && rightBracket) {
     // Brackets pulse/push outward and inward like a heartbeat
@@ -1719,10 +1855,11 @@ function animate() {
     }
   }
   if (holographicCage) {
-    // Rotate the geodesic cage on multiple axes
+    // Rotate the geodesic cage on multiple axes and pulse opacity
     holographicCage.rotation.y = elapsed * 0.35;
     holographicCage.rotation.x = Math.sin(elapsed * 0.2) * 0.15;
     holographicCage.rotation.z = elapsed * 0.15;
+    holographicCage.material.opacity = 0.12 + Math.abs(Math.sin(elapsed * 2.0)) * 0.14;
     if (logoNucleus) {
       holographicCage.position.y = logoNucleus.position.y;
     }
@@ -1736,17 +1873,22 @@ function animate() {
     taglineSprite.material.opacity = 0.75 + Math.sin(elapsed * 2.0) * 0.15;
   }
 
-  // Radar dish rotation
+  // Radar dish tracking scan (sweeps back and forth)
   if (radarDish) {
-    radarDish.rotation.y = elapsed * 0.8;
+    radarDish.rotation.y = Math.sin(elapsed * 0.45) * 0.75;
+    radarDish.rotation.x = 0.3 + Math.cos(elapsed * 0.3) * 0.18;
   }
 
-  // Starfield slow drift
+  // Starfield slow drift + glittering twinkle
   if (starField) {
     starField.rotation.y = elapsed * 0.01;
+    starField.material.size = 0.12 + Math.abs(Math.sin(elapsed * 2.8) * Math.cos(elapsed * 1.5)) * 0.06;
+    starField.material.opacity = 0.45 + Math.sin(elapsed * 1.2) * 0.15;
   }
 
-  // Floating objects — bobbing, rotation, orbiting
+  // Core energy wave rings disabled
+
+  // Floating objects — bobbing, multi-axis rotation, orbiting
   floatingObjects.forEach(obj => {
     if (obj.isDatabaseColumn) {
       const scaleY = 1.0 + Math.sin(elapsed * obj.speed + obj.offset) * 0.18;
@@ -1756,9 +1898,11 @@ function animate() {
     }
 
     if (obj.scaleFlicker) {
-      // Flame flicker
-      const s = 0.8 + Math.sin(elapsed * obj.speed + obj.offset) * 0.3;
-      obj.mesh.scale.set(s, s, s);
+      // Realistic vertical flame flickering and width pulse
+      const scaleY = 0.7 + Math.sin(elapsed * obj.speed + obj.offset) * 0.45;
+      const scaleXZ = 0.85 + Math.cos(elapsed * (obj.speed * 1.3) + obj.offset) * 0.15;
+      obj.mesh.scale.set(scaleXZ, scaleY, scaleXZ);
+      obj.mesh.material.opacity = 0.45 + Math.sin(elapsed * 18 + obj.offset) * 0.35;
       return;
     }
 
@@ -1777,15 +1921,21 @@ function animate() {
     obj.mesh.position.y = obj.baseY + Math.sin(elapsed * obj.speed + obj.offset) * 0.12;
 
     if (obj.rotate) {
-      obj.mesh.rotation.y = elapsed * 0.4;
-      obj.mesh.rotation.x = Math.sin(elapsed * 0.3) * 0.1;
+      // Zero-G tumbling rotation
+      obj.mesh.rotation.y = elapsed * (obj.speed * 0.4) + obj.offset;
+      obj.mesh.rotation.x = Math.sin(elapsed * 0.4 + obj.offset) * 0.18;
+      obj.mesh.rotation.z = Math.cos(elapsed * 0.3 + obj.offset) * 0.18;
     }
   });
 
-  // Drone hover animation
+  // Drone hover with roll & pitch tilt physics
   drones.forEach(d => {
     d.mesh.position.y = d.baseY + Math.sin(elapsed * d.speed + d.offset) * 0.2;
     d.mesh.position.x = d.baseX + Math.sin(elapsed * d.speed * 0.7 + d.offset) * 0.3;
+    
+    // Tilt physics based on movement direction
+    d.mesh.rotation.z = -Math.cos(elapsed * d.speed * 0.7 + d.offset) * 0.15; // roll
+    d.mesh.rotation.x = Math.cos(elapsed * d.speed + d.offset) * 0.1; // pitch
     d.mesh.rotation.y = elapsed * 0.5;
   });
 
@@ -1795,6 +1945,11 @@ function animate() {
     o.mesh.material.opacity = pulse;
     const s = 0.9 + Math.sin(elapsed * 1.5) * 0.1;
     o.mesh.scale.set(s, s, s);
+  });
+
+  // Pipeline core glow pulses
+  pipelines.forEach((pipe, idx) => {
+    pipe.glow.material.opacity = 0.15 + Math.sin(elapsed * 4.5 + idx) * 0.1;
   });
 
   // Pipeline particle flow
@@ -1825,12 +1980,7 @@ function animate() {
                             (activeSection === 'process' && key === 'core') ||
                             (activeSection === 'pricing' && key === 'data');
     
-    // Animate active light column
-    const column = lightColumns[key];
-    if (column) {
-      const targetOpacity = isCurrentActive ? 0.28 + Math.sin(elapsed * 3) * 0.06 : 0.0;
-      column.material.opacity += (targetOpacity - column.material.opacity) * 0.08;
-    }
+    // Light columns disabled
     
     // Animate scan ring
     const ring = scanRings[key];
@@ -1850,6 +2000,11 @@ function animate() {
   // Blink server LEDs on core monolith stacks
   serverLeds.forEach(led => {
     led.mesh.material.opacity = 0.2 + Math.max(0, Math.sin(elapsed * led.blinkSpeed + led.offset)) * 0.8;
+  });
+
+  // Pulse platform accent lights
+  platformLights.forEach(p => {
+    p.light.intensity = p.baseIntensity + Math.sin(elapsed * p.speed + p.offset) * 0.3;
   });
 
   // Pulse satellite transmission cone beam

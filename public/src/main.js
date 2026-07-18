@@ -1154,6 +1154,9 @@ if (btnSimulate) {
     const data = INSPECTOR_DATA[activeProjectKey];
     if (!data) return;
 
+    const targetUrlInput = document.getElementById('sim-target-url');
+    const targetUrl = targetUrlInput ? targetUrlInput.value.trim() : '/api/health';
+
     isSimulating = true;
     btnSimulate.disabled = true;
 
@@ -1165,28 +1168,98 @@ if (btnSimulate) {
     statusEl.classList.add('running');
     consoleEl.innerHTML = '';
 
-    const logs = data.simLogs;
-    for (let i = 0; i < logs.length; i++) {
-      await new Promise(r => setTimeout(r, 450));
-      
+    const addLog = (text, type = '') => {
       const logLine = document.createElement('div');
-      logLine.innerText = `→ \${logs[i]}`;
-      // Highlight metrics logs
-      if (logs[i].includes('[METRIC]') || logs[i].includes('[RENDER]')) {
+      logLine.innerText = text;
+      if (type === 'metric' || text.includes('[METRIC]') || text.includes('[RENDER]')) {
         logLine.style.color = '#34d399';
         logLine.style.fontWeight = 'bold';
-      } else if (logs[i].includes('[WARN]') || logs[i].includes('[AUTOSCALE]')) {
+      } else if (type === 'warn' || text.includes('[WARN]') || text.includes('[AUTOSCALE]')) {
         logLine.style.color = '#fbbf24';
-      } else if (logs[i].includes('successfully')) {
+      } else if (type === 'success' || text.includes('successfully') || text.includes('[SUCCESS]')) {
         logLine.style.color = '#60a5fa';
+      } else if (type === 'error' || text.includes('[ERROR]')) {
+        logLine.style.color = '#f87171';
       }
-      
       consoleEl.appendChild(logLine);
       consoleEl.scrollTop = consoleEl.scrollHeight;
+    };
 
-      // Update progress bar
-      const progressPercent = Math.min(((i + 1) / logs.length) * 100, 100);
-      progressEl.style.width = `\${progressPercent}%`;
+    addLog(`[TEST INITIALIZED] Target URL: ${targetUrl}`);
+    addLog(`[PROFILING] Initiating real-time socket connection stream...`);
+    await new Promise(r => setTimeout(r, 600));
+
+    const totalRequests = 50;
+    const batchSize = 10;
+    const numBatches = totalRequests / batchSize;
+    let completedRequests = 0;
+    let successCount = 0;
+    let totalLatency = 0;
+    let corsWarningTriggered = false;
+
+    for (let batch = 0; batch < numBatches; batch++) {
+      addLog(`[BATCH ${batch + 1}/${numBatches}] Dispatching ${batchSize} concurrent requests...`);
+      
+      const batchPromises = Array.from({ length: batchSize }).map(async (_, idx) => {
+        const start = performance.now();
+        try {
+          const separator = targetUrl.includes('?') ? '&' : '?';
+          const cacheBuster = `${separator}cb=${Math.random().toString(36).substring(2, 7)}`;
+          const response = await fetch(targetUrl + cacheBuster);
+          const duration = Math.round(performance.now() - start);
+          return { success: response.ok, status: response.status, duration };
+        } catch (error) {
+          const duration = Math.round(performance.now() - start);
+          const isCors = error.name === 'TypeError' && !targetUrl.startsWith('/') && !targetUrl.startsWith(window.location.origin);
+          return { success: false, status: 'CONN_ERR', duration, isCors };
+        }
+      });
+
+      const results = await Promise.all(batchPromises);
+      completedRequests += batchSize;
+
+      let batchSuccesses = 0;
+      let batchLatencySum = 0;
+      let hasCorsError = false;
+
+      results.forEach(res => {
+        if (res.success) batchSuccesses++;
+        batchLatencySum += res.duration;
+        if (res.isCors) hasCorsError = true;
+      });
+
+      successCount += batchSuccesses;
+      totalLatency += batchLatencySum;
+
+      const batchAvg = Math.round(batchLatencySum / batchSize);
+      const batchRate = Math.round((batchSuccesses / batchSize) * 100);
+
+      await new Promise(r => setTimeout(r, 300));
+      
+      addLog(`→ Batch ${batch + 1} complete: Success Rate = ${batchRate}%, Avg Latency = ${batchAvg}ms`);
+      addLog(`  ↳ Worker-1: ${results[0].status} (${results[0].duration}ms) | Worker-2: ${results[1].status} (${results[1].duration}ms)`);
+
+      if (hasCorsError && !corsWarningTriggered) {
+        corsWarningTriggered = true;
+        addLog(`[WARN] CORS Policy block or invalid certificate detected. For external sites, the browser prohibits client-side load injection. Use local paths like '/api/health' or '/project/called/' for accurate load benchmarks.`, 'warn');
+      }
+
+      progressEl.style.width = `${Math.round((completedRequests / totalRequests) * 100)}%`;
+    }
+
+    const finalSuccessRate = ((successCount / totalRequests) * 100).toFixed(1);
+    const finalAvgLatency = (totalLatency / totalRequests).toFixed(1);
+
+    addLog(`--------------------------------------------------`);
+    addLog(`[METRIC] Real Concurrency Benchmark: ${finalSuccessRate}% HTTP Success`, 'metric');
+    addLog(`[METRIC] Average Request Latency: ${finalAvgLatency}ms`, 'metric');
+    
+    if (successCount === totalRequests) {
+      addLog(`[SUCCESS] Real network load test completed successfully! Target is fully operational and scaling under high concurrency.`, 'success');
+    } else if (successCount > 0) {
+      addLog(`[WARN] Real network load test completed with partial errors. Target segment experienced degradation.`, 'warn');
+    } else {
+      addLog(`[ERROR] Load test failed. 0/50 requests succeeded. Please verify the target URL endpoint and try again.`, 'error');
     }
 
     statusEl.innerText = "Completed";

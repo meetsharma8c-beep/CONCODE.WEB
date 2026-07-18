@@ -16,6 +16,7 @@
   <!-- Fullscreen WebGL Canvas — Interactive 3D Animation -->
   <canvas id="webgl-canvas"></canvas>
   <div class="canvas-fade" id="canvas-fade"></div>
+  <div class="hologram-overlay"></div>
 
   <!-- ═══════════════════════════════════════════ -->
   <!-- NAVIGATION -->
@@ -552,8 +553,8 @@
               <label for="plan-api">Core Gateway Infrastructure</label>
               <select id="plan-api" class="planner-select">
                 <option value="starter" data-price="0" data-time="0">Single-Instance Gateway (Standard HTTP)</option>
-                <option value="professional" data-price="100" data-time="1" selected>Cluster Load-Balanced Gateway (+$100)</option>
-                <option value="enterprise" data-price="300" data-time="2">Multi-Region Edge Network (+$300)</option>
+                <option value="professional" data-price="20" data-time="1" selected>Cluster Load-Balanced Gateway (+$20)</option>
+                <option value="enterprise" data-price="90" data-time="2">Multi-Region Edge Network (+$90)</option>
               </select>
               <div class="control-help">Determines request routing capacity and network latency thresholds.</div>
             </div>
@@ -563,8 +564,8 @@
               <label for="plan-db">Database & Storage Engine</label>
               <select id="plan-db" class="planner-select">
                 <option value="starter" data-price="0" data-time="0">Standard SQL Instance (Postgres/MySQL)</option>
-                <option value="professional" data-price="150" data-time="1" selected>High-Availability DB + Redis Caching (+$150)</option>
-                <option value="enterprise" data-price="400" data-time="2">Distributed Vector DB Cluster (+$400)</option>
+                <option value="professional" data-price="30" data-time="1" selected>High-Availability DB + Redis Caching (+$30)</option>
+                <option value="enterprise" data-price="110" data-time="2">Distributed Vector DB Cluster (+$110)</option>
               </select>
               <div class="control-help">Configures data access latency, caching patterns, and vectors for AI models.</div>
             </div>
@@ -574,8 +575,8 @@
               <label for="plan-webgl">Visual Experience & Frontend</label>
               <select id="plan-webgl" class="planner-select">
                 <option value="starter" data-price="0" data-time="0">Standard Web Responsive Layout</option>
-                <option value="professional" data-price="200" data-time="2" selected>Cinematic 3D WebGL Canvas Scene (+$200)</option>
-                <option value="enterprise" data-price="500" data-time="3">Custom WebGPU Simulation Engine (+$500)</option>
+                <option value="professional" data-price="50" data-time="2" selected>Cinematic 3D WebGL Canvas Scene (+$50)</option>
+                <option value="enterprise" data-price="150" data-time="3">Custom WebGPU Simulation Engine (+$150)</option>
               </select>
               <div class="control-help">Defines hardware-accelerated presentation capabilities and client-side graphics quality.</div>
             </div>
@@ -585,8 +586,8 @@
               <label for="plan-ai">AI Integration & Cognitive Engine</label>
               <select id="plan-ai" class="planner-select">
                 <option value="starter" data-price="0" data-time="0">None (Pure Deterministic logic)</option>
-                <option value="professional" data-price="150" data-time="2">Structured Assistant API Gateway (+$150)</option>
-                <option value="enterprise" data-price="400" data-time="3" selected>Multi-Agent Autonomous RAG Orchestrator (+$400)</option>
+                <option value="professional" data-price="30" data-time="2" selected>Structured Assistant API Gateway (+$30)</option>
+                <option value="enterprise" data-price="110" data-time="3">Multi-Agent Autonomous RAG Orchestrator (+$110)</option>
               </select>
               <div class="control-help">Selects neural routing structures and agentic workflow complexities.</div>
             </div>
@@ -596,8 +597,8 @@
               <label for="plan-devops">Cloud Deployment & DevOps</label>
               <select id="plan-devops" class="planner-select">
                 <option value="starter" data-price="0" data-time="0">Standard Containerized Deployment (Docker Compose)</option>
-                <option value="professional" data-price="200" data-time="2" selected>Scalable Kubernetes Cloud Orchestration (+$200)</option>
-                <option value="enterprise" data-price="500" data-time="3">Multi-Cloud IaC (Terraform Setup) (+$500)</option>
+                <option value="professional" data-price="50" data-time="2" selected>Scalable Kubernetes Cloud Orchestration (+$50)</option>
+                <option value="enterprise" data-price="150" data-time="3">Multi-Cloud IaC (Terraform Setup) (+$150)</option>
               </select>
               <div class="control-help">Infrastructure configuration for scaling, monitoring, and automated rollouts.</div>
             </div>
@@ -607,8 +608,8 @@
               <label for="plan-sla">SLA & Support Tier</label>
               <select id="plan-sla" class="planner-select">
                 <option value="starter" data-price="0" data-time="0">Standard Developer Support (Next Business Day)</option>
-                <option value="professional" data-price="100" data-time="0" selected>Priority Email & Slack SLA (+$100)</option>
-                <option value="enterprise" data-price="300" data-time="1">24/7 Dedicated On-Call Engineering Hotline (+$300)</option>
+                <option value="professional" data-price="20" data-time="0" selected>Priority Email & Slack SLA (+$20)</option>
+                <option value="enterprise" data-price="90" data-time="1">24/7 Dedicated On-Call Engineering Hotline (+$90)</option>
               </select>
               <div class="control-help">Response timing commitments for server issues and code hotfixes.</div>
             </div>
@@ -937,7 +938,11 @@
 
           <div class="inspector-simulation-block">
             <h4 class="specs-subheader">Live Network Load Testing</h4>
-            <p class="control-help">Simulate high-concurrency request packets on this custom node segment.</p>
+            <p class="control-help">Execute real concurrent network requests against a local endpoint or custom URL.</p>
+            <div class="simulation-input-group" style="margin-bottom: 12px; display: flex; flex-direction: column; gap: 4px;">
+              <label for="sim-target-url" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); text-align: left; display: block;">Target Endpoint URL</label>
+              <input type="text" id="sim-target-url" style="width: 100%; box-sizing: border-box; padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.3); color: #fff; font-family: monospace; font-size: 12px;" value="/api/health">
+            </div>
             <div class="simulation-actions">
               <button class="btn btn-primary btn-sm" id="btn-simulate-load">Simulate Load (10k req/s)</button>
               <span class="sim-status-label" id="sim-status">Idle</span>

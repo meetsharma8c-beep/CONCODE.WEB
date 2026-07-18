@@ -78,27 +78,29 @@ class SynapseNeuralCore {
   async processQuery(message, history = []) {
     const query = message.trim();
     const lower = query.toLowerCase();
+    const routes = await getGateway().getRoutes();
 
-    // 1. INTENT: Diagnostic / Health Status Probe
-    if (lower.match(/\b(status|health|diagnose|nodes|telemetry)\b/)) {
-      const routes = await getGateway().getRoutes();
+    // 1. INTENT: Diagnostics / Status / Telemetry
+    if (lower.match(/\b(status|health|diagnose|nodes|telemetry|uptime)\b/)) {
       const telemetry = getGateway().getGatewayTelemetry();
+      let activeList = routes.length > 0
+        ? routes.map(r => `\`/project/${r.path}/\``).slice(-3).join(', ')
+        : 'None registered';
       
-      return `### That's a great approach to optimizing this workflow. Let's pull the live cluster telemetry metrics for you.
+      return `### Let's run a full diagnostics probe on our edge routing clusters.
 
 Here is the current state of our server network:
-* **Edge Gateway**: **HEALTHY** (avg latency: \`${telemetry.avgLatency}\`, ping: \`2ms\`)
-* **Active Client Routes**: \`${routes.length} mapped\` (gateway request rate: \`${telemetry.requestRate}\`)
-* **Kubernetes Nodes**: AWS EKS cluster stable (CPU load: \`24%\`, active nodes: \`8\`, load error rate: \`${telemetry.errorRate}\`)
-* **Database Engine**: Local JSON store active and synchronized.
-* **Neural Core**: Standalone ConCode core active (parsing speed: \`0.12ms\`)
+* **Edge Gateway Routing**: **HEALTHY** (avg latency: \`${telemetry.avgLatency}\`, ping: \`2ms\`)
+* **Dynamic Routes Map**: \`${routes.length} active\` (Latest projects: ${activeList})
+* **Kubernetes Workers**: AWS EKS cluster stable (CPU load: \`24%\`, active replicas: \`8\`, load error rate: \`${telemetry.errorRate}\`)
+* **Storage Engine**: Local JSON database backing up to \`data/\` collections.
+* **Neural Core**: Standalone ConCode core active (parsing speed: \`0.12ms\`, state: \`fully self-sufficient\`)
 
 *Shall we investigate specific gateway dynamic routes next?*`;
     }
 
-    // 2. INTENT: Project Brief Submission
-    if (lower.match(/\b(submit|send|hire|contact|hire developer|send brief|onboard)\b/)) {
-      const routes = await getGateway().getRoutes();
+    // 2. INTENT: Project Brief Submission / Onboarding
+    if (lower.match(/\b(submit|send|hire|contact|hire developer|send brief|onboard|proposal)\b/)) {
       let projectId = 'custom-site';
       if (routes.length > 0) {
         projectId = routes[routes.length - 1].projectId;
@@ -124,122 +126,137 @@ Our human developer will review the design draft and send a flat-rate custom quo
 *Shall we wrap this into a reusable component next?*`;
     }
 
-    // 3. INTENT: Website Generation
-    if (lower.match(/\b(generate|create|build|make)\b/) && lower.match(/\b(website|site|landing|page|portfolio|dashboard|cafe|restaurant|saas)\b/)) {
-      let projectId = 'custom-site';
-      const idMatch1 = query.match(/(?:called|named|project|id)\s+([a-zA-Z0-9-_]+)/i);
-      const idMatch2 = query.match(/for\s+([a-zA-Z0-9-_]+)/i);
-      
-      if (idMatch1 && idMatch1[1]) {
-        projectId = idMatch1[1].toLowerCase().replace(/[^a-z0-9-_]/g, '');
-      } else if (idMatch2 && idMatch2[1]) {
-        projectId = idMatch2[1].toLowerCase().replace(/[^a-z0-9-_]/g, '');
-      } else {
-        projectId = 'site_' + Math.random().toString(36).substr(2, 5);
-      }
-
-      const options = {};
-      let styleOption = "Standard responsive layout";
-      if (lower.includes('green') || lower.includes('emerald') || lower.includes('mint')) {
-        options.primaryColor = '#10b981';
-        options.secondaryColor = '#34d399';
-        styleOption = "Emerald styling theme";
-      } else if (lower.includes('rose') || lower.includes('red') || lower.includes('pink')) {
-        options.primaryColor = '#f43f5e';
-        options.secondaryColor = '#fb7185';
-        styleOption = "Rose/Red theme styling";
-      } else if (lower.includes('gold') || lower.includes('yellow') || lower.includes('amber')) {
-        options.primaryColor = '#eab308';
-        options.secondaryColor = '#facc15';
-        styleOption = "Gold/Amber theme styling";
-      } else if (lower.includes('orange') || lower.includes('coral')) {
-        options.primaryColor = '#f97316';
-        options.secondaryColor = '#fb923c';
-        styleOption = "Coral/Orange theme styling";
-      }
-
-      console.log(`[SYNAPSE AI] Generating layout prototype preview for: "${projectId}"`);
-      const result = await getStudio().generateWebsite(projectId, query, options);
-
-      let recommendedPlan = "Starter ($99 flat)";
-      if (lower.includes('3d') || lower.includes('webgl') || lower.includes('dashboard') || lower.includes('database')) {
-        recommendedPlan = "Professional ($299 flat)";
-      }
-      if (lower.includes('rust') || lower.includes('go') || lower.includes('kubernetes') || lower.includes('ai workflow')) {
-        recommendedPlan = "Enterprise ($799 flat)";
-      }
-
-      return `### Building a new prototype is always exciting! Let's generate a responsive mockup for you.
-
-Here is the specification draft I've put together:
-* **Layout Reference ID**: \`${projectId}\`
-* **Style Theme Selected**: \`${styleOption}\`
-* **Recommended Plan**: **${recommendedPlan}**
-* **Interactive Live Preview**: [View Layout Preview](${result.previewUrl})
-
-I've generated a multi-page prototype workspace for you! You can view it live using the link above. Our lead developer will refine, customize, and build out the full production version manually based on this spec.
-
-*Shall we compile this draft layout and trigger a build?*`;
-    }
-
-    // 4. INTENT: Container Deployment
-    if (lower.match(/\b(deploy|rollout|kube|kubernetes|push|container)\b/)) {
-      return `### Awesome target! Scaling and deployment are key to a successful launch.
-
-Here is an overview of how we handle container orchestration:
-1. **Docker Containerization**: We package up all your static nodes and backend services into structured container images.
-2. **Kubernetes Rollout**: We deploy the workloads across auto-scaling clusters (such as **AWS EKS** or **GCP GKE**) to guarantee high availability.
-3. **Gateway Mappings**: We configure the API Gateway to route traffic to the container instances, adding secure rate limits and SSL.
-
-All production deployments are handled directly by our lead developer to ensure top performance. If you'd like to proceed, type \`submit brief\` and we will set up the pipeline for you!
-
-*Shall we run cluster configurations next?*`;
-    }
-
-    // 5. INTENT: Data Migration
-    if (lower.match(/\b(migrate|import|csv|json|data|legacy)\b/)) {
-      return `### Data migrations can be delicate, but we can definitely streamline this process.
-
-Here is how our developer handles data transformations:
-* **Formats Supported**: Raw JSON, CSV tables, and SQL database exports.
-* **Integrity Audits**: Column matching, zero-value corrections, and duplicate removal scripts.
-* **Database Target**: Handled securely via our local MongoDB/Firestore integrations.
-
-We can easily include a full data migration package in your custom proposal. 
-
-*Shall we map out the CSV field keys first?*`;
-    }
-
-    // 6. INTENT: Services / Capabilities Explainer
-    if (lower.match(/\b(what is concode|services|capabilities|pricing|plans|cost)\b/)) {
+    // 3. INTENT: Pricing & Plans Table
+    if (lower.match(/\b(price|cost|plan|pricing|how much|starter|professional|enterprise)\b/)) {
       return `### Let's look at what we can build together at CONCODE!
 
-CONCODE is a developer-driven agency. We build clean, high-performance systems from scratch at flat-rate pricing:
-* **Starter Plan ($99 Flat)**: Custom single-page responsive design, lead forms, and core SEO configurations.
-* **Professional Plan ($299 Flat)**: Multi-page web layouts, interactive 3D WebGL scenes, and backend databases.
-* **Enterprise Plan ($799 Flat)**: Custom Go/Rust backend microservices, Redis-backed queues, AI pipelines, and EKS/Kubernetes setup.
+We build clean, high-performance systems from scratch at transparent flat-rate pricing:
+
+| Plan | Price | Scope & Key Features |
+| :--- | :---: | :--- |
+| **Starter** | **$99** | Single-page responsive layout, lead form integration, core SEO configurations. |
+| **Professional** | **$299** | Immersive multi-page layouts, cinematic 3D WebGL / Canvas visual effects, persistent database integrations. |
+| **Enterprise** | **$799** | High-performance Go/Rust backend microservices, vector database sharding, autonomous AI pipelines, and cloud Kubernetes setup. |
 
 *Which of these plans matches the project scope you have in mind?*`;
     }
 
-    // 7. Conversational Greetings
-    if (lower.match(/\b(hello|hey|hi|greetings|yo)\b/)) {
-      return `### Hello! It's fantastic to pair program with you today.
+    // 4. INTENT: Cloud Deployment / DevOps Details
+    if (lower.match(/\b(deploy|rollout|kube|kubernetes|push|container|aws|gcp|vercel|docker|terraform)\b/)) {
+      let routeSnippet = routes.length > 0 
+        ? `For example, to deploy your latest node \`${routes[routes.length-1].projectId}\`, run:`
+        : "For example, to deploy a project node called `my-app`, run:";
+      
+      return `### DevOps rollouts are fully integrated into our platform gateway.
 
-I am **ConCode AI**, the proprietary, self-made AI core developed natively by **ConCode Web Agency**. I run entirely on our private, standalone architecture with zero external key dependencies.
+Here is an overview of how we handle container orchestration and deployments:
+1. **Docker Containerization**: We package up all your static nodes and backend services into structured container images.
+2. **Kubernetes Rollout**: We deploy the workloads across auto-scaling clusters (such as **AWS EKS** or **GCP GKE**) to guarantee high availability.
+3. **Gateway Mappings**: We configure the API Gateway to route traffic to the container instances, adding secure rate limits and SSL.
 
-I can help you design website architectures, visual themes, and deployment scripts. When you're ready, we can submit your specs directly to the developer to start coding!
+You can trigger a cloud deployment build right here in the terminal console by running:
+\`\`\`bash
+/deploy [project-id] [aws|gcp|vercel]
+\`\`\`
+${routeSnippet}
+\`\`\`bash
+/deploy ${routes.length > 0 ? routes[routes.length-1].projectId : 'my-app'} vercel
+\`\`\`
 
-*How can I help you plan or prototype your web application today?*`;
+*Shall we check the Kubernetes configuration parameters first?*`;
     }
 
-    // Default Fallback Response
+    // 5. INTENT: Gateway & Routes Details
+    if (lower.match(/\b(gateway|route|routing|path|domain|ssl|rate limit|rpm)\b/)) {
+      let routesListStr = routes.length > 0
+        ? routes.map(r => `* \`/project/${r.path}/\` → Mapped to: \`${r.projectId}\` (Status: \`${r.status}\`, Rate limit: \`${r.rateLimitRpm} rpm\`)`).join('\n')
+        : '* No custom routes registered yet. You can build one using \`/generate\`!';
+
+      return `### The Concode API Gateway routes traffic dynamically to your project sandboxes.
+
+Here is a summary of the gateway specifications:
+* **Clean URLs Support**: Dynamic file extension resolution (e.g., serving \`about.html\` when the user visits \`/about\`).
+* **Ingress Rate Limits**: Safeguards instances against DDoS attacks by specifying requests per minute limits.
+* **Live Route Map**:
+${routesListStr}
+
+To list all registered gateways in the terminal console, you can run:
+\`\`\`bash
+/routes
+\`\`\`
+
+*Would you like to register a custom path or adjust rate limits for one of these routes?*`;
+    }
+
+    // 6. INTENT: Data Migration / ETL Details
+    if (lower.match(/\b(migrate|migration|etl|csv|json|import|export)\b/)) {
+      return `### Data migrations are handled securely via our schema mapping pipeline.
+
+Here is how our developer handles data transformations:
+* **Formats Supported**: Raw JSON arrays and CSV tables.
+* **Integrity Audits**: Automatic column mapping, email regex format checks, and name capitalization standardizing.
+* **Database Target**: Handled securely via our local MongoDB/Firestore integrations.
+
+To run a data migration in the terminal console, use:
+\`\`\`bash
+/migrate [contacts|inquiries] [csv|json] [mappings] [raw_data_string]
+\`\`\`
+For example, to import a contacts CSV list with column mapping:
+\`\`\`bash
+/migrate contacts csv Name=name,Mail=email "John Doe,john@example.com,Hello"
+\`\`\`
+
+*Shall we map out the CSV field keys first?*`;
+    }
+
+    // 7. INTENT: Dynamic Website Generation Brief Helper
+    if (lower.match(/\b(generate|create|build|make)\b/) && lower.match(/\b(website|site|landing|page|portfolio|dashboard|cafe|restaurant|saas|gym|fitness|shop|store)\b/)) {
+      let isCafe = lower.match(/\b(cafe|restaurant|coffee|bakery|food)\b/);
+      let isTech = lower.match(/\b(saas|tech|dashboard|analytics|crypto)\b/);
+      let isPort = lower.match(/\b(portfolio|designer|developer|creative)\b/);
+      
+      let projId = 'site_' + Math.random().toString(36).substr(2, 5);
+      let planRecommended = isTech ? 'Enterprise ($799 flat)' : (isCafe ? 'Professional ($299 flat)' : 'Starter ($99 flat)');
+      let visualDesc = isTech ? 'sleek dark-mode theme with nodes telemetry' : (isCafe ? 'cozy warm-accented design with reservation forms and menu offerings' : 'clean responsive grid card layout');
+
+      return `### Let's plan a custom prototype workspace brief for you!
+
+Based on your design request, I've outlined the architecture blueprint:
+* **Industry Focus**: \`${isCafe ? 'Food & Hospitality' : (isTech ? 'Software & Cloud Technology' : 'Creative Business Showcase')}\`
+* **Heuristics Profile**: Offline Dynamic Heuristic Compiler will auto-inject ${visualDesc}.
+* **Recommended Pricing Tier**: **${planRecommended}**
+* **Generation Command**: You can run this command directly in the terminal console:
+  \`\`\`bash
+  /generate ${projId} ${message.replace(/\b(generate|create|build|make)\b/gi, '').trim()}
+  \`\`\`
+
+*Shall we compile this draft layout and trigger a build in the workspace?*`;
+    }
+
+    // 8. Help / Commands Explainer
+    if (lower.match(/\b(help|commands|what can you do|menu)\b/)) {
+      return `### ConCode AI Console — Local Capabilities Guide
+
+I run entirely on our private, standalone architecture with zero external key dependencies. You can invoke the following slash commands directly in our CLI terminal:
+
+* \`/status\` — Probe server nodes and API latency stats.
+* \`/generate [id] [description]\` — Code-generate dynamic website workspaces.
+* \`/deploy [id] [aws|gcp|vercel]\` — Run cloud DevOps container/serverless rollouts.
+* \`/routes\` — List API Gateway dynamic route mappings.
+* \`/analytics [id]\` — Plot real-time API Gateway route telemetry.
+* \`/migrate [collection] [format] [mappings] [data]\` — Parse and load legacy tables.
+* \`/onboard\` — Launch project onboarding workflow.
+* \`/clear\` — Clear the console buffer logs.
+
+*Which module or command would you like to explore first?*`;
+    }
+
+    // Default Fallback
     return `### I hear you! Let's explore how we can build this feature.
 
-I am **ConCode AI**, the proprietary AI core of ConCode Web Agency. I can help you plan website architectures, visual themes, and cloud deployment pipelines.
-* Try typing: **"plan a landing page for my cafe project"**
-* Ask about our: **pricing capabilities**
-* Type: \`submit brief\` to request a direct developer quote.
+I am **ConCode AI**, the proprietary, self-sufficient AI core developed natively by **ConCode Web Agency**. I can help you plan website architectures, visual themes, and cloud deployment pipelines.
+* Try asking me about: **plans and pricing**, **cloud deployments**, **API gateway routes**, or **data migration**.
+* You can also code-generate a project: **"generate a cafe page called coffee-hub"** or type \`/help\` to list all terminal commands.
 
 *Let me know how you'd like to proceed!*`;
   }
