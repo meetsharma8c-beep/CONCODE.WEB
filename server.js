@@ -79,8 +79,8 @@ app.post('/api/chat', async (req, res) => {
   
   // Format history context for the Gemini SDK helper (last 15 messages)
   const formattedHistory = sessionChats.slice(-15).map(chat => ({
-    role: chat.role,
-    text: chat.text
+    role: chat.role || 'user',
+    text: chat.text || chat.message || ''
   }));
 
   // Save the user message to database
@@ -154,6 +154,16 @@ app.get('/api/gateway/analytics/:projectId', async (req, res, next) => {
 
 app.get('/api/gateway/telemetry', (req, res) => {
   responses.success(res, gateway.getGatewayTelemetry());
+});
+
+app.delete('/api/gateway/route/:projectId', async (req, res, next) => {
+  const { projectId } = req.params;
+  try {
+    const result = await gateway.deleteRoute(projectId);
+    responses.success(res, result);
+  } catch (err) {
+    next(err);
+  }
 });
 
 // ═══════════════════════════════════════
@@ -298,6 +308,10 @@ app.get('/api/admin/dashboard', verifyAdmin, async (req, res) => {
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('*', (req, res) => {
+  // If request is for a missing static file or API route, return 404 instead of index.html
+  if (req.path.includes('.') || req.path.startsWith('/api/')) {
+    return res.status(404).send('Not Found');
+  }
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 

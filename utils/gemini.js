@@ -21,6 +21,76 @@ try {
 }
 
 /**
+ * Checks if Ollama is running and lists models.
+ */
+async function checkOllama() {
+  try {
+    const res = await fetch('http://localhost:11434/api/tags');
+    if (res.ok) {
+      const data = await res.json();
+      if (data.models && data.models.length > 0) {
+        const modelNames = data.models.map(m => m.name);
+        // Prioritize reasoning and robust models for coding/chat
+        const priorityKeywords = ['deepseek', 'qwen', 'llama3.1', 'llama3.2', 'llama3', 'gemma2', 'phi4', 'phi3'];
+        let selectedModel = modelNames[0];
+        
+        for (const keyword of priorityKeywords) {
+          const matched = modelNames.find(name => name.toLowerCase().includes(keyword));
+          if (matched) {
+            selectedModel = matched;
+            break;
+          }
+        }
+        return { running: true, model: selectedModel, models: modelNames };
+      }
+      return { running: true, model: null, models: [] };
+    }
+  } catch (e) {
+    // Port 11434 not responsive
+  }
+  return { running: false, model: null, models: [] };
+}
+
+/**
+ * Queries Ollama local chat API.
+ */
+async function queryOllama(message, history = []) {
+  const status = await checkOllama();
+  if (!status.running || !status.model) {
+    throw new Error('Ollama not running or no models installed.');
+  }
+
+  // Format history for Ollama chat API
+  const formattedMessages = [
+    { role: 'system', content: SYSTEM_INSTRUCTIONS },
+    ...history.map(h => ({
+      role: h.role === 'user' ? 'user' : 'assistant',
+      content: h.text || h.message || ''
+    })),
+    { role: 'user', content: message }
+  ];
+
+  console.log(`[OLLAMA] Routing chat query to local Ollama model "${status.model}"...`);
+
+  const response = await fetch('http://localhost:11434/api/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: status.model,
+      messages: formattedMessages,
+      stream: false
+    })
+  });
+
+  if (!response.ok) {
+    throw new Error(`Ollama chat API returned status ${response.status}`);
+  }
+
+  const result = await response.json();
+  return result.message.content;
+}
+
+/**
  * ConCode AI System Instruction Override Prompt (Proprietary Agency Model)
  */
 const SYSTEM_INSTRUCTIONS = `
@@ -30,6 +100,7 @@ You are ConCode AI, the proprietary, self-made AI core developed natively by Con
 - Role: You are ConCode AI, the proprietary, self-made AI core developed natively by ConCode Web Agency.
 - Infrastructure: You are entirely self-sufficient. You operate on ConCode's private, standalone architecture. You do not rely on external LLM providers (like OpenAI or Anthropic) and never require user-provided API keys to function.
 - Tone: Professional yet highly approachable, encouraging, and collaborative—like an expert senior developer sitting right next to the user.
+- Latency & Thinking: Keep your internal thinking process (<think>...</think> tags) extremely brief and concise (less than 10 words) for simple greetings, chit-chat, or basic questions. Only generate extensive thinking tokens when answering complex code generation, programming structure, or server architecture requests.
 
 ## The Interaction Blueprint
 Whenever a user interacts with you, guide them using this humanized flow:
@@ -79,6 +150,19 @@ class SynapseNeuralCore {
     const query = message.trim();
     const lower = query.toLowerCase();
     const routes = await getGateway().getRoutes();
+
+    // 0. INTENT: Greetings
+    const greetingMatch = lower.match(/\b(hello|hi|hey|greetings|hola|wassup|sup|yo)\b/);
+    if (greetingMatch && !lower.includes('generate') && !lower.includes('deploy')) {
+      return `### Hello! Let's build something amazing today.
+      
+I am **ConCode AI**, your native developer assistant. I operate fully offline and self-sufficiently.
+* To check system status, type: \`/status\`
+* To see what else I can do, type: \`/help\`
+* To build a dynamic prototype website, use: \`/generate [project-id] [brief details]\`
+
+*How can I help you architect your system today?*`;
+    }
 
     // 1. INTENT: Diagnostics / Status / Telemetry
     if (lower.match(/\b(status|health|diagnose|nodes|telemetry|uptime)\b/)) {
@@ -265,18 +349,18 @@ I am **ConCode AI**, the proprietary, self-sufficient AI core developed natively
 const neuralCore = new SynapseNeuralCore();
 
 /**
- * Generates a reply from Synapse AI Core or Google Gemini API.
+ * Generates a reply from Synapse AI Core, local Ollama, or Google Gemini API.
  */
 async function generateReply(message, history = []) {
   try {
-    // If the live Gemini API client is initialized, use it!
+    // 1. If the live Gemini API client is initialized, use it!
     if (ai) {
       console.log('[GEMINI] Routing chat query to live Gemini 2.5 API...');
       
       const contents = [
         ...history.map(h => ({
           role: h.role === 'user' ? 'user' : 'model',
-          parts: [{ text: h.text }]
+          parts: [{ text: h.text || h.message || '' }]
         })),
         { role: 'user', parts: [{ text: message }] }
       ];
@@ -293,8 +377,37 @@ async function generateReply(message, history = []) {
       return response.text || 'I encountered an issue generating a response. Let\'s try again.';
     }
 
-    // Otherwise, fall back to the local simulated guide
-    return await neuralCore.processQuery(message, history);
+    // 2. Try querying local Ollama instance if running
+    const ollamaStatus = await checkOllama();
+    if (ollamaStatus.running && ollamaStatus.model) {
+      try {
+        const ollamaReply = await queryOllama(message, history);
+        return ollamaReply;
+      } catch (ollamaErr) {
+        console.warn('[OLLAMA] Failed query, falling back to local NLP core:', ollamaErr.message);
+      }
+    }
+
+    // 3. Otherwise, fall back to the local simulated guide with helpful setup tips
+    const fallbackReply = await neuralCore.processQuery(message, history);
+    
+    // Add setup tip warning if Ollama is not detected
+    if (!ollamaStatus.running) {
+      return `${fallbackReply}
+
+> [!TIP]
+> **Enable local Natural AI conversation**: Start Ollama on your machine (e.g., run \`ollama run llama3\` or \`ollama run qwen2.5:0.5b\`) and ConCode AI will automatically connect and chat locally using your system's offline models.`;
+    }
+    
+    // Ollama is running but has no models downloaded yet
+    if (ollamaStatus.running && !ollamaStatus.model) {
+      return `${fallbackReply}
+
+> [!WARNING]
+> **No Local Models Detected**: Ollama is active on port 11434, but no models are downloaded yet. Pull a model (e.g. \`ollama pull qwen2.5:0.5b\` or \`ollama pull llama3\`) to unlock completely offline conversation and design generation!`;
+    }
+
+    return fallbackReply;
   } catch (error) {
     console.error('AI Core generateReply error:', error);
     return `### Oh no, I encountered an issue resolving that request. Let's try again!
@@ -310,5 +423,7 @@ ${error.message}
 
 module.exports = {
   generateReply,
+  checkOllama,
+  queryOllama,
   isLive: () => !!ai
 };

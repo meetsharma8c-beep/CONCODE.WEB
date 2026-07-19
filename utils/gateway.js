@@ -154,11 +154,49 @@ function getGatewayTelemetry() {
   };
 }
 
+/**
+ * Deletes a route and cleans up its files, analytics, and deployments.
+ */
+async function deleteRoute(projectId) {
+  const routes = await db.read('routes');
+  const existingRoute = routes.find(r => r.projectId.toLowerCase() === projectId.toLowerCase());
+  
+  if (!existingRoute) {
+    throw new Error('Project route does not exist.');
+  }
+
+  // Delete from routes collection
+  await db.delete('routes', existingRoute.id);
+
+  // Clean up analytics for this project
+  const analytics = await db.read('analytics');
+  const projectAnalytics = analytics.filter(a => a.projectId.toLowerCase() === projectId.toLowerCase());
+  for (const item of projectAnalytics) {
+    await db.delete('analytics', item.id);
+  }
+
+  // Clean up deployments for this project
+  const deployments = await db.read('deployments');
+  const projectDeployments = deployments.filter(d => d.projectId.toLowerCase() === projectId.toLowerCase());
+  for (const item of projectDeployments) {
+    await db.delete('deployments', item.id);
+  }
+
+  // Clean up physical directory
+  const projectDir = path.join(__dirname, '../public/projects', existingRoute.projectId);
+  if (fs.existsSync(projectDir)) {
+    fs.rmSync(projectDir, { recursive: true, force: true });
+  }
+
+  return { success: true, message: `Successfully deleted project ${existingRoute.projectId} and its gateway routes.` };
+}
+
 module.exports = {
   registerRoute,
   getRoutes,
   resolveRoute,
   getGatewayTelemetry,
   getRouteAnalytics: fnGetRouteAnalytics,
-  isValidRoutePath
+  isValidRoutePath,
+  deleteRoute
 };

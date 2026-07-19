@@ -14,6 +14,26 @@ try {
 }
 
 /**
+ * Helper to safely extract and parse JSON from LLM responses (even with conversational prefix/suffix or thinking blocks).
+ */
+function extractAndParseJSON(text) {
+  if (!text) return {};
+  
+  // Remove <think>...</think> blocks if present
+  let cleaned = text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+  
+  // Find the first '{' and last '}' to extract the JSON object
+  const startIdx = cleaned.indexOf('{');
+  const endIdx = cleaned.lastIndexOf('}');
+  
+  if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
+    cleaned = cleaned.substring(startIdx, endIdx + 1);
+  }
+  
+  return JSON.parse(cleaned);
+}
+
+/**
  * Main entrance to generate a website.
  * @param {string} projectId 
  * @param {string} prompt 
@@ -40,6 +60,8 @@ async function fnGenerateWebsite(projectId, prompt, options = {}) {
     css: '',
     js: ''
   };
+
+  let generatedWithAI = false;
 
   if (ai) {
     try {
@@ -82,20 +104,89 @@ Return a parseable JSON object matching this schema:
       });
 
       const text = response.text || '{}';
-      const parsed = JSON.parse(text);
+      const parsed = extractAndParseJSON(text);
       
       siteData.pages['index.html'] = parsed.index || parsed.html;
       siteData.pages['about.html'] = parsed.about || '<h1>About Page</h1>';
       siteData.pages['contact.html'] = parsed.contact || '<h1>Contact Page</h1>';
       siteData.css = parsed.css;
       siteData.js = parsed.js;
-      
+      generatedWithAI = true;
     } catch (err) {
-      console.error('[STUDIO] Gemini generation failed, falling back to local layout generator:', err);
-      siteData = generateOfflineMultiPageLayout(prompt, options);
+      console.error('[STUDIO] Gemini generation failed, falling back to local detectors:', err);
     }
-  } else {
-    console.log('[STUDIO] GEMINI_API_KEY is not defined, generating local offline premium layout.');
+  }
+
+  // If Gemini is not set up or failed, check for local Ollama
+  if (!generatedWithAI) {
+    try {
+      const geminiLib = require('./gemini');
+      const ollamaStatus = await geminiLib.checkOllama();
+      
+      if (ollamaStatus.running && ollamaStatus.model) {
+        console.log(`[STUDIO] Requesting local Ollama model "${ollamaStatus.model}" to generate custom website files...`);
+        
+        const systemInstructions = `
+You are an expert front-end developer. Generate a premium, production-ready website code based on the user's request.
+Generate THREE files: index.html (main page), about.html (info page), contact.html (contact form), along with style.css and app.js.
+Return a structured JSON object containing precisely:
+1. "index": Complete HTML code for index.html.
+2. "about": Complete HTML code for about.html.
+3. "contact": Complete HTML code for contact.html.
+4. "css": A comprehensive stylesheet for all three pages.
+5. "js": A comprehensive client script for all three pages.
+
+In each HTML, link them as:
+<link rel="stylesheet" href="style.css">
+<script src="app.js" defer></script>
+
+Return a parseable JSON object matching this schema:
+{
+  "index": "string",
+  "about": "string",
+  "contact": "string",
+  "css": "string",
+  "js": "string"
+}
+`;
+
+        const response = await fetch('http://localhost:11434/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: ollamaStatus.model,
+            prompt: `Generate website code for: "${prompt}"`,
+            system: systemInstructions,
+            format: 'json',
+            stream: false,
+            options: {
+              temperature: 0.2
+            }
+          })
+        });
+
+        if (response.ok) {
+          const resData = await response.json();
+          const parsed = extractAndParseJSON(resData.response || '{}');
+          
+          siteData.pages['index.html'] = parsed.index || parsed.html;
+          siteData.pages['about.html'] = parsed.about || '<h1>About Page</h1>';
+          siteData.pages['contact.html'] = parsed.contact || '<h1>Contact Page</h1>';
+          siteData.css = parsed.css;
+          siteData.js = parsed.js;
+          generatedWithAI = true;
+        } else {
+          throw new Error(`Ollama API returned status ${response.status}`);
+        }
+      }
+    } catch (err) {
+      console.error('[STUDIO] Local Ollama generation failed, falling back to offline layout compiler:', err.message);
+    }
+  }
+
+  // Fallback to offline premium layout compiler if all AI options fail
+  if (!generatedWithAI) {
+    console.log('[STUDIO] Generating local offline premium layout compiled via heuristics.');
     siteData = generateOfflineMultiPageLayout(prompt, options);
   }
 
@@ -324,6 +415,7 @@ function generateOfflineMultiPageLayout(prompt, options = {}) {
  * Compiles specific sections and widgets for index, about, and contact based on industry category.
  */
 function compileIndustryHTML(category, clientName, theme, prompt) {
+  const query = prompt ? prompt.toLowerCase() : '';
   let index = '';
   let about = '';
   let contact = '';
@@ -336,7 +428,7 @@ function compileIndustryHTML(category, clientName, theme, prompt) {
     const heroTitle = isCafe ? 'Fuel Your Spirit,<br>Sip by Sip.' : 'Crafting Culinary<br>Excellence.';
     const heroSubtitle = isCafe ? `Welcome to ${clientName} — a premium sanctuary crafted for specialty coffee enthusiasts and artisan bakers.` : `Indulge in an immersive dining experience at ${clientName} — curated signature culinary arts.`;
 
-    const menuItems = isCafe ? [
+    let menuItems = isCafe ? [
       { name: 'Saffron Gold Latte', desc: 'Espresso infused with rare Iranian saffron and organic gold flake dust.', price: '$9.50', tag: 'Signature' },
       { name: 'Smoked Vanilla Nitro Cold Brew', desc: 'Cold brew slow-infused with oak-smoke vanilla bean cream.', price: '$6.50', tag: 'Popular' },
       { name: 'Matcha Blossom Cappuccino', desc: 'Japanese ceremonial grade matcha layered with cherry blossom cream.', price: '$7.00', tag: 'Vegan' },
@@ -347,6 +439,30 @@ function compileIndustryHTML(category, clientName, theme, prompt) {
       { name: 'Burrata Wild Honey Crostini', desc: 'Fresh burrata, heirloom tomatoes, roasted figs, drizzled in organic honey.', price: '$18.00', tag: 'Starter' },
       { name: 'Smoked Sea Salt Caramel Mousse', desc: 'Dark chocolate mousse casing, liquid caramel core, Maldon sea salt flakes.', price: '$14.00', tag: 'Dessert' }
     ];
+
+    // Dynamic menu item customization based on prompt keywords
+    if (query.match(/\b(sushi|japanese|ramen|fish|tokyo|asia)\b/)) {
+      menuItems = [
+        { name: 'Dragon Volcano Roll', desc: 'Spicy tuna, cucumber, topped with avocado, fresh unagi, and spicy sriracha mayo.', price: '$18.50', tag: 'Signature' },
+        { name: 'Premium Bluefin Otoro Sashimi', desc: 'Succulent fresh slices of fatty bluefin tuna belly served with pickled ginger.', price: '$34.00', tag: 'Signature' },
+        { name: 'Truffle Sea Salt Edamame', desc: 'Steamed young soybeans tossed in white truffle oil and premium Maldon flakes.', price: '$8.00', tag: 'Popular' },
+        { name: 'Matcha Mochi Gelato Core', desc: 'Sweet glutinous rice cake wrapping premium green tea artisanal ice cream.', price: '$6.00', tag: 'Dessert' }
+      ];
+    } else if (query.match(/\b(pizza|italian|pasta|rome|naples)\b/)) {
+      menuItems = [
+        { name: 'Truffle Porcini Pizza', desc: 'Wild porcini mushrooms, fresh buffalo mozzarella, truffle oil, and torn basil.', price: '$22.00', tag: 'Signature' },
+        { name: 'Burrata Prosciutto Flatbread', desc: 'Hand-stretched crust, thin prosciutto di Parma, creamy burrata, hot honey drizzle.', price: '$19.00', tag: 'Popular' },
+        { name: 'Garlic Herb Baked Focaccia', desc: 'Freshly baked rosemary focaccia, salted garlic butter dipping emulsion.', price: '$7.50', tag: 'Popular' },
+        { name: 'Traditional Tiramisu Core', desc: 'Espresso-soaked ladyfingers, velvety mascarpone cream, dark cocoa powder.', price: '$9.00', tag: 'Dessert' }
+      ];
+    } else if (query.match(/\b(burger|fast food|diner|fries|patty)\b/)) {
+      menuItems = [
+        { name: 'ConCode Signature Wagyu Burger', desc: 'Double Wagyu beef patty, sharp cheddar, caramelized balsamic onions, secret sauce.', price: '$16.50', tag: 'Signature' },
+        { name: 'Crispy Parmesan Truffle Fries', desc: 'Double-fried fresh russet potatoes tossed in black truffle oil, aged parmesan, fresh parsley.', price: '$8.00', tag: 'Popular' },
+        { name: 'Spicy Buffalo Cauliflower Wings', desc: 'Crispy tempura florets tossed in hot cayenne pepper glaze, vegan ranch.', price: '$11.00', tag: 'Popular' },
+        { name: 'Salted Caramel Cookie Dough Shake', desc: 'Creamy vanilla bean shake blended with chocolate chip chunks, liquid sea salt caramel.', price: '$7.50', tag: 'Dessert' }
+      ];
+    }
 
     index = `
       <header class="hero animate-fade">
@@ -444,11 +560,18 @@ function compileIndustryHTML(category, clientName, theme, prompt) {
     `;
 
   } else if (category === 'tech') {
+    let subtitleText = `Next-generation cloud infrastructure, API gateways, and vector data networks constructed for: "${prompt}"`;
+    if (query.match(/\b(crypto|blockchain|token|web3|wallet|btc|eth|sol|decentral|ledger)\b/)) {
+      subtitleText = `Decentralized ledger routing networks, smart contract engines, and secure trustless node gateways constructed for: "${prompt}"`;
+    } else if (query.match(/\b(ai|agent|bot|neuron|model|intelligence|gemini|gpt|neural)\b/)) {
+      subtitleText = `Autonomous multi-agent swarms, customized pgvector embeddings databases, and intelligent neural gateway layers constructed for: "${prompt}"`;
+    }
+
     index = `
       <header class="hero animate-fade">
         <div class="badge">CORE SYSTEM INTEGRATED</div>
         <h1 class="title">Orchestrate Your Operations<br><span class="accent">At Infinite Scale</span></h1>
-        <p class="subtitle">Next-generation cloud infrastructure, API gateways, and vector data networks constructed for: "${prompt}"</p>
+        <p class="subtitle">${subtitleText}</p>
         <div class="actions">
           <a href="#calculator" class="btn btn-primary">Resource Calculator</a>
           <a href="contact.html" class="btn btn-secondary">Onboard Cluster</a>
@@ -540,11 +663,38 @@ function compileIndustryHTML(category, clientName, theme, prompt) {
     `;
 
   } else if (category === 'portfolio') {
+    let subtitleText = `Ecosystem crafted for: "${prompt}" — Powered by CONCODE AI Studio.`;
+    let focusTitle = `Engineering Visual Realism<br>Through Custom Code`;
+    let focusBadge = `CREATIVE DIGITAL DESIGN`;
+    let items = [
+      { title: 'NeuroRouter 3D', desc: 'High-concurrency graphic loop rendering 10k nodes in browser canvas.', tag: 'WebGL', cat: 'webgl', tech: "['Three.js', 'GLSL Shaders', 'WebSockets']" },
+      { title: 'Concode CLI Kernel', desc: 'Secure CLI emulator running custom commands offline.', tag: 'Systems', cat: 'systems', tech: "['Node.js', 'Shell scripting', 'Terminals']" },
+      { title: 'Vibrant Glassmorphism', desc: 'Frosted cards, animated neon glows, and Outfit typography.', tag: 'WebGL', cat: 'webgl', tech: "['CSS Grid', 'Tailwind', 'Aesthetics']" }
+    ];
+
+    if (query.match(/\b(photo|camera|lens|photographer|photography)\b/)) {
+      focusTitle = `Capturing Visual Realism<br>Through the Lens`;
+      focusBadge = `CREATIVE PHOTOGRAPHY STUDIO`;
+      items = [
+        { title: 'Glacial Echoes 3D', desc: 'Immersive 3D gallery rendering high-resolution arctic landscape photographs.', tag: 'WebGL', cat: 'webgl', tech: "['Three.js', 'Image processing', 'Shaders']" },
+        { title: 'Neon Monolithic Tokyo', desc: 'Shutter-speed interactive sequence showcasing dynamic architectural photos.', tag: 'Systems', cat: 'systems', tech: "['JavaScript', 'CSS Grid', 'Viewport API']" },
+        { title: 'Chrono-Exposure Node', desc: 'Automated light-leak simulator adjusting contrast dynamically.', tag: 'WebGL', cat: 'webgl', tech: "['WebGL', 'Canvas2D', 'CSS Filters']" }
+      ];
+    } else if (query.match(/\b(writer|author|copywriter|content|writing)\b/)) {
+      focusTitle = `Sculpting Human Stories<br>Through Written Words`;
+      focusBadge = `TECHNICAL WRITING & CONTENT`;
+      items = [
+        { title: 'Syntax Narrative Hub', desc: 'Interactive story layout detailing dynamic markdown parsing engines.', tag: 'Systems', cat: 'systems', tech: "['Markdown-IT', 'YAML parser', 'AST']" },
+        { title: 'Semantics Lexicon 3D', desc: '3D word cloud visualizer grouping semantic synonyms interactively.', tag: 'WebGL', cat: 'webgl', tech: "['Three.js', 'D3-Force', 'JSON']" },
+        { title: 'Copy Integrity Auditor', desc: 'Offline readability scanner rendering inline grammar diagnostics.', tag: 'Systems', cat: 'systems', tech: "['Regex', 'LocalDB', 'Textarea']" }
+      ];
+    }
+
     index = `
       <header class="hero animate-fade">
-        <div class="badge">CREATIVE DIGITAL DESIGN</div>
-        <h1 class="title">Engineering Visual Realism<br>Through Custom Code</h1>
-        <p class="subtitle">Ecosystem crafted for: "${prompt}" — Powered by CONCODE AI Studio.</p>
+        <div class="badge">${focusBadge}</div>
+        <h1 class="title">${focusTitle}</h1>
+        <p class="subtitle">${subtitleText}</p>
         <div class="actions">
           <a href="#works" class="btn btn-primary">Inspect Works</a>
           <a href="contact.html" class="btn btn-secondary">Contact Studio</a>
@@ -564,21 +714,13 @@ function compileIndustryHTML(category, clientName, theme, prompt) {
         </div>
 
         <div class="grid portfolio-gallery-grid">
-          <div class="card portfolio-card" data-cat="webgl" onclick="openProjectModal('NeuroRouter', 'A WebGL telemetry interface mapping distributed routing node graphs.', ['Three.js', 'GLSL Shaders', 'WebSockets'])">
-            <h3>NeuroRouter 3D</h3>
-            <p>High-concurrency graphic loop rendering 10k nodes in browser canvas.</p>
-            <span class="badge-tag">WebGL</span>
-          </div>
-          <div class="card portfolio-card" data-cat="systems" onclick="openProjectModal('Concode CLI', 'An interactive client-side CLI portfolio rendering system telemetry.', ['Node.js', 'Shell scripting', 'Terminals'])">
-            <h3>Concode CLI Kernel</h3>
-            <p>Secure CLI emulator running custom commands offline.</p>
-            <span class="badge-tag">Systems</span>
-          </div>
-          <div class="card portfolio-card" data-cat="webgl" onclick="openProjectModal('Glassmorphic UI', 'A CSS variables system generating glass widgets with backdrop-filters.', ['CSS Grid', 'Tailwind', 'Aesthetics'])">
-            <h3>Vibrant Glassmorphism</h3>
-            <p>Frosted cards, animated neon glows, and Outfit typography.</p>
-            <span class="badge-tag">WebGL</span>
-          </div>
+          ${items.map(item => `
+            <div class="card portfolio-card" data-cat="${item.cat}" onclick="openProjectModal('${item.title}', '${item.desc}', ${item.tech})">
+              <h3>${item.title}</h3>
+              <p>${item.desc}</p>
+              <span class="badge-tag">${item.tag}</span>
+            </div>
+          `).join('')}
         </div>
       </section>
     `;

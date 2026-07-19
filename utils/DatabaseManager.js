@@ -88,6 +88,35 @@ class DatabaseManager {
       return document;
     }
   }
+
+  /**
+   * Deletes a document from a collection by ID.
+   * @param {string} collection - The collection name.
+   * @param {string} docId - The document ID.
+   * @returns {Promise<boolean>} True if successful.
+   */
+  async delete(collection, docId) {
+    if (this.useFirestore) {
+      try {
+        await this.db.collection(collection).doc(docId).delete();
+        return true;
+      } catch (e) {
+        console.error(`Firestore error deleting from "${collection}":`, e);
+        return false;
+      }
+    } else {
+      const items = await this.read(collection);
+      const filtered = items.filter(item => item.id !== docId);
+      const file = path.join(this.baseDir, `${collection}.json`);
+      try {
+        fs.writeFileSync(file, JSON.stringify(filtered, null, 2), 'utf8');
+        return true;
+      } catch (e) {
+        console.error(`Local database error deleting from file "${collection}":`, e);
+        return false;
+      }
+    }
+  }
 }
 
 module.exports = DatabaseManager;

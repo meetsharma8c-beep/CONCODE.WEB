@@ -415,11 +415,29 @@ async function sendChatMessage() {
 
   const logEl = document.getElementById('chat-output');
   logEl.innerHTML += `<p class="user-msg">${query}</p>`;
+  
+  // Add an animated/pulsing typing placeholder
+  const typingId = 'typing_' + Date.now();
+  logEl.innerHTML += `<div class="bot-msg" id="${typingId}" style="opacity: 0.7; font-style: italic; display: flex; align-items: center; gap: 8px;">
+    <span class="loading-spinner" style="width: 12px; height: 12px; border: 2px solid rgba(255,255,255,0.2); border-top-color: var(--cyan); border-radius: 50%; display: inline-block; animation: spin 1s linear infinite;"></span>
+    <span>ConCode AI is thinking (local inference active)...</span>
+  </div>`;
+  
+  // Add dynamic spinning keyframe if not present
+  if (!document.getElementById('spinner-keyframes')) {
+    const style = document.createElement('style');
+    style.id = 'spinner-keyframes';
+    style.textContent = `@keyframes spin { to { transform: rotate(360deg); } }`;
+    document.head.appendChild(style);
+  }
+
   inputEl.value = '';
   logEl.scrollTop = logEl.scrollHeight;
 
   // Intercept CLI console commands starting with /
   if (query.startsWith('/')) {
+    const typingIndicator = document.getElementById(typingId);
+    if (typingIndicator) typingIndicator.remove();
     await handleCliCommand(query, logEl);
     return;
   }
@@ -431,12 +449,20 @@ async function sendChatMessage() {
       body: JSON.stringify({ input: query, sessionId: chatSessionId })
     });
     const result = await res.json();
+    
+    // Remove the placeholder
+    const typingIndicator = document.getElementById(typingId);
+    if (typingIndicator) typingIndicator.remove();
+
     if (result.success) {
       logEl.innerHTML += `<div class="bot-msg">${marked.parse(result.data.reply)}</div>`;
     } else {
       logEl.innerHTML += `<div class="bot-msg" style="color: #ef4444">${result.error.message}</div>`;
     }
   } catch (err) {
+    // Remove placeholder on failure
+    const typingIndicator = document.getElementById(typingId);
+    if (typingIndicator) typingIndicator.remove();
     logEl.innerHTML += `<div class="bot-msg" style="color: #ef4444">Couldn't reach the server. Please try again.</div>`;
   }
   logEl.scrollTop = logEl.scrollHeight;
@@ -476,6 +502,7 @@ async function handleCliCommand(cmd, logEl) {
       <code>/status</code> — Probe server nodes and API latency stats.<br>
       <code>/generate [id] [description]</code> — Code-generate dynamic website workspaces.<br>
       <code>/deploy [id] [aws|gcp|vercel]</code> — Run cloud DevOps container/serverless rollouts.<br>
+      <code>/delete [id]</code> — Delete a generated project and its gateway route mapping.<br>
       <code>/analytics [id]</code> — Plot real-time API Gateway route telemetry.<br>
       <code>/routes</code> — List API Gateway dynamic route mappings.<br>
       <code>/migrate [contacts|inquiries] [csv|json] [mappings] [data]</code> — Parse and load legacy tables.<br>
@@ -495,6 +522,32 @@ async function handleCliCommand(cmd, logEl) {
         openOnboardModal();
       }, 500);
       break;
+
+    case '/delete': {
+      const id = parts[1];
+      if (!id) {
+        print('<span style="color: var(--orange)">Syntax Error</span>: Use <code>/delete [project-id]</code>');
+        break;
+      }
+      print(`Deleting project routing entry and files for ID: <code>${id}</code>...`);
+      print(`<span style="color: var(--cyan)">→ DELETE /api/gateway/route/${id}</span>`);
+      try {
+        fetch(`/api/gateway/route/${id}`, {
+          method: 'DELETE'
+        })
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) {
+              print(`<span style="color: var(--green)">✓ Project ${id} and its gateway routes deleted successfully.</span>`);
+            } else {
+              print(`<span style="color: var(--orange)">Deletion Error</span>: ${data.error.message}`);
+            }
+          });
+      } catch (err) {
+        print('<span style="color: var(--orange)">Connection Error</span>: Couldn\'t connect to backend gateway service.');
+      }
+      break;
+    }
 
     case '/routes':
       print('<span style="color: var(--cyan)">→ GET /api/gateway/routes</span>');
