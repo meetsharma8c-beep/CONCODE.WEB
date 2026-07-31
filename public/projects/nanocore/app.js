@@ -4,9 +4,9 @@
  * World-Class DeepTech Execution Engine
  */
 
-import { NanoDesignEngine } from './modules/nanoDesign.js?v=3.2';
-import { NanoPredictEngine } from './modules/nanoPredict.js?v=3.2';
-import { NanoSwarmEngine } from './modules/nanoSwarm.js?v=3.2';
+import { NanoDesignEngine } from './modules/nanoDesign.js';
+import { NanoPredictEngine } from './modules/nanoPredict.js';
+import { NanoSwarmEngine } from './modules/nanoSwarm.js';
 
 class NanoCoreApp {
   constructor() {
