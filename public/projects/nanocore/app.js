@@ -91,6 +91,9 @@ class NanoCoreApp {
     this.updateActiveModuleUI();
 
     if (moduleName === 'swarm' && this.swarmEngine) {
+      this.swarmEngine.initCanvasSize();
+      this.swarmEngine.buildVesselMap();
+      this.swarmEngine.resetSwarm();
       this.swarmEngine.start();
     } else if (this.swarmEngine) {
       this.swarmEngine.stop();
@@ -294,7 +297,8 @@ class NanoCoreApp {
 
       document.getElementById('val-grad-x').textContent = `${gx > 0 ? '+' : ''}${gx}%`;
       document.getElementById('val-grad-y').textContent = `${gy > 0 ? '+' : ''}${gy}%`;
-      document.getElementById('val-[#00F0FF] val-field-tesla').textContent = `${tesla.toFixed(1)} T`;
+      const teslaEl = document.getElementById('val-field-tesla');
+      if (teslaEl) teslaEl.textContent = `${tesla.toFixed(1)} T`;
       document.getElementById('val-viscosity').textContent = `${visc.toFixed(3)} Pa·s`;
 
       this.swarmEngine.setMagneticControls(gx, gy, tesla);

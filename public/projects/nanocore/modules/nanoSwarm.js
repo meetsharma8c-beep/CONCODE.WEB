@@ -41,14 +41,14 @@ export class NanoSwarmEngine {
     if (parent) {
       const rect = parent.getBoundingClientRect();
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      this.canvas.width = (rect.width || 800) * dpr;
-      this.canvas.height = (rect.height || 480) * dpr;
-      if (this.ctx) {
-        this.ctx.resetTransform?.();
-        this.ctx.scale(dpr, dpr);
-      }
       this.cssWidth = rect.width || 800;
       this.cssHeight = rect.height || 480;
+      this.dpr = dpr;
+      this.canvas.width = Math.floor(this.cssWidth * dpr);
+      this.canvas.height = Math.floor(this.cssHeight * dpr);
+      if (this.ctx) {
+        this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
     }
   }
 
@@ -234,8 +234,12 @@ export class NanoSwarmEngine {
   render() {
     if (!this.ctx || !this.canvas) return;
 
-    const w = this.canvas.width;
-    const h = this.canvas.height;
+    const w = this.cssWidth || (this.canvas ? this.canvas.width : 800);
+    const h = this.cssHeight || (this.canvas ? this.canvas.height : 480);
+
+    if (this.ctx && this.dpr) {
+      this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+    }
 
     // Clear Canvas
     this.ctx.fillStyle = '#060913';
