@@ -102,14 +102,20 @@ export class NanoDesignEngine {
     this.scene.add(this.bondGroup);
     this.scene.add(this.cloudGroup);
 
+    this.createAmbientParticleCloud();
+
     // Animation Loop
     const animate = () => {
       requestAnimationFrame(animate);
       if (this.controls) this.controls.update();
       if (this.atomGroup && !this.isInteracting) {
-        this.atomGroup.rotation.y += 0.002;
-        this.bondGroup.rotation.y += 0.002;
-        this.cloudGroup.rotation.y += 0.002;
+        this.atomGroup.rotation.y += 0.0015;
+        this.bondGroup.rotation.y += 0.0015;
+        this.cloudGroup.rotation.y += 0.0015;
+      }
+      if (this.ambientParticles) {
+        this.ambientParticles.rotation.y += 0.0006;
+        this.ambientParticles.rotation.x += 0.0003;
       }
       this.renderer.render(this.scene, this.camera);
     };
@@ -133,6 +139,51 @@ export class NanoDesignEngine {
       this.renderer.setSize(width, height);
     });
     resizeObserver.observe(this.container);
+  }
+
+  createAmbientParticleCloud() {
+    if (this.ambientParticles) {
+      this.scene.remove(this.ambientParticles);
+      if (this.ambientParticles.geometry) this.ambientParticles.geometry.dispose();
+      if (this.ambientParticles.material) this.ambientParticles.material.dispose();
+    }
+
+    const count = 300;
+    const geometry = new THREE.BufferGeometry();
+    const positions = new Float32Array(count * 3);
+    const colors = new Float32Array(count * 3);
+
+    const emerald = new THREE.Color(0x10b981);
+    const silver = new THREE.Color(0xe2e8f0);
+
+    for (let i = 0; i < count; i++) {
+      const radius = 2.0 + Math.random() * 4.0;
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.random() * Math.PI - Math.PI / 2;
+
+      positions[i * 3] = radius * Math.cos(theta) * Math.cos(phi);
+      positions[i * 3 + 1] = radius * Math.sin(phi);
+      positions[i * 3 + 2] = radius * Math.sin(theta) * Math.cos(phi);
+
+      const c = Math.random() > 0.4 ? emerald : silver;
+      colors[i * 3] = c.r;
+      colors[i * 3 + 1] = c.g;
+      colors[i * 3 + 2] = c.b;
+    }
+
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+    const material = new THREE.PointsMaterial({
+      size: 0.04,
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.5,
+      blending: THREE.AdditiveBlending
+    });
+
+    this.ambientParticles = new THREE.Points(geometry, material);
+    this.scene.add(this.ambientParticles);
   }
 
   calculateMetrics(n, m, lengthNm = 3.0) {
