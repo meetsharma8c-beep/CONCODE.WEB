@@ -2,29 +2,71 @@ const fs = require('fs');
 const path = require('path');
 
 let admin = null;
-try {
-  admin = require('firebase-admin');
-  if (!admin.apps.length) {
-    admin.initializeApp();
+if (process.env.USE_FIRESTORE === 'true') {
+  try {
+    admin = require('firebase-admin');
+    if (!admin.apps.length) {
+      const serviceAccountPath = process.env.GOOGLE_APPLICATION_CREDENTIALS || path.join(__dirname, '../config/firebase-service-account.json');
+      if (fs.existsSync(serviceAccountPath)) {
+        admin.initializeApp({
+          credential: admin.credential.cert(require(serviceAccountPath))
+        });
+        console.log('DatabaseManager: Connected using Firebase Service Account key.');
+      } else {
+        admin.initializeApp();
+        console.log('DatabaseManager: Connected using Firebase default environment credentials.');
+      }
+    }
+  } catch (e) {
+    console.log('DatabaseManager: firebase-admin not available/loaded or failed to initialize, using local JSON database fallback:', e.message);
   }
+}
+
+
+let MongoClient = null;
+try {
+  const mongodb = require('mongodb');
+  MongoClient = mongodb.MongoClient;
 } catch (e) {
-  console.log('DatabaseManager: firebase-admin not available/loaded, using local JSON database fallback.');
+  console.log('DatabaseManager: mongodb package not available, using other fallbacks.');
 }
 
 class DatabaseManager {
   constructor() {
-    // If running in a Firebase environment with credentials configured, use Firestore. Otherwise, use local JSON fallback.
-    this.useFirestore = (process.env.USE_FIRESTORE === 'true') && admin && admin.apps.length > 0;
-    if (this.useFirestore) {
+    this.useMongo = !!process.env.MONGO_URI && !!MongoClient;
+    this.useFirestore = !this.useMongo && (process.env.USE_FIRESTORE === 'true') && admin && admin.apps.length > 0;
+
+    if (this.useMongo) {
+      this.client = new MongoClient(process.env.MONGO_URI);
+      this.client.connect()
+        .then(() => {
+          this.mongoDb = this.client.db();
+          console.log('DatabaseManager: Connected to self-hosted MongoDB.');
+        })
+        .catch(err => {
+          console.error('DatabaseManager: MongoDB connection failed, falling back to local JSON database:', err.message);
+          this.useMongo = false;
+          this.initLocalFallback();
+        });
+    } else if (this.useFirestore) {
       this.db = admin.firestore();
       console.log('DatabaseManager: Connected to Cloud Firestore.');
     } else {
-      this.baseDir = path.join(__dirname, '../data');
+      this.initLocalFallback();
+    }
+  }
+
+  initLocalFallback() {
+    this.memoryStore = new Map();
+    this.baseDir = path.join(__dirname, '../data');
+    try {
       if (!fs.existsSync(this.baseDir)) {
         fs.mkdirSync(this.baseDir, { recursive: true });
       }
-      console.log('DatabaseManager: Initialized local JSON database fallback.');
+    } catch (e) {
+      console.log('DatabaseManager: Read-only filesystem detected; using in-memory store.');
     }
+    console.log('DatabaseManager: Initialized local JSON database fallback.');
   }
 
   /**
@@ -33,7 +75,22 @@ class DatabaseManager {
    * @returns {Promise<Array>} A list of documents.
    */
   async read(collection) {
-    if (this.useFirestore) {
+    if (this.useMongo && this.mongoDb) {
+      try {
+        const items = await this.mongoDb.collection(collection).find({}).toArray();
+        return items.map(item => {
+          const doc = { ...item };
+          if (item._id) {
+            doc.id = item.id || item._id.toString();
+            delete doc._id;
+          }
+          return doc;
+        });
+      } catch (e) {
+        console.error(`MongoDB error reading collection "${collection}":`, e.message);
+        return [];
+      }
+    } else if (this.useFirestore) {
       try {
         const snapshot = await this.db.collection(collection).orderBy('createdAt', 'asc').get();
         const items = [];
@@ -46,13 +103,18 @@ class DatabaseManager {
         return [];
       }
     } else {
+      if (this.memoryStore && this.memoryStore.has(collection)) {
+        return this.memoryStore.get(collection);
+      }
       const file = path.join(this.baseDir, `${collection}.json`);
       if (!fs.existsSync(file)) return [];
       try {
         const data = fs.readFileSync(file, 'utf8');
-        return JSON.parse(data || '[]');
+        const items = JSON.parse(data || '[]');
+        if (this.memoryStore) this.memoryStore.set(collection, items);
+        return items;
       } catch (e) {
-        console.error(`Local database error reading file "${collection}":`, e);
+        console.error(`Local database error reading file "${collection}":`, e.message);
         return [];
       }
     }
@@ -68,7 +130,16 @@ class DatabaseManager {
     document.id = Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
     document.createdAt = new Date().toISOString();
 
-    if (this.useFirestore) {
+    if (this.useMongo && this.mongoDb) {
+      try {
+        const docToInsert = { ...document, _id: document.id };
+        await this.mongoDb.collection(collection).insertOne(docToInsert);
+        return document;
+      } catch (e) {
+        console.error(`MongoDB error writing to "${collection}":`, e.message);
+        return document;
+      }
+    } else if (this.useFirestore) {
       try {
         await this.db.collection(collection).doc(document.id).set(document);
         return document;
@@ -79,11 +150,12 @@ class DatabaseManager {
     } else {
       const items = await this.read(collection);
       items.push(document);
+      if (this.memoryStore) this.memoryStore.set(collection, items);
       const file = path.join(this.baseDir, `${collection}.json`);
       try {
         fs.writeFileSync(file, JSON.stringify(items, null, 2), 'utf8');
       } catch (e) {
-        console.error(`Local database error writing to file "${collection}":`, e);
+        console.log(`Local database file write bypassed (in-memory saved for "${collection}")`);
       }
       return document;
     }
@@ -96,7 +168,15 @@ class DatabaseManager {
    * @returns {Promise<boolean>} True if successful.
    */
   async delete(collection, docId) {
-    if (this.useFirestore) {
+    if (this.useMongo && this.mongoDb) {
+      try {
+        await this.mongoDb.collection(collection).deleteOne({ _id: docId });
+        return true;
+      } catch (e) {
+        console.error(`MongoDB error deleting from "${collection}":`, e.message);
+        return false;
+      }
+    } else if (this.useFirestore) {
       try {
         await this.db.collection(collection).doc(docId).delete();
         return true;
@@ -107,14 +187,14 @@ class DatabaseManager {
     } else {
       const items = await this.read(collection);
       const filtered = items.filter(item => item.id !== docId);
+      if (this.memoryStore) this.memoryStore.set(collection, filtered);
       const file = path.join(this.baseDir, `${collection}.json`);
       try {
         fs.writeFileSync(file, JSON.stringify(filtered, null, 2), 'utf8');
-        return true;
       } catch (e) {
-        console.error(`Local database error deleting from file "${collection}":`, e);
-        return false;
+        console.log(`Local database file write bypassed (in-memory updated for "${collection}")`);
       }
+      return true;
     }
   }
 }

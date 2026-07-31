@@ -351,13 +351,29 @@ export class NanoDesignEngine {
     }
   }
 
+  disposeGroup(group) {
+    if (!group) return;
+    while (group.children.length > 0) {
+      const child = group.children[0];
+      group.remove(child);
+      if (child.geometry) child.geometry.dispose();
+      if (child.material) {
+        if (Array.isArray(child.material)) {
+          child.material.forEach(m => m.dispose());
+        } else {
+          child.material.dispose();
+        }
+      }
+    }
+  }
+
   /**
    * Render Three.js meshes for atoms, bonds, and pi-orbitals
    */
   render3DMesh(atoms, bonds, isMetallic) {
-    while (this.atomGroup.children.length > 0) this.atomGroup.remove(this.atomGroup.children[0]);
-    while (this.bondGroup.children.length > 0) this.bondGroup.remove(this.bondGroup.children[0]);
-    while (this.cloudGroup.children.length > 0) this.cloudGroup.remove(this.cloudGroup.children[0]);
+    this.disposeGroup(this.atomGroup);
+    this.disposeGroup(this.bondGroup);
+    this.disposeGroup(this.cloudGroup);
 
     const defaultAtomColor = isMetallic ? 0x00f0ff : 0x00ff9d;
     const defaultBondColor = isMetallic ? 0x0088cc : 0x00aa66;

@@ -30,6 +30,7 @@ export class NanoSwarmEngine {
     };
 
     this.initCanvasSize();
+    this.setupResizeListener();
     this.buildVesselMap();
     this.resetSwarm();
   }
@@ -38,17 +39,32 @@ export class NanoSwarmEngine {
     if (!this.canvas) return;
     const parent = this.canvas.parentElement;
     if (parent) {
-      this.canvas.width = parent.clientWidth || 800;
-      this.canvas.height = parent.clientHeight || 480;
+      const rect = parent.getBoundingClientRect();
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      this.canvas.width = (rect.width || 800) * dpr;
+      this.canvas.height = (rect.height || 480) * dpr;
+      if (this.ctx) {
+        this.ctx.resetTransform?.();
+        this.ctx.scale(dpr, dpr);
+      }
+      this.cssWidth = rect.width || 800;
+      this.cssHeight = rect.height || 480;
     }
+  }
+
+  setupResizeListener() {
+    window.addEventListener('resize', () => {
+      this.initCanvasSize();
+      this.buildVesselMap();
+    });
   }
 
   /**
    * Build microfluidic vascular channel layout with bifurcation (branching)
    */
   buildVesselMap() {
-    const w = this.canvas ? this.canvas.width : 800;
-    const h = this.canvas ? this.canvas.height : 480;
+    const w = this.cssWidth || (this.canvas ? this.canvas.width : 800);
+    const h = this.cssHeight || (this.canvas ? this.canvas.height : 480);
 
     this.target = { x: w - 90, y: h / 2, radius: 40 };
 
@@ -64,7 +80,7 @@ export class NanoSwarmEngine {
   resetSwarm() {
     this.particles = [];
     const startX = 60;
-    const h = this.canvas ? this.canvas.height : 480;
+    const h = this.cssHeight || (this.canvas ? this.canvas.height : 480);
     const minY = 80;
     const maxY = h - 80;
 

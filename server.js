@@ -32,8 +32,12 @@ const growth = require('./utils/growth');
 const dataEngine = require('./utils/dataEngine');
 const notifications = require('./utils/notifications');
 
+const compression = require('compression');
+
 const app = express();
 const db = new DatabaseManager();
+
+app.use(compression());
 
 // Helmet CSP Middleware - Bypass CSP on dynamically served client projects
 app.use((req, res, next) => {
