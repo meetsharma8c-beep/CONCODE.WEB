@@ -1,0 +1,269 @@
+/**
+ * NanoCore by CONCODE - Cybernetic Design System & CSS Architecture
+ * Identity: Linear meets Palantir & NASA Control Rooms
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
+
+:root {
+  /* Atomic Dark Theme Color Palette */
+  --bg-primary: #0B0F17;
+  --bg-surface: #131924;
+  --bg-surface-glass: rgba(19, 25, 36, 0.75);
+  --border-card: #1F293D;
+  --border-cyan-glow: rgba(0, 240, 255, 0.3);
+  --border-violet-glow: rgba(112, 0, 255, 0.3);
+
+  /* Accents */
+  --accent-cyan: #00F0FF;
+  --accent-violet: #7000FF;
+  --accent-emerald: #36D399;
+  --accent-amber: #FF9F43;
+  --accent-crimson: #FF4757;
+
+  /* Text Hierarchy */
+  --text-heading: #F1F5F9;
+  --text-body: #94A3B8;
+  --text-muted: #64748B;
+
+  /* Fonts */
+  --font-sans: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+/* Base System Setup */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background-color: var(--bg-primary);
+  color: var(--text-body);
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+  background-image: 
+    radial-gradient(ellipse at 20% 10%, rgba(0, 240, 255, 0.05) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 90%, rgba(112, 0, 255, 0.05) 0%, transparent 50%),
+    linear-gradient(to bottom, rgba(11, 15, 23, 0.8), rgba(11, 15, 23, 0.95));
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+ * 1. KEYFRAME ANIMATIONS & HUD UTILITIES
+ * ═════════════════════════════════════════════════════════════════════ */
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(0, 240, 255, 0.2), inset 0 0 10px rgba(0, 240, 255, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(0, 240, 255, 0.45), inset 0 0 20px rgba(0, 240, 255, 0.25);
+  }
+}
+
+@keyframes scanline-effect {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(1000%); }
+}
+
+@keyframes atomic-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes radar-sweep {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 3s ease-in-out infinite;
+}
+
+.animate-atomic-spin {
+  animation: atomic-spin 12s linear infinite;
+}
+
+/* Sub-pixel Grid Overlay for Canvas Containers */
+.subpixel-grid-overlay {
+  background-size: 32px 32px;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+}
+
+/* Holographic Scanline Layer */
+.scanline-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    transparent 50%,
+    rgba(0, 240, 255, 0.02) 51%,
+    transparent 52%
+  );
+  background-size: 100% 6px;
+  opacity: 0.7;
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+ * 2. COMPONENT STYLING ARCHITECTURE
+ * ═════════════════════════════════════════════════════════════════════ */
+
+/* NanoCard Component: Glassmorphic Container with Corner Ticks */
+.nano-card {
+  position: relative;
+  background: var(--bg-surface-glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-card);
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  overflow: hidden;
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+
+.nano-card:hover {
+  border-color: var(--border-cyan-glow);
+  box-shadow: 0 0 25px rgba(0, 240, 255, 0.15);
+}
+
+/* NASA-style HUD Corner Brackets */
+.hud-corner-tl, .hud-corner-tr, .hud-corner-bl, .hud-corner-br {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  pointer-events: none;
+  z-index: 10;
+}
+.hud-corner-tl { top: 0; left: 0; border-top: 2px solid var(--accent-cyan); border-left: 2px solid var(--accent-cyan); }
+.hud-corner-tr { top: 0; right: 0; border-top: 2px solid var(--accent-cyan); border-right: 2px solid var(--accent-cyan); }
+.hud-corner-bl { bottom: 0; left: 0; border-bottom: 2px solid var(--accent-cyan); border-left: 2px solid var(--accent-cyan); }
+.hud-corner-br { bottom: 0; right: 0; border-bottom: 2px solid var(--accent-cyan); border-right: 2px solid var(--accent-cyan); }
+
+/* ControlHUD Component: Floating Glass Controls */
+.control-hud {
+  background: rgba(19, 25, 36, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 12px 16px;
+}
+
+/* Custom Sleek Range Sliders */
+.nano-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: #0F1420;
+  border: 1px solid rgba(0, 240, 255, 0.2);
+  outline: none;
+}
+
+.nano-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent-cyan);
+  cursor: pointer;
+  box-shadow: 0 0 12px var(--accent-cyan), inset 0 0 4px #FFFFFF;
+  transition: transform 0.15s ease, background-color 0.15s ease;
+}
+
+.nano-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.25);
+  background: var(--accent-emerald);
+  box-shadow: 0 0 16px var(--accent-emerald);
+}
+
+/* MetricBadge Components: Glowing Status Indicators */
+.metric-badge {
+  display: inline-flex;
+  items-center: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.metric-badge-metallic {
+  background: rgba(54, 211, 153, 0.12);
+  border: 1px solid rgba(54, 211, 153, 0.35);
+  color: var(--accent-emerald);
+  box-shadow: 0 0 12px rgba(54, 211, 153, 0.2);
+}
+
+.metric-badge-semiconducting {
+  background: rgba(255, 159, 67, 0.12);
+  border: 1px solid rgba(255, 159, 67, 0.35);
+  color: var(--accent-amber);
+  box-shadow: 0 0 12px rgba(255, 159, 67, 0.2);
+}
+
+.metric-badge-warning {
+  background: rgba(255, 71, 87, 0.12);
+  border: 1px solid rgba(255, 71, 87, 0.35);
+  color: var(--accent-crimson);
+  box-shadow: 0 0 12px rgba(255, 71, 87, 0.2);
+}
+
+.metric-badge-cyan {
+  background: rgba(0, 240, 255, 0.12);
+  border: 1px solid rgba(0, 240, 255, 0.35);
+  color: var(--accent-cyan);
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.2);
+}
+
+/* ═════════════════════════════════════════════════════════════════════
+ * 3. CANVAS OVERLAY READOUTS & HUD CONTROLS
+ * ═════════════════════════════════════════════════════════════════════ */
+.canvas-hud-overlay {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.canvas-fps-badge {
+  background: rgba(11, 15, 23, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-heading);
+}
+
+.canvas-coords-readout {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  z-index: 20;
+  background: rgba(11, 15, 23, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 240, 255, 0.2);
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-body);
+}
+
+.font-mono {
+  font-family: var(--font-mono);
+}

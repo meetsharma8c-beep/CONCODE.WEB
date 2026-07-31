@@ -11,6 +11,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="src/style.css?v=2.4">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
   <!-- Fullscreen WebGL Canvas — Interactive 3D Animation -->
@@ -25,24 +29,46 @@
     <div class="nav-inner">
       <a href="#" class="nav-logo" id="nav-logo">
         <svg class="nav-logo-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- 7 Eyelashes on top arc -->
+          <path d="M 20 39 L 13 28 M 29 31 L 23 18 M 39 26 L 35 12 M 50 24 L 50 10 M 61 26 L 65 12 M 71 31 L 77 18 M 80 39 L 87 28" stroke="#38bdf8" stroke-width="4.5" stroke-linecap="round"/>
           <!-- Eye outer bracket path -->
-          <path d="M 15 50 C 30 20, 70 20, 85 50" stroke="#00f0ff" stroke-width="8" stroke-linecap="round"/>
-          <path d="M 15 50 C 30 80, 70 80, 85 50" stroke="#00f0ff" stroke-width="8" stroke-linecap="round"/>
-          <!-- Central glowing core circular nucleus -->
-          <circle cx="50" cy="50" r="14" fill="#00f0ff" class="logo-nucleus-svg"/>
+          <path d="M 15 50 C 30 20, 70 20, 85 50" stroke="#38bdf8" stroke-width="7" stroke-linecap="round"/>
+          <path d="M 15 50 C 30 80, 70 80, 85 50" stroke="#38bdf8" stroke-width="7" stroke-linecap="round"/>
+          <!-- Central core circular nucleus -->
+          <circle cx="50" cy="50" r="14" fill="#38bdf8" class="logo-nucleus-svg"/>
           <!-- Internal bracket </> code symbol -->
-          <path d="M 45 44 L 39 50 L 45 56 M 55 44 L 61 50 L 55 56 M 52 42 L 48 58" stroke="#121c26" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M 45 44 L 39 50 L 45 56 M 55 44 L 61 50 L 55 56 M 52 42 L 48 58" stroke="#0f172a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
         <span class="nav-logo-text scramble-logo" data-scramble="CONCODE">CONCODE</span>
       </a>
       <ul class="nav-menu" id="nav-menu">
         <li><a href="#services">Services</a></li>
+        <li><a href="#nanotech-suite" style="color: #00f0ff; font-weight: 600;">DeepTech Suite</a></li>
         <li><a href="#portfolio">Portfolio</a></li>
         <li><a href="#work">Work</a></li>
         <li><a href="#process">Process</a></li>
         <li><a href="#pricing">Pricing</a></li>
         <li><a href="#contact">Contact</a></li>
       </ul>
+
+      <!-- Small CONCODE AI Circular Button -->
+      <button class="concode-ai-circle-btn" id="btn-concode-ai" title="Launch CONCODE AI Assistant" aria-label="CONCODE AI Assistant">
+        <div class="ai-circle-glow"></div>
+        <svg class="ai-circle-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="50" cy="50" r="42" stroke="url(#aiGlowGrad)" stroke-width="5" stroke-dasharray="200 40" class="ai-circle-ring"/>
+          <circle cx="50" cy="50" r="14" fill="#38bdf8" class="ai-circle-core"/>
+          <path d="M 45 44 L 39 50 L 45 56 M 55 44 L 61 50 L 55 56" stroke="#0f172a" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+          <defs>
+            <linearGradient id="aiGlowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#38bdf8"/>
+              <stop offset="100%" stop-color="#6366f1"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <span class="ai-circle-text">AI</span>
+      </button>
+
+      <a href="login.html" class="nav-secondary-btn nav-auth-btn" id="nav-btn-auth">Auth</a>
       <button class="nav-cta" id="btn-onboard">Start a Project</button>
       <button class="nav-hamburger" id="nav-toggle" aria-label="Toggle menu">
         <span></span><span></span><span></span>
@@ -56,17 +82,17 @@
   <section class="hero" id="hero">
     <div class="hero-overlay"></div>
     <div class="hero-content">
-      <div class="hero-badge">Next-Generation Digital Agency</div>
+      <div class="hero-badge">Automated Client-Acquisition Systems & AI Websites</div>
       <h1 class="hero-title">
         <span id="typewriter-line-1" class="hero-title-line"></span><span id="typewriter-cursor" class="terminal-cursor"></span><br>
         <span id="typewriter-line-2" class="hero-title-accent"></span>
       </h1>
       <p class="hero-subtitle">
-        High-performance web platforms, immersive 3D experiences, and AI-powered solutions — engineered for companies that refuse to settle.
+        CONCODE transforms traditional business websites into high-speed, AI-driven sales engines that capture, qualify, and convert leads 24/7. We help ambitious companies scale revenue and eliminate manual follow-up without adding headcount.
       </p>
       <div class="hero-actions">
-        <a href="#contact" class="btn btn-primary">Get in Touch</a>
-        <a href="#work" class="btn btn-ghost">View Our Work</a>
+        <button class="btn btn-primary" id="btn-hero-onboard">Build Your Growth System &rarr;</button>
+        <a href="#pricing" class="btn btn-ghost">Calculate Estimated ROI</a>
       </div>
     </div>
     <div class="hero-scroll-indicator">
@@ -75,150 +101,253 @@
     </div>
   </section>
 
-
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- PROBLEM / SHIFT SECTION -->
+  <!-- ═══════════════════════════════════════════ -->
+  <section class="section section-dark" id="problem-shift">
+    <div class="container">
+      <div class="section-header" style="max-width: 840px; margin: 0 auto 40px; text-align: center;">
+        <span class="section-label">The Paradigm Shift</span>
+        <h2 class="section-title scramble-text">The Age of the Passive<br>Website Is Dead.</h2>
+        <p class="section-desc" style="font-size: 1.15rem; line-height: 1.7; color: var(--text-secondary); margin-top: 16px;">
+          Most business websites are nothing more than expensive digital brochures—pretty to look at, but completely useless at generating predictable revenue. While your site sits idle, potential clients bounce in under 3 seconds, leads slip through the cracks, and your team wastes hours manually chasing unqualified prospects.
+        </p>
+        <p class="section-desc" style="font-size: 1.15rem; line-height: 1.7; color: var(--cyan); margin-top: 16px; font-weight: 400;">
+          Modern growth requires an automated, high-speed ecosystem. When you replace static templates with instant AI response workflows and conversion-focused architecture, your website stops being a business expense and becomes your company's highest-performing salesperson.
+        </p>
+      </div>
+    </div>
+  </section>
 
   <!-- ═══════════════════════════════════════════ -->
-  <!-- SERVICES -->
+  <!-- SERVICES / CORE SOLUTIONS GRID -->
   <!-- ═══════════════════════════════════════════ -->
   <section class="section" id="services">
     <div class="container">
       <div class="section-header">
-        <span class="section-label">What We Do</span>
-        <h2 class="section-title scramble-text">Capabilities that<br>drive real results.</h2>
-        <p class="section-desc scroll-highlight">We don't build templates. We architect anti-fragile, high-concurrency digital platforms that give you an unfair advantage.</p>
+        <span class="section-label">Core Solutions</span>
+        <h2 class="section-title scramble-text">Five Subsystems Built for<br>Predictable Revenue.</h2>
+        <p class="section-desc scroll-highlight">We don't build passive templates. We architect high-concurrency client acquisition engines engineered for tangible business outcomes.</p>
       </div>
 
       <div class="services-grid">
-        <div class="service-card reveal-item">
-          <div class="service-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/><path d="M7 12l3-3 2 2 5-5"/></svg>
-          </div>
-          <h3>Automated Growth <span class="expand-icon">+</span></h3>
-          <p>Programmatic scaling scripts, marketing pipelines, and growth engines built natively into your platform.</p>
-          <div class="service-details">
-            <div class="detail-item">
-              <span class="detail-label">Function</span>
-              <span class="detail-text">User acquisition automation, programmatic funnels, and target data extraction.</span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">Backend Integration</span>
-              <span class="detail-text">Redis-backed task queues (BullMQ), headless scraping (Puppeteer), and webhook ingestion.</span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">Business Result</span>
-              <span class="detail-text">Zero-overhead customer pipeline scaling and 10x faster lead response rates.</span>
-            </div>
-          </div>
-        </div>
-
+        <!-- Service 1 -->
         <div class="service-card reveal-item">
           <div class="service-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M12 2a10 10 0 0110 10 10 10 0 01-10 10A10 10 0 012 12 10 10 0 0112 2z"/><path d="M2 12h4m12 0h4M12 2v4m0 12v4"/></svg>
           </div>
-          <h3>Integrative AI <span class="expand-icon">+</span></h3>
-          <p>Advanced LLM routing, custom embeddings, and structured neural output layers for workflow automation.</p>
+          <h3>AI Chatbots & Nurturing <span class="expand-icon">+</span></h3>
+          <p>24/7 Autonomous Lead Capture & Instant Follow-Up. Convert cold traffic into booked appointments in under 60 seconds.</p>
           <div class="service-details">
             <div class="detail-item">
               <span class="detail-label">Function</span>
-              <span class="detail-text">Multi-LLM intent routing, prompt template engines, and semantic search integration.</span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">Backend Integration</span>
-              <span class="detail-text">Google Gemini API, pgvector/Pinecone vector sharding, and structured JSON output parsing.</span>
+              <span class="detail-text">Instant multi-channel SMS and email follow-ups with 24/7 automated calendar booking.</span>
             </div>
             <div class="detail-item">
               <span class="detail-label">Business Result</span>
-              <span class="detail-text">Automated customer agent response scaling and intelligent hands-free operations.</span>
+              <span class="detail-text">Never lose another qualified prospect to slow response times or after-hours inquiries.</span>
             </div>
           </div>
         </div>
 
+        <!-- Service 2 -->
         <div class="service-card reveal-item">
           <div class="service-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><path d="M3.27 6.96L12 12.01l8.73-5.05M12 22.08V12"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/><path d="M7 12l3-3 2 2 5-5"/></svg>
           </div>
-          <h3>WebGL & WebGPU <span class="expand-icon">+</span></h3>
-          <p>Cinematic, interactive 3D frontend scenes powered by hardware acceleration that captivate instantly.</p>
+          <h3>CRO & Sales Funnels <span class="expand-icon">+</span></h3>
+          <p>High-Converting Sales Funnels Engineered for Maximum ROI. Turn existing traffic into a reliable revenue stream.</p>
           <div class="service-details">
             <div class="detail-item">
               <span class="detail-label">Function</span>
-              <span class="detail-text">Physics-based graphic loops, custom shaders, and interactive 3D canvas controls.</span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">Backend Integration</span>
-              <span class="detail-text">Brotli-compressed asset servers, CDN caching, and automated shader deployment workflows.</span>
+              <span class="detail-text">Eliminate user friction, optimize scroll depth, and implement scientific A/B test funnels.</span>
             </div>
             <div class="detail-item">
               <span class="detail-label">Business Result</span>
-              <span class="detail-text">Significant bounce-rate reduction and top-tier product premium presentation.</span>
+              <span class="detail-text">Maximize conversion rates and increase customer lifetime value from every visit.</span>
             </div>
           </div>
         </div>
 
+        <!-- Service 3 -->
         <div class="service-card reveal-item">
           <div class="service-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
           </div>
-          <h3>DevOps & Cloud <span class="expand-icon">+</span></h3>
-          <p>Kubernetes clusters, serverless computing, and self-healing container architectures deployed globally.</p>
+          <h3>Technical SEO & Speed <span class="expand-icon">+</span></h3>
+          <p>Sub-Millisecond Load Speeds & Local Search Dominance. Outrank competitors on Google with hardware acceleration.</p>
           <div class="service-details">
             <div class="detail-item">
               <span class="detail-label">Function</span>
-              <span class="detail-text">Automated CI/CD build scripts, server orchestration, SSL certificate rotations, and auto-scaling.</span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">Backend Integration</span>
-              <span class="detail-text">Docker, Google Cloud Run/EKS, GitHub Actions workflows, and health-check daemons.</span>
+              <span class="detail-text">Hardware-accelerated rendering, instant page loads, and structured schema markup.</span>
             </div>
             <div class="detail-item">
               <span class="detail-label">Business Result</span>
-              <span class="detail-text">Reduced hosting costs by up to 40%, automated rollback protection, and faster code deployments.</span>
+              <span class="detail-text">Drive consistent organic traffic and rank #1 with top-tier search engine visibility.</span>
             </div>
           </div>
         </div>
 
-        <div class="service-card reveal-item">
-          <div class="service-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/><circle cx="12" cy="16" r="1"/></svg>
-          </div>
-          <h3>Security & Compliance <span class="expand-icon">+</span></h3>
-          <p>End-to-end encryption, SOC 2 readiness, penetration testing, and zero-trust architecture from day one.</p>
-          <div class="service-details">
-            <div class="detail-item">
-              <span class="detail-label">Function</span>
-              <span class="detail-text">Secure request authentication, endpoint rate-limiting, and penetration vulnerability mitigation.</span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">Backend Integration</span>
-              <span class="detail-text">JWT session handling, Helmet middleware protection, bcrypt password hashing, and encrypted secrets.</span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">Business Result</span>
-              <span class="detail-text">SOC 2 compliance readiness, bulletproof user privacy, and zero data leakage.</span>
-            </div>
-          </div>
-        </div>
-
+        <!-- Service 4 -->
         <div class="service-card reveal-item">
           <div class="service-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
           </div>
-          <h3>Data Engineering <span class="expand-icon">+</span></h3>
-          <p>Real-time data pipelines, vector databases, ETL workflows, and analytics dashboards for actionable insights.</p>
+          <h3>Brand Copywriting <span class="expand-icon">+</span></h3>
+          <p>Copywriting That Captivates, Persuades, and Sells. Position your brand as the undisputed authority in your market.</p>
           <div class="service-details">
             <div class="detail-item">
               <span class="detail-label">Function</span>
-              <span class="detail-text">Data pipeline mapping (ETL), real-time query optimization, and structured analytic reporting.</span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">Backend Integration</span>
-              <span class="detail-text">Firestore real-time listeners, PostgreSQL relational database sharding, and cron synchronization scripts.</span>
+              <span class="detail-text">Sharp, outcome-driven messaging targeting your ideal client's specific pain points.</span>
             </div>
             <div class="detail-item">
               <span class="detail-label">Business Result</span>
-              <span class="detail-text">Instant complex record lookups and real-time data-driven business analytics.</span>
+              <span class="detail-text">Turn casual browsers into high-value, long-term buyers with persuasive messaging.</span>
             </div>
           </div>
+        </div>
+
+        <!-- Service 5 -->
+        <div class="service-card reveal-item">
+          <div class="service-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/><circle cx="12" cy="16" r="1"/></svg>
+          </div>
+          <h3>Care & Growth Retainers <span class="expand-icon">+</span></h3>
+          <p>Continuous System Optimization & Security Management. Keep your platform fast, secure, and constantly converting.</p>
+          <div class="service-details">
+            <div class="detail-item">
+              <span class="detail-label">Function</span>
+              <span class="detail-text">Proactive performance tweaks, monthly CRO audits, and 24/7 server monitoring.</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Business Result</span>
+              <span class="detail-text">Hands-off technical management so you can focus exclusively on scaling your business.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Service 6 -->
+        <div class="service-card reveal-item">
+          <div class="service-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><path d="M3.27 6.96L12 12.01l8.73-5.05M12 22.08V12"/></svg>
+          </div>
+          <h3>High-Concurrency Backend <span class="expand-icon">+</span></h3>
+          <p>Microservice Cloud Cluster Architecture. Deploy self-healing containers built for enterprise scale.</p>
+          <div class="service-details">
+            <div class="detail-item">
+              <span class="detail-label">Function</span>
+              <span class="detail-text">Express/Node REST APIs, Redis caching layers, and Kubernetes auto-scaling orchestration.</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Business Result</span>
+              <span class="detail-text">Zero downtime under high traffic bursts and up to 40% reduced infrastructure hosting costs.</span>
+            </div>
+          </div>
+        <!-- Service 7: DeepTech & Nanotechnology Engineering -->
+        <div class="service-card reveal-item" style="border: 1px solid rgba(0, 240, 255, 0.3); background: rgba(15, 23, 42, 0.9);">
+          <div class="service-icon" style="color: #00f0ff;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 000 18M3 12h18"/><path d="M12 7a5 5 0 015 5 5 5 0 01-5 5 5 5 0 01-5-5 5 5 0 015-5z"/></svg>
+          </div>
+          <h3 style="color: #00f0ff;">DeepTech & Nanotech Suite <span class="expand-icon" style="color: #00ff9d;">+</span></h3>
+          <p>Scientific Web Engineering, 3D WebGL Nanostructure Modeling, Quantum Property AI Predictors & Microfluidic Swarm Simulators.</p>
+          <div class="service-details">
+            <div class="detail-item">
+              <span class="detail-label">Function</span>
+              <span class="detail-text">Custom Three.js 3D lattice generators, Brus equation quantum inference engines, and 2D canvas particle physics loops.</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Business Result</span>
+              <span class="detail-text">Establishes market authority for biotech, semiconductor, and emerging tech enterprises looking to build cutting-edge web platforms.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- LIVE DEEPTECH & NANOTECH SUITE SHOWCASE -->
+  <!-- ═══════════════════════════════════════════ -->
+  <section class="section section-dark" id="nanotech-suite" style="border-top: 1px solid rgba(0, 240, 255, 0.2); background: radial-gradient(circle at 50% 20%, rgba(0, 240, 255, 0.05), transparent 70%);">
+    <div class="container" style="max-width: 1280px;">
+      
+      <div class="section-header" style="text-align: center; margin-bottom: 32px;">
+        <span class="section-label" style="color: #00f0ff; border-color: rgba(0, 240, 255, 0.3); background: rgba(0, 240, 255, 0.1);">Flagship Enterprise Technology Showcase</span>
+        <h2 class="section-title scramble-text" style="font-size: 2.5rem; margin-top: 8px;">NanoCore by CONCODE</h2>
+        <p class="section-desc" style="max-width: 760px; margin: 0 auto; color: #94a3b8;">
+          Experience CONCODE's high-performance DeepTech suite live directly on our platform. Explore 3D carbon nanostructures, AI quantum property predictions, and microrobot swarm physics.
+        </p>
+      </div>
+
+      <!-- Embedded Suite Frame -->
+      <div style="background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(16px); border: 1px solid rgba(0, 240, 255, 0.3); border-radius: 20px; overflow: hidden; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);">
+        <iframe src="/projects/nanocore/index.html" style="width: 100%; height: 740px; border: none; display: block;" title="NanoCore by CONCODE DeepTech Suite Showcase"></iframe>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding: 12px 20px; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px;">
+        <div style="font-family: var(--font-mono); font-size: 0.8rem; color: #94a3b8;">
+          <span style="color: #00ff9d;">● LIVE ENGINE ACTIVE</span> — Integrated into CONCODE Core Infrastructure
+        </div>
+        <div>
+          <a href="/projects/nanocore/index.html" target="_blank" style="font-family: var(--font-mono); font-size: 0.8rem; color: #00f0ff; text-decoration: none; font-weight: 600;">
+            Open Standalone Fullscreen Viewport &rarr;
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- WHY CHOOSE US / BUSINESS OUTCOME SECTION -->
+  <!-- ═══════════════════════════════════════════ -->
+  <section class="section section-dark" id="why-choose-us">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-label">Proven Impact</span>
+        <h2 class="section-title scramble-text">Proven Metrics.<br>Zero Guesswork.</h2>
+        <p class="section-desc scroll-highlight">We don't measure success in subjective aesthetics. We measure success in revenue, leads, and operational efficiency.</p>
+      </div>
+
+      <div class="pricing-grid">
+        <div class="pricing-card reveal-item">
+          <div class="pricing-header">
+            <div style="font-size: 2.2rem; font-weight: 500; color: var(--cyan); margin-bottom: 8px;">&lt; 60 Seconds</div>
+            <h3>Instant Lead Response</h3>
+            <p class="pricing-desc">Engage and qualify inbound leads automatically before your competitors even see the notification.</p>
+          </div>
+          <ul class="pricing-features">
+            <li>Up to <strong>391% higher conversion probability</strong></li>
+            <li>Instant multi-channel SMS & email follow-ups</li>
+            <li>24/7 calendar booking integration</li>
+          </ul>
+        </div>
+
+        <div class="pricing-card featured reveal-item">
+          <div class="pricing-badge">Core Business Outcome</div>
+          <div class="pricing-header">
+            <div style="font-size: 2.2rem; font-weight: 500; color: #a855f7; margin-bottom: 8px;">3.2x Average Lift</div>
+            <h3>Conversion Rate Surge</h3>
+            <p class="pricing-desc">Replace passive static templates with high-converting sales funnels designed for maximum ROI.</p>
+          </div>
+          <ul class="pricing-features">
+            <li>Direct increase in booked strategy calls</li>
+            <li>Zero-friction user experience design</li>
+            <li>Scientific A/B testing & CRO audits</li>
+          </ul>
+        </div>
+
+        <div class="pricing-card reveal-item">
+          <div class="pricing-header">
+            <div style="font-size: 2.2rem; font-weight: 500; color: #10b981; margin-bottom: 8px;">100% Automated</div>
+            <h3>Zero Administrative Friction</h3>
+            <p class="pricing-desc">Eliminate manual follow-up overhead and sync leads directly into your database or CRM.</p>
+          </div>
+          <ul class="pricing-features">
+            <li>Self-updating database pipelines</li>
+            <li>Automated customer onboarding workflows</li>
+            <li>Zero manual data entry required</li>
+          </ul>
         </div>
       </div>
     </div>
@@ -253,43 +382,54 @@
         <p class="section-desc scroll-highlight">Real systems generating value for real businesses. Not mockups — production engines.</p>
       </div>
 
-      <div class="portfolio-grid" id="github-portfolio-grid">
-        <div class="portfolio-card reveal-item btn-inspect-project" style="--accent: #00f0ff; cursor: pointer;" data-project="antigravity">
-          <div class="portfolio-visual">
-            <div class="portfolio-gradient"></div>
-            <div class="portfolio-number">01</div>
-          </div>
-          <div class="portfolio-info">
-            <h3>Antigravity Dashboard</h3>
-            <p>A next-generation desktop AI assistant that injects itself directly into Microsoft Word, Excel, and Notepad using Win32 API and COM automation.</p>
-            <div class="portfolio-tags">
-              <span>Python</span>
-              <span>Win32 COM</span>
-              <span>Gemini API</span>
-              <span>PySide6</span>
+      <!-- Gallery Controls: Category Tabs & Real-time Search -->
+      <div class="project-gallery-controls">
+        <div class="project-category-tabs" id="project-category-tabs">
+          <button class="project-cat-tab active" data-category="all">All Projects</button>
+          <button class="project-cat-tab" data-category="web">Web Apps & Portals</button>
+          <button class="project-cat-tab" data-category="ai">AI & Neural Gateways</button>
+          <button class="project-cat-tab" data-category="microservices">Microservices & Systems</button>
+          <button class="project-cat-tab" data-category="github">GitHub Repositories</button>
+          <button class="project-cat-tab" data-category="generated">Live Generated (Port 3001)</button>
+        </div>
+        <div class="project-search-box">
+          <input type="text" id="project-search-input" placeholder="Search projects by title, tech, or tags..." spellcheck="false" />
+        </div>
+      </div>
+
+      <!-- Dynamic Live Generated Projects Container -->
+      <div id="dynamic-generated-projects-container" style="display: flex; flex-direction: column; gap: 24px;"></div>
+
+      <!-- ═══════════════════════════════════════════ -->
+      <!-- GITHUB REPOSITORIES SHOWCASE SECTION -->
+      <!-- ═══════════════════════════════════════════ -->
+      <div id="github-repos-section" class="github-repos-section">
+        <div class="github-section-header">
+          <div class="github-header-left">
+            <svg class="github-octocat-icon" viewBox="0 0 24 24" width="28" height="28" fill="currentColor">
+              <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+            </svg>
+            <div>
+              <h3 class="github-section-title">Open Source GitHub Codebases</h3>
+              <p class="github-section-sub">Public repositories, production core engines & open-source infrastructure modules.</p>
             </div>
-            <div class="portfolio-inspect-cta">Inspect Subsystem Specs &rarr;</div>
+          </div>
+          <div class="github-header-actions">
+            <span class="github-org-badge">
+              <span class="github-live-dot"></span> @meetsharma8c-beep
+            </span>
+            <button id="btn-sync-github-repos" class="github-sync-btn" title="Refresh Live GitHub Repositories">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+              Sync Repos
+            </button>
           </div>
         </div>
 
-        <div class="portfolio-card reveal-item btn-inspect-project" style="--accent: #a855f7; cursor: pointer;" data-project="aisigma">
-          <div class="portfolio-visual">
-            <div class="portfolio-gradient"></div>
-            <div class="portfolio-number">02</div>
-          </div>
-          <div class="portfolio-info">
-            <h3>AI Sigma (AI Σ) Gateway</h3>
-            <p>A secure, cross-platform AI gateway combining an Expo mobile/web client with a secure Express proxy server and Firebase Functions.</p>
-            <div class="portfolio-tags">
-              <span>React Native</span>
-              <span>Expo Router</span>
-              <span>Express.js</span>
-              <span>Firebase</span>
-            </div>
-            <div class="portfolio-inspect-cta">Inspect Subsystem Specs &rarr;</div>
-          </div>
+        <div id="github-repos-container" class="github-repos-grid">
+          <!-- Dynamic Repo Cards Rendered Here by main.js -->
         </div>
       </div>
+
     </div>
   </section>
 
@@ -319,22 +459,36 @@
             <div class="workspace-content active" id="content-studio">
               <div class="form-group">
                 <label for="studio-project-id">Project ID</label>
-                <input type="text" id="studio-project-id" placeholder="e.g. cafe-shop" value="my-cafe-site">
+                <input type="text" id="studio-project-id" placeholder="e.g. saas-app" value="neural-saas-core">
               </div>
               <div class="form-group">
-                <label for="studio-prompt">Design Prompt</label>
-                <textarea id="studio-prompt" rows="4" placeholder="Describe the layout, colors, and content details... e.g. A gorgeous dark themed cafe page with menu items."></textarea>
-              </div>
-              <div class="form-group">
-                <label for="studio-accent">Accent Color</label>
-                <select id="studio-accent">
-                  <option value="#00f0ff">Neon Cyan</option>
-                  <option value="#a855f7">Vibrant Purple</option>
-                  <option value="#f97316">Sun Orange</option>
-                  <option value="#10b981">Emerald Green</option>
+                <label for="studio-category">Industry Category</label>
+                <select id="studio-category">
+                  <option value="saas">SaaS AI Platform</option>
+                  <option value="crypto">Crypto & Web3 Analytics</option>
+                  <option value="shop">E-Commerce Storefront</option>
+                  <option value="portfolio">Creative Portfolio Studio</option>
+                  <option value="cafe">Cafe & Artisan Bistro</option>
                 </select>
               </div>
-              <button class="btn btn-primary" id="btn-studio-build" style="width: 100%;">Build System &rarr;</button>
+              <div class="form-group">
+                <label for="studio-prompt">Design & Feature Prompt</label>
+                <textarea id="studio-prompt" rows="3" placeholder="Describe the layout, colors, state handlers, and features..."></textarea>
+              </div>
+              <div class="form-group">
+                <label for="studio-accent">Accent Theme</label>
+                <select id="studio-accent">
+                  <option value="#00f0ff">Neon Cyan (#00f0ff)</option>
+                  <option value="#a855f7">Vibrant Purple (#a855f7)</option>
+                  <option value="#f97316">Sunburst Orange (#f97316)</option>
+                  <option value="#10b981">Emerald Matrix (#10b981)</option>
+                  <option value="#d4af37">Luxury Gold (#d4af37)</option>
+                </select>
+              </div>
+              <div class="studio-btn-group" style="display: flex; gap: 10px; margin-top: 10px;">
+                <button class="btn btn-primary" id="btn-studio-build" style="flex: 2;">Build Web Application &rarr;</button>
+                <button class="btn btn-secondary" id="btn-studio-clear" style="flex: 1;">Clear Workspace</button>
+              </div>
             </div>
 
             <!-- DEVOPS PIPELINES -->
@@ -382,24 +536,57 @@
           </div>
         </div>
 
-        <!-- Live Viewport Monitor (Right Pane) -->
+        <!-- Live Viewport & Code Monitor (Right Pane) -->
         <div class="workspace-monitor-panel">
           <div class="monitor-header">
             <div class="monitor-status">
               <span class="status-indicator live"></span>
-              <span class="status-label">CONSOLE LIVE</span>
+              <span class="status-label" id="monitor-status-text">CONSOLE LIVE</span>
             </div>
-            <div class="monitor-project-info" id="monitor-project-label">Project: Idle</div>
+
+            <!-- View Switcher -->
+            <div class="monitor-view-tabs">
+              <button class="monitor-view-tab active" id="tab-view-preview" data-view="preview">Viewport</button>
+              <button class="monitor-view-tab" id="tab-view-code" data-view="code">Code Inspector</button>
+              <button class="monitor-view-tab" id="tab-view-terminal" data-view="terminal">Console Logs</button>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div class="monitor-project-info" id="monitor-project-label">Project: Idle</div>
+              <button class="btn btn-secondary btn-xs" id="btn-clear-project" title="Reset Viewport & Workspace">Clear Project</button>
+            </div>
           </div>
           
           <div class="monitor-body">
             <!-- HTML preview iframe -->
-            <div class="monitor-view-iframe" id="monitor-iframe-wrapper" style="display: none;">
+            <div class="monitor-view-iframe" id="monitor-iframe-wrapper">
               <iframe id="workspace-preview-iframe" src="about:blank" title="Prototype Viewport"></iframe>
             </div>
 
+            <!-- Code Inspector Window -->
+            <div class="monitor-view-code" id="monitor-code-wrapper" style="display: none;">
+              <div class="code-inspector-bar">
+                <div class="code-file-tabs" id="code-file-tabs">
+                  <button class="code-file-tab active" data-file="index.html">index.html</button>
+                  <button class="code-file-tab" data-file="about.html">about.html</button>
+                  <button class="code-file-tab" data-file="dashboard.html">dashboard.html</button>
+                  <button class="code-file-tab" data-file="contact.html">contact.html</button>
+                  <button class="code-file-tab" data-file="style.css">style.css</button>
+                  <button class="code-file-tab" data-file="app.js">app.js</button>
+                </div>
+              </div>
+              <textarea id="studio-code-editor" class="code-editor-textarea" spellcheck="false"></textarea>
+              
+              <!-- Action & AI Refine Bar -->
+              <div class="ai-refine-bar">
+                <input type="text" id="studio-refine-input" placeholder="Ask CONCODE AI to refine this project... (e.g. 'Add dark mode toggle button')" />
+                <button class="btn btn-secondary btn-sm" id="btn-save-code">Save Edits</button>
+                <button class="btn btn-primary btn-sm" id="btn-refine-build">Refine with AI &rarr;</button>
+              </div>
+            </div>
+
             <!-- Terminal output window -->
-            <div class="monitor-view-terminal" id="monitor-terminal-wrapper">
+            <div class="monitor-view-terminal" id="monitor-terminal-wrapper" style="display: none;">
               <div class="terminal-shell" id="workspace-terminal-logs">
                 <div class="terminal-line system">ConCode AI Control Workspace initialized.</div>
                 <div class="terminal-line system">All endpoints active. Awaiting operator input...</div>
@@ -461,12 +648,14 @@
   <!-- ═══════════════════════════════════════════ -->
   <!-- PRICING -->
   <!-- ═══════════════════════════════════════════ -->
+  <!-- PRICING -->
+  <!-- ═══════════════════════════════════════════ -->
   <section class="section section-dark" id="pricing">
     <div class="container">
       <div class="section-header">
-        <span class="section-label">Pricing</span>
-        <h2 class="section-title scramble-text">Transparent plans,<br>no hidden costs.</h2>
-        <p class="section-desc scroll-highlight">Choose the engagement model that fits your scale. Every plan includes dedicated support.</p>
+        <span class="section-label">Tailored Development Plans</span>
+        <h2 class="section-title scramble-text">Build exactly what<br>your business needs.</h2>
+        <p class="section-desc scroll-highlight">Get personalized feature development, custom AI agent tuning, and dedicated full-stack engineering tailored specifically to your project requirements.</p>
       </div>
 
       <!-- Pricing View Switcher -->
@@ -481,7 +670,7 @@
           <div class="pricing-card reveal-item">
             <div class="pricing-header">
               <h3>Starter</h3>
-              <p class="pricing-desc">For clean, responsive custom landing pages and basic structures.</p>
+              <p class="pricing-desc">Perfect for developers & startups needing personal custom-tailored web applications.</p>
             </div>
             <div class="pricing-amount">
               <span class="price-currency">$</span>
@@ -489,20 +678,20 @@
               <span class="price-period">flat</span>
             </div>
             <ul class="pricing-features">
-              <li>Full Custom Layout Development</li>
-              <li>Responsive Design (Mobile & Desktop)</li>
-              <li>Standard Form / Lead Capture Integration</li>
-              <li>Standard Support (12h SLA)</li>
-              <li>Deploy Readiness Optimization</li>
+              <li><strong>Personal Custom Feature Development</strong></li>
+              <li>Full Custom Layout & Component Specs</li>
+              <li>100% Full Source Code Ownership & Export</li>
+              <li>CONCODE AI Native Assistant Access</li>
+              <li>Dedicated Local Review Host (`localhost:3001`)</li>
             </ul>
-            <button class="btn btn-outline btn-select-tier" data-tier="Starter">Get Started</button>
+            <button class="btn btn-outline btn-select-tier" data-tier="Starter">Get Started &rarr;</button>
           </div>
 
           <div class="pricing-card featured reveal-item">
-            <div class="pricing-badge">Most Popular</div>
+            <div class="pricing-badge">Recommended for Developers</div>
             <div class="pricing-header">
               <h3>Professional</h3>
-              <p class="pricing-desc">Premium multi-page custom business platforms with 3D styling & database dashboard.</p>
+              <p class="pricing-desc">Complete custom development with dedicated AI agent fine-tuning and 1-on-1 engineer pairing.</p>
             </div>
             <div class="pricing-amount">
               <span class="price-currency">$</span>
@@ -510,19 +699,20 @@
               <span class="price-period">flat</span>
             </div>
             <ul class="pricing-features">
-              <li>Everything in Starter</li>
-              <li>Cinematic 3D WebGL / Canvas Scenes</li>
-              <li>Interactive User Dashboard & Forms</li>
-              <li>Database Schema + Caching Layer</li>
-              <li>Priority Support (4h SLA)</li>
+              <li><strong>Everything in Starter</strong></li>
+              <li><strong>Personalized Feature Engineering</strong> (Built to your exact specs)</li>
+              <li><strong>Custom-Trained CONCODE AI Agent</strong> (Tuned on your brand & logic)</li>
+              <li><strong>1-on-1 Senior Developer Pairing & Review</strong></li>
+              <li>Cinematic WebGL 3D Scenes & Interactive Dashboards</li>
+              <li>Isolated Zero-Latency Host & Gateway Route</li>
             </ul>
-            <button class="btn btn-primary btn-select-tier" data-tier="Professional">Get Started</button>
+            <button class="btn btn-primary btn-select-tier" data-tier="Professional">Unlock Personal Build &rarr;</button>
           </div>
 
           <div class="pricing-card reveal-item">
             <div class="pricing-header">
               <h3>Enterprise</h3>
-              <p class="pricing-desc">Full-scale custom bespoke systems with high-concurrency microservices.</p>
+              <p class="pricing-desc">Full-scale bespoke platform engineering with an autonomous AI fleet and lead architect access.</p>
             </div>
             <div class="pricing-amount">
               <span class="price-currency">$</span>
@@ -530,13 +720,14 @@
               <span class="price-period">flat</span>
             </div>
             <ul class="pricing-features">
-              <li>Everything in Professional</li>
-              <li>High-Performance Rust / Go Backend</li>
-              <li>Vector Database & Advanced AI Workflows</li>
-              <li>Cloud Kubernetes Cluster Deployments</li>
-              <li>Dedicated Developer Priority Support</li>
+              <li><strong>Everything in Professional</strong></li>
+              <li><strong>Unlimited Personal Bespoke Requests</strong></li>
+              <li>High-Concurrency Microservices & Custom APIs</li>
+              <li>Private Autonomous AI Agent Fleet</li>
+              <li>Cloud Kubernetes & Vercel Edge Release Pipelines</li>
+              <li>24/7 Dedicated Lead Architect Direct Support</li>
             </ul>
-            <button class="btn btn-outline btn-select-tier" data-tier="Enterprise">Contact Sales</button>
+            <button class="btn btn-outline btn-select-tier" data-tier="Enterprise">Contact Architect &rarr;</button>
           </div>
         </div>
       </div>
@@ -745,10 +936,10 @@
   <section class="cta-banner" id="cta-banner">
     <div class="container">
       <div class="cta-content">
-        <h2 class="scramble-text">The Age of Passive<br>Web Agencies is Dead.</h2>
-        <p>We don't just build websites. We engineer competitive advantages.</p>
+        <h2 class="scramble-text">Ready to Turn Your Website Into Your<br>Highest-Performing Revenue Driver?</h2>
+        <p>Stop losing qualified leads to slow response times and passive designs. Claim your strategy session today.</p>
         <div class="cta-actions">
-          <button class="btn btn-primary btn-lg" id="btn-cta-onboard">Start Your Project</button>
+          <button class="btn btn-primary btn-lg" id="btn-cta-onboard">Book Your Growth Strategy Call &rarr;</button>
           <button class="btn btn-ghost btn-lg" id="btn-chat">Talk to AI Assistant</button>
         </div>
       </div>
@@ -762,9 +953,9 @@
     <div class="container">
       <div class="contact-layout">
         <div class="contact-info">
-          <span class="section-label">Get in Touch</span>
-          <h2 class="section-title scramble-text">Let's build<br>something great.</h2>
-          <p class="section-desc scroll-highlight">Ready to scale your platform or launch something new? Reach out and we'll respond within 12 hours.</p>
+          <span class="section-label">Book a Strategy Session</span>
+          <h2 class="section-title scramble-text">Build Your Custom<br>Growth Engine.</h2>
+          <p class="section-desc scroll-highlight">Ready to transform your online presence into a 24/7 lead-generating machine? Send us a message and we'll analyze your current system within 12 hours.</p>
 
           <div class="contact-details">
             <div class="contact-detail">
@@ -828,6 +1019,8 @@
         <div class="footer-brand">
           <a href="#" class="nav-logo" id="footer-logo">
             <svg class="nav-logo-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <!-- 7 Eyelashes on top arc -->
+              <path d="M 20 39 L 13 28 M 29 31 L 23 18 M 39 26 L 35 12 M 50 24 L 50 10 M 61 26 L 65 12 M 71 31 L 77 18 M 80 39 L 87 28" stroke="#00f0ff" stroke-width="5" stroke-linecap="round"/>
               <!-- Eye outer bracket path -->
               <path d="M 15 50 C 30 20, 70 20, 85 50" stroke="#00f0ff" stroke-width="8" stroke-linecap="round"/>
               <path d="M 15 50 C 30 80, 70 80, 85 50" stroke="#00f0ff" stroke-width="8" stroke-linecap="round"/>
@@ -970,19 +1163,44 @@
     </div>
   </div>
 
-  <!-- AI Chat Drawer -->
+  <!-- CONCODE AI Live Interactive Chat Drawer -->
   <div id="chat-drawer" class="drawer-overlay">
-    <div class="drawer-panel">
-      <div class="drawer-header">
-        <span class="drawer-title">AI Assistant</span>
+    <div class="drawer-panel concode-ai-drawer-panel">
+      <div class="drawer-header ai-drawer-header">
+        <div class="ai-drawer-title-group">
+          <div class="ai-header-circle">
+            <span class="ai-live-indicator"></span>
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#00f0ff" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+          </div>
+          <div>
+            <div class="drawer-title ai-brand-title">CONCODE AI Core <span class="ai-model-badge">CONCODE AI Engine</span></div>
+            <div class="ai-status-sub">Online &bull; Real-time AI System Assistant</div>
+          </div>
+        </div>
         <button class="modal-close" id="chat-close">&times;</button>
       </div>
-      <div class="chat-log" id="chat-output">
-        <div class="bot-msg">Hi! I'm CONCODE's AI assistant. How can I help you today?</div>
+
+      <!-- Quick Suggestion Chips -->
+      <div class="ai-quick-chips">
+        <button class="ai-chip" data-prompt="What services does CONCODE provide?">Services</button>
+        <button class="ai-chip" data-prompt="How do I build a 3D web application?">3D Web</button>
+        <button class="ai-chip" data-prompt="Show me GitHub open-source repositories">GitHub Code</button>
+        <button class="ai-chip" data-prompt="How can I start a project with CONCODE?">Start Project</button>
       </div>
+
+      <div class="chat-log" id="chat-output">
+        <div class="bot-msg">
+          <strong>Welcome to CONCODE AI</strong><br>
+          I am your real-time cognitive assistant. Ask me anything about our 3D web engineering, cloud architecture, AI models, open-source repositories, or project pricing.
+        </div>
+      </div>
+
       <div class="chat-input-bar">
-        <input type="text" id="chat-input" placeholder="Ask me anything...">
-        <button class="btn btn-primary btn-sm" id="chat-send">Send</button>
+        <input type="text" id="chat-input" placeholder="Type your message or command (e.g. /help)..." spellcheck="false">
+        <button class="btn btn-primary btn-sm" id="chat-send">
+          Send
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-left:4px;"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
       </div>
     </div>
   </div>

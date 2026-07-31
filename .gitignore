@@ -32,8 +32,17 @@ yarn-error.log*
 # Dynamic generated client layouts in studio
 public/projects/*
 !public/projects/terminal-portfolio/
+!public/projects/nanocore/
 
 # Firebase configuration caches
 .firebase/
 firebase-debug.log
  firestore-debug.log
+
+# Private Firebase Service Account credentials
+config/*.json
+
+# Self-hosted MongoDB data storage volume
+mongo-data/
+.vercel
+.env*
