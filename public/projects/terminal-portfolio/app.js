@@ -276,7 +276,7 @@ document.addEventListener('DOMContentLoaded', () => {
       .then(res => res.json())
       .then(data => {
         if (data.success) {
-          logBox.innerHTML = '<p class="text-success">✓ Inquiry package submitted successfully to developer database.</p>';
+          logBox.innerHTML = '<p class="text-success"> Inquiry package submitted successfully to developer database.</p>';
         } else {
           logBox.innerHTML = `<p class="text-danger">Submission error: ${data.error.message}</p>`;
         }
@@ -325,7 +325,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let html = '<p class="text-muted">Live public GitHub repositories:</p><br>';
     repos.forEach((repo, idx) => {
       const languageText = repo.language ? ` [${repo.language}]` : '';
-      const stars = repo.stargazers_count > 0 ? ` ★ ${repo.stargazers_count}` : '';
+      const stars = repo.stargazers_count > 0 ? `  ${repo.stargazers_count}` : '';
       const forks = repo.forks_count > 0 ? ` ⇅ ${repo.forks_count}` : '';
       const description = repo.description || 'No description provided.';
       

@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aws-site-my-custom-site
+  namespace: concode-apps
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: aws-site-my-custom-site
+  template:
+    metadata:
+      labels:
+        app: aws-site-my-custom-site
+    spec:
+      containers:
+      - name: web
+        image: registry.concode.io/aws/my-custom-site:latest
+        ports:
+        - containerPort: 3000

@@ -1,0 +1,30 @@
+services:
+  concode-web:
+    build: .
+    container_name: concode-web-app
+    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      - concode-db
+    env_file:
+      - .env
+    environment:
+      - OLLAMA_HOST=http://host.docker.internal:11434
+      - MONGO_URI=mongodb://concode-db:27017/concode
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./data:/app/data
+      - ./public:/app/public
+      - ./config:/app/config
+
+  concode-db:
+    image: mongo:6.0
+    container_name: concode-mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./mongo-data:/data/db
+

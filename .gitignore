@@ -32,7 +32,6 @@ yarn-error.log*
 # Dynamic generated client layouts in studio
 public/projects/*
 !public/projects/terminal-portfolio/
-!public/projects/nanocore/
 
 # Firebase configuration caches
 .firebase/

@@ -100,7 +100,7 @@ async function runCloudDeploymentPipeline(deploymentId, projectId, target) {
       { text: 'Uploading client workspace assets to Vercel global CDN edge caches...', delay: 400 },
       { text: 'Resolving dynamic endpoint mapping arrays...', delay: 200 },
       { text: 'Applying deployment DNS names mappings: ' + projectId + '.vercel.app', delay: 300 },
-      { text: '✓ Success! Vercel serverless application deployment completed.', delay: 100 }
+      { text: ' Success! Vercel serverless application deployment completed.', delay: 100 }
     ];
   } else {
     // AWS & GCP Kubernetes cluster builds
@@ -126,7 +126,7 @@ async function runCloudDeploymentPipeline(deploymentId, projectId, target) {
       { text: `[KUBE] Pod dynamic-site-${projectId}-a2 scheduled.`, delay: 100 },
       { text: 'Running liveness & readiness health checks... (100% responsive)', delay: 500 },
       { text: `Updating ${providerName} Edge Gateway ingress tables. Custom route DNS verified.`, delay: 300 },
-      { text: `✓ Success! ${providerName} container cluster deployment completed.`, delay: 150 }
+      { text: ` Success! ${providerName} container cluster deployment completed.`, delay: 150 }
     ];
   }
 

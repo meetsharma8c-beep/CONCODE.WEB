@@ -388,25 +388,39 @@ function createDualLayerBar(w, h, d, glowColor, metalColor) {
 function buildCentralPlinth() {
   centralGroup = new THREE.Group();
 
-  // ─── Rocky Crag Base ───
-  const cragGeom = new THREE.IcosahedronGeometry(5, 1);
+  // ─── Structured Triangular Base Disk ───
+  const cragGeom = new THREE.IcosahedronGeometry(4.8, 1);
   const cragPos = cragGeom.attributes.position;
   for (let i = 0; i < cragPos.count; i++) {
+    const x = cragPos.getX(i);
+    const z = cragPos.getZ(i);
     const y = cragPos.getY(i);
-    if (y < 0) cragPos.setY(i, y * 0.25);
-    if (y > 0) cragPos.setY(i, y * 0.6);
-    cragPos.setX(i, cragPos.getX(i) + (Math.random() - 0.5) * 0.8);
-    cragPos.setZ(i, cragPos.getZ(i) + (Math.random() - 0.5) * 0.8);
+    const angle = Math.atan2(z, x);
+    const dist = Math.sqrt(x * x + z * z);
+    
+    // Structured symmetrical radial facets (8-fold geometric symmetry)
+    const facetElev = Math.cos(angle * 8) * 0.18;
+    if (y < 0) {
+      cragPos.setY(i, -0.7);
+    } else {
+      cragPos.setY(i, 0.35 + facetElev * (dist / 4.8));
+    }
   }
   cragGeom.computeVertexNormals();
-  const cragMat = getHologramMaterial(0x00f0ff, 0.08);
+  const cragMat = getHologramMaterial(0x00f0ff, 0.1);
   const crag = new THREE.Mesh(cragGeom, cragMat);
-  crag.position.y = -1.5;
-  const cragEdges = new THREE.LineSegments(
-    new THREE.EdgesGeometry(cragGeom),
-    new THREE.LineBasicMaterial({ color: 0x00f0ff, transparent: true, opacity: 0.45, blending: THREE.AdditiveBlending })
-  );
-  crag.add(cragEdges);
+  crag.position.y = -1.2;
+  
+  // Structured razor-sharp triangular wireframe overlay
+  const cragWireMat = new THREE.MeshBasicMaterial({
+    color: 0x00f0ff,
+    wireframe: true,
+    transparent: true,
+    opacity: 0.5,
+    blending: THREE.AdditiveBlending
+  });
+  const cragWire = new THREE.Mesh(cragGeom, cragWireMat);
+  crag.add(cragWire);
   centralGroup.add(crag);
 
   // ─── Outer Shield / Eye Frame ───
@@ -437,6 +451,20 @@ function buildCentralPlinth() {
   );
   innerShield.add(rightEdges);
   centralGroup.add(innerShield);
+
+  // 3D Eye Lashes (7 lashes)
+  const lashesGroup = new THREE.Group();
+  lashesGroup.position.set(0, 1.5, 0);
+  const lashMat = new THREE.MeshBasicMaterial({ color: 0x00f0ff, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending });
+  const lashGeom = new THREE.CylinderGeometry(0.03, 0.08, 0.7, 8);
+  for (let i = 0; i < 7; i++) {
+    const lash = new THREE.Mesh(lashGeom, lashMat);
+    const angle = (i - 3) * 0.20;
+    lash.position.set(Math.sin(angle) * 3.2, Math.cos(angle) * 1.6 + 1.2, 0);
+    lash.rotation.z = -angle * 0.75;
+    lashesGroup.add(lash);
+  }
+  centralGroup.add(lashesGroup);
 
   // Shield backplate — solid disc behind the code symbol
   const backplateGeom = new THREE.CylinderGeometry(2.8, 2.8, 0.1, 48);
@@ -549,10 +577,12 @@ function buildCentralPlinth() {
   // Energy waves disabled
 
   // ─── Glowing Platform Disc ───
-  const discGeom = new THREE.CylinderGeometry(2.5, 2.5, 0.06, 48);
+  const discGeom = new THREE.CylinderGeometry(2.5, 2.5, 0.06, 16, 2);
   const discMat = getHologramMaterial(0x00f0ff, 0.08);
   const disc = new THREE.Mesh(discGeom, discMat);
   disc.position.y = 1.0; // Rest perfectly under the eye torus frame bottom (1.05) to avoid clipping
+  const discWireMat = new THREE.MeshBasicMaterial({ color: 0x00f0ff, wireframe: true, transparent: true, opacity: 0.35, blending: THREE.AdditiveBlending });
+  disc.add(new THREE.Mesh(discGeom, discWireMat));
   centralGroup.add(disc);
 
   // ─── Orange Base Emission Ring ───
@@ -1806,26 +1836,38 @@ function animate() {
     centralGroup.rotation.y = elapsed * 0.12;
   }
 
-  // Slowly rotate main directional light to animate ground shadows dynamically
+  // Keep directional light stationary to prevent expensive shadow map re-calculations on every frame
+  /*
   if (dirLight) {
     const lightAngle = elapsed * 0.04;
     dirLight.position.x = 15 * Math.cos(lightAngle) - 10 * Math.sin(lightAngle);
     dirLight.position.z = 15 * Math.sin(lightAngle) + 10 * Math.cos(lightAngle);
   }
+  */
+
+  // ─── 2-Second Eye Blinking Cycle ───
+  const blinkCycle = elapsed % 2.0;
+  let eyeBlinkY = 1.0;
+  if (blinkCycle > 1.84) {
+    const t = (blinkCycle - 1.84) / 0.16; // 0 to 1
+    eyeBlinkY = 0.08 + 0.92 * (0.5 + 0.5 * Math.cos(t * Math.PI * 2));
+  }
 
   // ─── Logo Component Animations ───
   if (eyeOuter) {
-    // Sway the outer frame
+    // Sway the outer frame & blink
     eyeOuter.rotation.z = Math.sin(elapsed * 1.5) * 0.08;
+    eyeOuter.scale.y = eyeBlinkY;
   }
   if (innerShield) {
-    // Sway in counter-phase
+    // Sway in counter-phase & blink
     innerShield.rotation.z = -Math.sin(elapsed * 1.5) * 0.05;
+    innerShield.scale.y = eyeBlinkY;
   }
   if (iris) {
     // Rapid rotation and breathing scale of iris glow core
     iris.rotation.z = -elapsed * 0.6;
-    iris.scale.setScalar(1.0 + Math.sin(elapsed * 3.5) * 0.05);
+    iris.scale.set(1.0 + Math.sin(elapsed * 3.5) * 0.05, (1.0 + Math.sin(elapsed * 3.5) * 0.05) * eyeBlinkY, 1.0);
     iris.material.opacity = 0.55 + Math.sin(elapsed * 3.5) * 0.15;
   }
   if (leftBracket && rightBracket) {

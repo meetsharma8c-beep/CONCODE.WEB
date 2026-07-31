@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aws-site-fitpulse-app
+  namespace: concode-apps
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: aws-site-fitpulse-app
+  template:
+    metadata:
+      labels:
+        app: aws-site-fitpulse-app
+    spec:
+      containers:
+      - name: web
+        image: registry.concode.io/aws/fitpulse-app:latest
+        ports:
+        - containerPort: 3000

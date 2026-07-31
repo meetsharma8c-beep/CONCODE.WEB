@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const gateway = require('./gateway');
+const OLLAMA_HOST = process.env.OLLAMA_HOST || 'http://localhost:11434';
 
 // Try to load Gemini client if configured
 let ai = null;
@@ -62,131 +63,24 @@ async function fnGenerateWebsite(projectId, prompt, options = {}) {
   };
 
   let generatedWithAI = false;
+  const concodeAI = require('./concodeAI');
 
-  if (ai) {
-    try {
-      console.log(`[STUDIO] Requesting Gemini to generate custom website files for: "${prompt}"`);
-      
-      const systemInstructions = `
-You are an expert front-end developer. Generate a premium, production-ready website code based on the user's request.
-Generate THREE files: index.html (main page), about.html (info page), contact.html (contact form), along with style.css and app.js.
-Return a structured JSON object containing precisely:
-1. "index": Complete HTML code for index.html.
-2. "about": Complete HTML code for about.html.
-3. "contact": Complete HTML code for contact.html.
-4. "css": A comprehensive stylesheet for all three pages.
-5. "js": A comprehensive client script for all three pages.
-
-In each HTML, link them as:
-<link rel="stylesheet" href="style.css">
-<script src="app.js" defer></script>
-
-Return a parseable JSON object matching this schema:
-{
-  "index": "string",
-  "about": "string",
-  "contact": "string",
-  "css": "string",
-  "js": "string"
-}
-`;
-
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: [
-          { role: 'user', parts: [{ text: `Generate code for: "${prompt}"` }] }
-        ],
-        config: {
-          systemInstruction: systemInstructions,
-          temperature: 0.2,
-          responseMimeType: 'application/json'
-        }
-      });
-
-      const text = response.text || '{}';
-      const parsed = extractAndParseJSON(text);
-      
-      siteData.pages['index.html'] = parsed.index || parsed.html;
-      siteData.pages['about.html'] = parsed.about || '<h1>About Page</h1>';
-      siteData.pages['contact.html'] = parsed.contact || '<h1>Contact Page</h1>';
-      siteData.css = parsed.css;
-      siteData.js = parsed.js;
+  try {
+    console.log(`[STUDIO] Synthesizing website using CONCODE AI v5.0 Engine for: "${prompt}"`);
+    const aiResult = await concodeAI.generateWebsiteFiles(normalizedId, prompt, options);
+    if (aiResult.success) {
+      siteData.pages = aiResult.pages;
+      siteData.css = aiResult.css;
+      siteData.js = aiResult.js;
       generatedWithAI = true;
-    } catch (err) {
-      console.error('[STUDIO] Gemini generation failed, falling back to local detectors:', err);
     }
+  } catch (err) {
+    console.warn('[STUDIO] ConCodeAIEngine website synthesis exception, checking local options...', err.message);
   }
 
-  // If Gemini is not set up or failed, check for local Ollama
+  // Fallback to offline multi-page compiler if all AI options fail
   if (!generatedWithAI) {
-    try {
-      const geminiLib = require('./gemini');
-      const ollamaStatus = await geminiLib.checkOllama();
-      
-      if (ollamaStatus.running && ollamaStatus.model) {
-        console.log(`[STUDIO] Requesting local Ollama model "${ollamaStatus.model}" to generate custom website files...`);
-        
-        const systemInstructions = `
-You are an expert front-end developer. Generate a premium, production-ready website code based on the user's request.
-Generate THREE files: index.html (main page), about.html (info page), contact.html (contact form), along with style.css and app.js.
-Return a structured JSON object containing precisely:
-1. "index": Complete HTML code for index.html.
-2. "about": Complete HTML code for about.html.
-3. "contact": Complete HTML code for contact.html.
-4. "css": A comprehensive stylesheet for all three pages.
-5. "js": A comprehensive client script for all three pages.
-
-In each HTML, link them as:
-<link rel="stylesheet" href="style.css">
-<script src="app.js" defer></script>
-
-Return a parseable JSON object matching this schema:
-{
-  "index": "string",
-  "about": "string",
-  "contact": "string",
-  "css": "string",
-  "js": "string"
-}
-`;
-
-        const response = await fetch('http://localhost:11434/api/generate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            model: ollamaStatus.model,
-            prompt: `Generate website code for: "${prompt}"`,
-            system: systemInstructions,
-            format: 'json',
-            stream: false,
-            options: {
-              temperature: 0.2
-            }
-          })
-        });
-
-        if (response.ok) {
-          const resData = await response.json();
-          const parsed = extractAndParseJSON(resData.response || '{}');
-          
-          siteData.pages['index.html'] = parsed.index || parsed.html;
-          siteData.pages['about.html'] = parsed.about || '<h1>About Page</h1>';
-          siteData.pages['contact.html'] = parsed.contact || '<h1>Contact Page</h1>';
-          siteData.css = parsed.css;
-          siteData.js = parsed.js;
-          generatedWithAI = true;
-        } else {
-          throw new Error(`Ollama API returned status ${response.status}`);
-        }
-      }
-    } catch (err) {
-      console.error('[STUDIO] Local Ollama generation failed, falling back to offline layout compiler:', err.message);
-    }
-  }
-
-  // Fallback to offline premium layout compiler if all AI options fail
-  if (!generatedWithAI) {
-    console.log('[STUDIO] Generating local offline premium layout compiled via heuristics.');
+    console.log('[STUDIO] Generating local offline multi-page layout compiled via heuristics.');
     siteData = generateOfflineMultiPageLayout(prompt, options);
   }
 
@@ -200,6 +94,11 @@ Return a parseable JSON object matching this schema:
     fs.writeFileSync(path.join(projectDir, filename), siteData.pages[filename], 'utf8');
   });
 
+const PREVIEW_PORT = process.env.PREVIEW_PORT || 3001;
+const getPreviewUrl = (projectId, pathSuffix = '') => {
+  return `http://localhost:${PREVIEW_PORT}/project/${projectId}/${pathSuffix}`;
+};
+
   // Write style and JS files
   fs.writeFileSync(path.join(projectDir, 'style.css'), siteData.css, 'utf8');
   fs.writeFileSync(path.join(projectDir, 'app.js'), siteData.js, 'utf8');
@@ -209,7 +108,7 @@ Return a parseable JSON object matching this schema:
 
   return {
     projectId: normalizedId,
-    previewUrl: `/project/${normalizedId}/`,
+    previewUrl: getPreviewUrl(normalizedId),
     pages: Object.keys(siteData.pages),
     files: [...Object.keys(siteData.pages), 'style.css', 'app.js'],
     theme: prompt.toLowerCase().includes('light') ? 'light' : 'dark'
@@ -868,7 +767,7 @@ function assembleHTML(clientName, pageName, innerContent, theme) {
         <li><a href="contact.html" ${activeClass(isContact)}>Contact</a></li>
       </ul>
       <div class="nav-cart-wrapper" onclick="toggleCartDrawer()">
-        <span class="cart-icon">🛒</span>
+        <span class="cart-icon"></span>
         <span class="cart-badge" id="cart-badge-count">0</span>
       </div>
     </div>
@@ -903,7 +802,7 @@ function assembleHTML(clientName, pageName, innerContent, theme) {
     <div class="ticket-modal-backdrop" onclick="closeTicketModal()"></div>
     <div class="card ticket-card animate-fade">
       <div class="ticket-header">
-        <div class="ticket-logo">✦ ${clientName}</div>
+        <div class="ticket-logo"> ${clientName}</div>
         <div class="ticket-status-badge">RESERVED</div>
       </div>
       <div class="ticket-body">
@@ -927,7 +826,7 @@ function assembleHTML(clientName, pageName, innerContent, theme) {
           </div>
           <div class="ticket-field" style="grid-column: span 2;">
             <span class="ticket-label">RELIABILITY FILTER</span>
-            <span class="ticket-val text-green">✓ Ingress Health Check Approved</span>
+            <span class="ticket-val text-green"> Ingress Health Check Approved</span>
           </div>
         </div>
       </div>
@@ -1794,7 +1693,7 @@ function checkoutOrder() {
     return;
   }
   
-  alert('✓ Transaction payload generated! Transmitting parameters to system database. Cart cleared.');
+  alert(' Transaction payload generated! Transmitting parameters to system database. Cart cleared.');
   cart = [];
   localStorage.removeItem('concode_offline_cart');
   updateCartBadge();
@@ -1975,13 +1874,13 @@ function submitClientContact(event) {
       });
       const data = await res.json();
       if (data.success) {
-        await log('✓ Transmitted payload successfully! Lead ID: ' + data.data.lead.id, 200);
+        await log(' Transmitted payload successfully! Lead ID: ' + data.data.lead.id, 200);
         event.target.reset();
       } else {
-        await log('⚠ Transmission error: ' + data.error.message, 200);
+        await log(' Transmission error: ' + data.error.message, 200);
       }
     } catch (e) {
-      await log('⚠ Connection fallback. Saving inquiry payload parameters locally...', 300);
+      await log(' Connection fallback. Saving inquiry payload parameters locally...', 300);
     }
   })();
 }
@@ -2041,12 +1940,184 @@ document.addEventListener('DOMContentLoaded', () => {
         aiVal.innerText = val + '%';
       }
     }, 3000);
-  }
 });
 `;
 }
 
+/**
+ * Allows developer to manually create a project workspace with custom code files.
+ * @param {string} projectId 
+ * @param {Object} files - Dictionary of filename -> content
+ * @returns {Promise<Object>}
+ */
+async function createManualProject(projectId, files = {}) {
+  const normalizedId = projectId.trim().toLowerCase().replace(/[^a-z0-9-_]/g, '');
+  if (!normalizedId) {
+    throw new Error('Invalid project ID. Use alphanumeric, hyphens, or underscores.');
+  }
+
+  const projectDir = path.join(__dirname, '../public/projects', normalizedId);
+  if (!fs.existsSync(projectDir)) {
+    fs.mkdirSync(projectDir, { recursive: true });
+  }
+
+  const savedFiles = [];
+  const defaultIndex = `<!DOCTYPE html>\n<html>\n<head>\n  <title>${normalizedId}</title>\n  <link rel="stylesheet" href="style.css">\n</head>\n<body>\n  <h1>${normalizedId} Custom Build</h1>\n  <script src="app.js"></script>\n</body>\n</html>`;
+
+  const targetFiles = {
+    'index.html': defaultIndex,
+    'style.css': '/* Custom Developer Styles */\nbody { font-family: sans-serif; background: #0b0f19; color: #fff; padding: 2rem; }',
+    'app.js': '// Custom Developer Logic\nconsole.log("Project loaded.");',
+    ...files
+  };
+
+  for (const [filename, content] of Object.entries(targetFiles)) {
+    const safeName = path.basename(filename);
+    const filePath = path.join(projectDir, safeName);
+    fs.writeFileSync(filePath, content, 'utf8');
+    savedFiles.push(safeName);
+  }
+
+  await gateway.registerRoute(normalizedId, normalizedId);
+
+  return {
+    projectId: normalizedId,
+    pages: savedFiles,
+    localDir: projectDir,
+    previewUrl: getPreviewUrl(normalizedId),
+    message: `Developer workspace "${normalizedId}" initialized with custom source files.`
+  };
+}
+
+/**
+ * Saves or updates a single file in a project workspace.
+ * @param {string} projectId 
+ * @param {string} filename 
+ * @param {string} content 
+ */
+async function saveProjectFile(projectId, filename, content = '') {
+  const normalizedId = projectId.trim().toLowerCase().replace(/[^a-z0-9-_]/g, '');
+  const safeName = path.basename(filename);
+
+  const projectDir = path.join(__dirname, '../public/projects', normalizedId);
+  if (!fs.existsSync(projectDir)) {
+    fs.mkdirSync(projectDir, { recursive: true });
+  }
+
+  const filePath = path.join(projectDir, safeName);
+  fs.writeFileSync(filePath, content, 'utf8');
+
+  await gateway.registerRoute(normalizedId, normalizedId);
+
+  return {
+    projectId: normalizedId,
+    filename: safeName,
+    previewUrl: getPreviewUrl(normalizedId, safeName === 'index.html' ? '' : safeName),
+    savedAt: new Date().toISOString()
+  };
+}
+
+/**
+ * Retrieves all files and content for a given project.
+ * @param {string} projectId 
+ */
+async function getProjectFiles(projectId) {
+  const normalizedId = projectId.trim().toLowerCase().replace(/[^a-z0-9-_]/g, '');
+  const projectDir = path.join(__dirname, '../public/projects', normalizedId);
+
+  if (!fs.existsSync(projectDir)) {
+    throw new Error(`Project directory for "${normalizedId}" does not exist.`);
+  }
+
+  const fileList = fs.readdirSync(projectDir);
+  const files = {};
+  const pages = {};
+
+  for (const filename of fileList) {
+    const fullPath = path.join(projectDir, filename);
+    if (fs.statSync(fullPath).isFile()) {
+      const content = fs.readFileSync(fullPath, 'utf8');
+      files[filename] = content;
+      if (filename.endsWith('.html')) {
+        pages[filename] = content;
+      }
+    }
+  }
+
+  return {
+    projectId: normalizedId,
+    files,
+    pages,
+    css: files['style.css'] || '',
+    js: files['app.js'] || '',
+    filenames: Object.keys(files)
+  };
+}
+
+/**
+ * Refines existing project using CONCODE AI v5.0 prompt iteration.
+ * @param {string} projectId 
+ * @param {string} instruction 
+ */
+async function refineWebsite(projectId, instruction) {
+  const normalizedId = projectId.trim().toLowerCase().replace(/[^a-z0-9-_]/g, '');
+  const currentData = await getProjectFiles(normalizedId);
+
+  const concodeAI = require('./concodeAI');
+  const result = await concodeAI.refineWebsiteFiles(normalizedId, currentData, instruction);
+
+  const projectDir = path.join(__dirname, '../public/projects', normalizedId);
+
+  if (result.pages) {
+    Object.keys(result.pages).forEach(filename => {
+      fs.writeFileSync(path.join(projectDir, filename), result.pages[filename], 'utf8');
+    });
+  }
+  if (result.css) {
+    fs.writeFileSync(path.join(projectDir, 'style.css'), result.css, 'utf8');
+  }
+  if (result.js) {
+    fs.writeFileSync(path.join(projectDir, 'app.js'), result.js, 'utf8');
+  }
+
+  return {
+    projectId: normalizedId,
+    previewUrl: getPreviewUrl(normalizedId),
+    message: `Project "${normalizedId}" refined by CONCODE AI v5.0.`,
+    files: Object.keys(result.pages || {})
+  };
+}
+
+/**
+ * Deletes a project workspace directory and unlinks gateway route.
+ * @param {string} projectId 
+ */
+async function deleteProject(projectId) {
+  const normalizedId = projectId.trim().toLowerCase().replace(/[^a-z0-9-_]/g, '');
+  const projectDir = path.join(__dirname, '../public/projects', normalizedId);
+
+  if (fs.existsSync(projectDir)) {
+    fs.rmSync(projectDir, { recursive: true, force: true });
+  }
+
+  try {
+    await gateway.deleteRoute(normalizedId);
+  } catch (e) {
+    // Route might not exist
+  }
+
+  return {
+    projectId: normalizedId,
+    message: `Project workspace "${normalizedId}" deleted successfully.`
+  };
+}
+
 module.exports = {
-  generateWebsite: fnGenerateWebsite
+  generateWebsite: fnGenerateWebsite,
+  createManualProject,
+  saveProjectFile,
+  getProjectFiles,
+  refineWebsite,
+  deleteProject
 };
 

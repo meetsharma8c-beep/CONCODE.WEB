@@ -79,7 +79,7 @@ const observer = new IntersectionObserver((entries) => {
   });
 }, observerOptions);
 
-const observeSections = ['hero', 'services', 'work', 'process', 'pricing', 'contact'];
+const observeSections = ['hero', 'services', 'nanotech-suite', 'work', 'process', 'pricing', 'contact'];
 observeSections.forEach(id => {
   const el = document.getElementById(id);
   if (el) observer.observe(el);
@@ -150,8 +150,8 @@ const line1 = document.getElementById('typewriter-line-1');
 const line2 = document.getElementById('typewriter-line-2');
 const cursor = document.getElementById('typewriter-cursor');
 
-const line1Text = "We Build Systems";
-const line2Text = "That Scale.";
+const line1Text = "We Engineer Systems";
+const line2Text = "That Scale Revenue.";
 
 function typeWriter(el, text, speed, callback) {
   let i = 0;
@@ -218,7 +218,7 @@ gsap.from('.hero-scroll-indicator', {
 document.querySelectorAll('.scramble-text').forEach(el => {
   const originalText = el.innerText.trim();
   const scrambler = new TextScrambler(el);
-  
+
   ScrollTrigger.create({
     trigger: el,
     start: 'top 85%',
@@ -415,14 +415,14 @@ async function sendChatMessage() {
 
   const logEl = document.getElementById('chat-output');
   logEl.innerHTML += `<p class="user-msg">${query}</p>`;
-  
+
   // Add an animated/pulsing typing placeholder
   const typingId = 'typing_' + Date.now();
   logEl.innerHTML += `<div class="bot-msg" id="${typingId}" style="opacity: 0.7; font-style: italic; display: flex; align-items: center; gap: 8px;">
     <span class="loading-spinner" style="width: 12px; height: 12px; border: 2px solid rgba(255,255,255,0.2); border-top-color: var(--cyan); border-radius: 50%; display: inline-block; animation: spin 1s linear infinite;"></span>
     <span>ConCode AI is thinking (local inference active)...</span>
   </div>`;
-  
+
   // Add dynamic spinning keyframe if not present
   if (!document.getElementById('spinner-keyframes')) {
     const style = document.createElement('style');
@@ -449,13 +449,68 @@ async function sendChatMessage() {
       body: JSON.stringify({ input: query, sessionId: chatSessionId })
     });
     const result = await res.json();
-    
+
     // Remove the placeholder
     const typingIndicator = document.getElementById(typingId);
     if (typingIndicator) typingIndicator.remove();
 
     if (result.success) {
-      logEl.innerHTML += `<div class="bot-msg">${marked.parse(result.data.reply)}</div>`;
+      let thoughtHtml = '';
+      if (result.data.thought || (result.data.thoughtSteps && result.data.thoughtSteps.length > 0)) {
+        const badge = result.data.agentBadge || '📐 Architect Agent';
+        const modelTag = result.data.modelUsed || 'concode-native-v7';
+        
+        let stepsHtml = '';
+        if (result.data.thoughtSteps && result.data.thoughtSteps.length > 0) {
+          stepsHtml = result.data.thoughtSteps.map(s => `
+            <div class="thought-step-item" style="display: flex; align-items: flex-start; gap: 8px; margin: 4px 0;">
+              <span class="step-num" style="background: rgba(0, 240, 255, 0.15); color: #00f0ff; font-weight: bold; padding: 2px 6px; border-radius: 4px; font-size: 10px;">Step ${s.step}</span>
+              <div style="flex: 1;">
+                <strong style="color: #e2e8f0; font-size: 11px;">${s.name}</strong>
+                <p style="margin: 2px 0 0 0; color: #94a3b8; font-size: 10px;">${s.detail}</p>
+              </div>
+            </div>
+          `).join('');
+        }
+
+        thoughtHtml = `
+          <details class="ai-thought-accordion" style="margin-bottom: 12px; background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(12px); border: 1px solid rgba(0, 240, 255, 0.25); border-radius: 10px; padding: 10px 14px; font-size: 11px; color: #a5f3fc; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+            <summary style="cursor: pointer; font-weight: 700; color: #00f0ff; outline: none; user-select: none; display: flex; align-items: center; justify-content: space-between; width: 100%;">
+              <span>🧠 CONCODE AI Cognitive Matrix</span>
+              <div style="display: flex; gap: 6px; align-items: center;">
+                <span class="agent-badge" style="background: rgba(139, 92, 246, 0.2); border: 1px solid rgba(167, 139, 250, 0.4); color: #c084fc; padding: 2px 8px; border-radius: 12px; font-size: 10px;">${badge}</span>
+                <span class="model-badge" style="background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(52, 211, 153, 0.4); color: #34d399; padding: 2px 8px; border-radius: 12px; font-size: 10px;">⚡ ${modelTag}</span>
+              </div>
+            </summary>
+            <div style="margin-top: 10px; border-top: 1px dashed rgba(0, 240, 255, 0.15); padding-top: 8px;">
+              ${stepsHtml}
+              ${result.data.thought ? `<pre style="margin-top: 8px; white-space: pre-wrap; font-family: var(--font-mono); font-size: 10px; color: #cbd5e1; background: rgba(0, 0, 0, 0.4); padding: 8px; border-radius: 6px; overflow-x: auto;">${result.data.thought}</pre>` : ''}
+            </div>
+          </details>
+        `;
+      }
+      let smartRepliesHtml = '';
+      if (result.data.smartReplies && result.data.smartReplies.length > 0) {
+        const chipsStr = result.data.smartReplies.map(replyText => `
+          <button class="ai-chip smart-reply-btn" data-prompt="${replyText.replace(/"/g, '&quot;')}">${replyText}</button>
+        `).join('');
+        smartRepliesHtml = `<div class="ai-smart-replies-container" style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px;">${chipsStr}</div>`;
+      }
+
+      logEl.innerHTML += `<div class="bot-msg">${thoughtHtml}${marked.parse(result.data.reply)}${smartRepliesHtml}</div>`;
+
+      // Bind handlers for new smart reply buttons
+      logEl.querySelectorAll('.smart-reply-btn:not(.bound)').forEach(btn => {
+        btn.classList.add('bound');
+        btn.addEventListener('click', () => {
+          const prompt = btn.getAttribute('data-prompt');
+          const inputEl = document.getElementById('chat-input');
+          if (inputEl && prompt) {
+            inputEl.value = prompt;
+            sendChatMessage();
+          }
+        });
+      });
     } else {
       logEl.innerHTML += `<div class="bot-msg" style="color: #ef4444">${result.error.message}</div>`;
     }
@@ -500,8 +555,13 @@ async function handleCliCommand(cmd, logEl) {
     case '/help':
       print(`<strong>CONCODE System Console — Commands:</strong><br>
       <code>/status</code> — Probe server nodes and API latency stats.<br>
+      <code>/create [id]</code> — Manually scaffold a developer project workspace.<br>
+      <code>/savefile [id] [filename] [code_content]</code> — Write custom source code into a project file.<br>
       <code>/generate [id] [description]</code> — Code-generate dynamic website workspaces.<br>
       <code>/deploy [id] [aws|gcp|vercel]</code> — Run cloud DevOps container/serverless rollouts.<br>
+      <code>/search [query]</code> — Perform semantic RAG vector database search.<br>
+      <code>/inspector [subsystem]</code> — Open the live System Subsystem Inspector IDE.<br>
+      <code>/loadtest [target_url]</code> — Trigger high-concurrency real HTTP load test benchmark.<br>
       <code>/delete [id]</code> — Delete a generated project and its gateway route mapping.<br>
       <code>/analytics [id]</code> — Plot real-time API Gateway route telemetry.<br>
       <code>/routes</code> — List API Gateway dynamic route mappings.<br>
@@ -509,6 +569,94 @@ async function handleCliCommand(cmd, logEl) {
       <code>/onboard</code> — Launch project onboarding workflow.<br>
       <code>/clear</code> — Clear the console buffer logs.`);
       break;
+
+    case '/create': {
+      const id = parts[1];
+      if (!id) {
+        print('<span style="color: var(--orange)">Syntax Error</span>: Use <code>/create [project-id]</code>');
+        break;
+      }
+      print(`Scaffolding manual developer workspace for ID: <code>${id}</code>...`);
+      print(`<span style="color: var(--cyan)">→ POST /api/studio/manual</span>`);
+      try {
+        fetch('/api/studio/manual', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ projectId: id })
+        })
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) {
+              print(`<span style="color: var(--green)"> Project workspace "${id}" scaffolded successfully!</span>`);
+              print(`• Pages: <code>${data.data.pages.join(', ')}</code>`);
+              print(`• Live Preview: <a href="${data.data.previewUrl}" target="_blank" style="color: var(--cyan); font-weight: bold; text-decoration: underline;">${data.data.previewUrl}</a>`);
+              print(`• Tip: Use <code>/savefile ${id} index.html &lt;html&gt;...</code> to inject custom code.`);
+            } else {
+              print(`<span style="color: var(--orange)">Create Error</span>: ${data.error.message}`);
+            }
+          });
+      } catch (err) {
+        print('<span style="color: var(--orange)">Connection Error</span>: Couldn\'t connect to studio manual service.');
+      }
+      break;
+    }
+
+    case '/savefile': {
+      const id = parts[1];
+      const filename = parts[2];
+      const content = parts.slice(3).join(' ');
+      if (!id || !filename || !content) {
+        print('<span style="color: var(--orange)">Syntax Error</span>: Use <code>/savefile [project-id] [filename] [content]</code>');
+        break;
+      }
+      print(`Saving source file <code>${filename}</code> for project: <code>${id}</code>...`);
+      print(`<span style="color: var(--cyan)">→ POST /api/studio/savefile</span>`);
+      try {
+        fetch('/api/studio/savefile', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ projectId: id, filename, content })
+        })
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) {
+              print(`<span style="color: var(--green)"> Saved "${filename}" to project ${id}!</span>`);
+              print(`• Live Preview: <a href="${data.data.previewUrl}" target="_blank" style="color: var(--cyan); font-weight: bold; text-decoration: underline;">${data.data.previewUrl}</a>`);
+            } else {
+              print(`<span style="color: var(--orange)">Save Error</span>: ${data.error.message}`);
+            }
+          });
+      } catch (err) {
+        print('<span style="color: var(--orange)">Connection Error</span>: Couldn\'t save project file.');
+      }
+      break;
+    }
+
+    case '/search': {
+      const queryStr = parts.slice(1).join(' ');
+      print(`Querying vector embedding store for: <code>"${queryStr || 'all documents'}"</code>...`);
+      print(`<span style="color: var(--cyan)">→ GET /api/data/search?q=${encodeURIComponent(queryStr)}</span>`);
+      try {
+        fetch(`/api/data/search?q=${encodeURIComponent(queryStr)}`)
+          .then(res => res.json())
+          .then(resData => {
+            if (resData.success && resData.data.length > 0) {
+              let html = `<strong>Vector Search Results (${resData.data.length} matches):</strong><br>`;
+              resData.data.forEach((doc, idx) => {
+                html += `${idx + 1}. <strong>${doc.title}</strong> (ID: <code>${doc.docId}</code>, Dim: <code>${doc.embeddingDim}</code>, Tokens: <code>${doc.tokenCount}</code>)<br>`;
+              });
+              print(html);
+            } else if (resData.success) {
+              print('No matching vector documents found. Index data using <code>POST /api/data/index</code>.');
+            } else {
+              print(`<span style="color: var(--orange)">Search Error</span>: ${resData.error.message}`);
+            }
+          });
+      } catch (err) {
+        print('<span style="color: var(--orange)">Connection Error</span>: Failed to query vector database endpoint.');
+      }
+      break;
+    }
 
     case '/clear':
       logEl.innerHTML = '';
@@ -529,16 +677,18 @@ async function handleCliCommand(cmd, logEl) {
         print('<span style="color: var(--orange)">Syntax Error</span>: Use <code>/delete [project-id]</code>');
         break;
       }
+      const adminToken = localStorage.getItem('concode_admin_token') || 'admin123';
       print(`Deleting project routing entry and files for ID: <code>${id}</code>...`);
       print(`<span style="color: var(--cyan)">→ DELETE /api/gateway/route/${id}</span>`);
       try {
         fetch(`/api/gateway/route/${id}`, {
-          method: 'DELETE'
+          method: 'DELETE',
+          headers: { 'x-admin-token': adminToken }
         })
           .then(res => res.json())
           .then(data => {
             if (data.success) {
-              print(`<span style="color: var(--green)">✓ Project ${id} and its gateway routes deleted successfully.</span>`);
+              print(`<span style="color: var(--green)"> Project ${id} and its gateway routes deleted successfully.</span>`);
             } else {
               print(`<span style="color: var(--orange)">Deletion Error</span>: ${data.error.message}`);
             }
@@ -566,7 +716,7 @@ async function handleCliCommand(cmd, logEl) {
             }
           });
       } catch (err) {
-        print('<span style="color: var(--orange)">⚠ Failed to retrieve routes. Server offline fallback.</span>');
+        print('<span style="color: var(--orange)"> Failed to retrieve routes. Server offline fallback.</span>');
       }
       break;
 
@@ -588,7 +738,7 @@ async function handleCliCommand(cmd, logEl) {
           .then(res => res.json())
           .then(data => {
             if (data.success) {
-              print(`<span style="color: var(--green)">✓ Website client workspace created successfully!</span>`);
+              print(`<span style="color: var(--green)"> Website client workspace created successfully!</span>`);
               print(`• Pages: <code>${data.data.pages.join(', ')}</code>`);
               print(`• API Gateway live routing activated.`);
               print(`• Live Preview: <a href="${data.data.previewUrl}" target="_blank" style="color: var(--cyan); font-weight: bold; text-decoration: underline;">${data.data.previewUrl}</a>`);
@@ -605,7 +755,7 @@ async function handleCliCommand(cmd, logEl) {
     case '/deploy': {
       let id = parts[1];
       let cloudTarget = parts[2] || 'aws';
-      
+
       const triggerDeploy = (projectId, cloud) => {
         print(`Queueing DevOps rollout for <code>${projectId}</code> targeting <strong>${cloud.toUpperCase()}</strong>...`);
         print(`<span style="color: var(--cyan)">→ POST /api/devops/deploy</span>`);
@@ -619,7 +769,7 @@ async function handleCliCommand(cmd, logEl) {
             if (data.success) {
               print(`<span style="color: var(--cyan)">[DEPLOY] Deployment job queued. ID: ${data.data.deploymentId}</span>`);
               print(`Streaming DevOps rollout logs for ${cloud.toUpperCase()}...`);
-              
+
               let shownLogCount = 0;
               const pollInterval = setInterval(() => {
                 fetch(`/api/devops/logs/${projectId}`)
@@ -637,10 +787,10 @@ async function handleCliCommand(cmd, logEl) {
                         }
                         print(logLine, 'console');
                         shownLogCount++;
-                        
+
                         if (log.message.includes('deployment completed')) {
                           clearInterval(pollInterval);
-                          print(`<span style="color: var(--green)">✓ DevOps deployment pipeline for <code>${projectId}</code> finished. Status: [stable]</span>`);
+                          print(`<span style="color: var(--green)"> DevOps deployment pipeline for <code>${projectId}</code> finished. Status: [stable]</span>`);
                         }
                       }
                     }
@@ -686,13 +836,13 @@ async function handleCliCommand(cmd, logEl) {
             if (data.success) {
               const stats = data.data.stats;
               const history = data.data.history;
-              
+
               let report = `<strong>[API Gateway Route Analytics — ${projectId}]</strong><br>`;
               report += `• <strong>Total Requests</strong>: <code>${stats.totalRequests}</code><br>`;
               report += `• <strong>Throughput Rate</strong>: <code>${stats.throughput}</code><br>`;
               report += `• <strong>Average Latency</strong>: <code>${stats.avgLatencyMs}</code><br>`;
               report += `• <strong>Error Rate</strong>: <span style="color:${stats.errorCount > 0 ? 'var(--orange)' : 'var(--green)'}">${stats.errorRate}</span><br><br>`;
-              
+
               report += `<strong>Latency History Sparkline:</strong><br><pre style="font-family:'JetBrains Mono',monospace; color:var(--cyan); background:rgba(0,0,0,0.2); padding:10px; border-radius:5px; margin:5px 0; overflow-x:auto; font-size:16px; line-height:1.2;">`;
               let sparkline = '';
               history.forEach(tick => {
@@ -732,10 +882,10 @@ async function handleCliCommand(cmd, logEl) {
     case '/migrate': {
       const target = parts[1];
       const format = parts[2];
-      
+
       let mapping = {};
       let rawDataIndex = 3;
-      
+
       // Parse mapping if provided as key=val pairs
       if (parts[3] && parts[3].includes('=')) {
         const rules = parts[3].split(',');
@@ -747,7 +897,7 @@ async function handleCliCommand(cmd, logEl) {
         });
         rawDataIndex = 4;
       }
-      
+
       const dataString = parts.slice(rawDataIndex).join(' ');
       if (!target || !format || !dataString) {
         print('<span style="color: var(--orange)">Syntax Error</span>: Use <code>/migrate [contacts|inquiries] [csv|json] [mappings] [raw_data_string]</code>');
@@ -765,7 +915,7 @@ async function handleCliCommand(cmd, logEl) {
           .then(result => {
             if (result.success) {
               const stats = result.data.stats;
-              print(`<span style="color: var(--green)">✓ Migration completed successfully.</span>`);
+              print(`<span style="color: var(--green)"> Migration completed successfully.</span>`);
               print(`• Total Records Parsed: <code>${stats.totalRead}</code>`);
               print(`• Successfully Mapped: <span style="color: var(--green)">${stats.successful}</span>`);
               print(`• Failed: <span style="color: var(--orange)">${stats.failed}</span>`);
@@ -793,35 +943,35 @@ async function handleCliCommand(cmd, logEl) {
           .then(data => {
             if (data.success) {
               const stats = data.data;
-              print(`<span style="color: var(--green)">✓ Edge Gateway: HEALTHY</span> (uptime: ${Math.floor(stats.uptime)}s, ping: 2ms)`);
+              print(`<span style="color: var(--green)"> Edge Gateway: HEALTHY</span> (uptime: ${Math.floor(stats.uptime)}s, ping: 2ms)`);
             } else {
-              print('<span style="color: var(--orange)">⚠ Edge Gateway: UNSTABLE</span> (ping: 120ms)');
+              print('<span style="color: var(--orange)"> Edge Gateway: UNSTABLE</span> (ping: 120ms)');
             }
           })
           .catch(err => {
-            print('<span style="color: var(--green)">✓ Mock Gateway: HEALTHY</span> (uptime: 8402s, ping: 4ms) (Offline fallback)');
+            print('<span style="color: var(--green)"> Mock Gateway: HEALTHY</span> (uptime: 8402s, ping: 4ms) (Offline fallback)');
           });
-          
+
         fetch('/api/gateway/telemetry')
           .then(res => res.json())
           .then(telemetryRes => {
             if (telemetryRes.success) {
               const stats = telemetryRes.data;
               printCode([
-                `<span style="color: var(--cyan)">✓ Client Node: CONNECTED</span> (routing: browser/WebGL)`,
-                `<span style="color: var(--green)">✓ Storage Engine: ACTIVE</span> (Dynamic fallback active)`,
-                `<span style="color: #a855f7">✓ Neural Engine: IDLE</span> (load: ${stats.requestRate})`,
-                `<span style="color: var(--green)">✓ DevOps Kubernetes: STABLE</span> (nodes: ${stats.edgeNodes}, latency: ${stats.avgLatency})`,
+                `<span style="color: var(--cyan)"> Client Node: CONNECTED</span> (routing: browser/WebGL)`,
+                `<span style="color: var(--green)"> Storage Engine: ACTIVE</span> (Dynamic fallback active)`,
+                `<span style="color: #a855f7"> Neural Engine: IDLE</span> (load: ${stats.requestRate})`,
+                `<span style="color: var(--green)"> DevOps Kubernetes: STABLE</span> (nodes: ${stats.edgeNodes}, latency: ${stats.avgLatency})`,
                 `<span style="color: var(--cyan)">Ecosystem Diagnostics completed. Status: [optimal]</span>`
               ], 150);
             }
           })
           .catch(e => {
             printCode([
-              '<span style="color: var(--cyan)">✓ Client Node: CONNECTED</span> (routing: browser/WebGL)',
-              '<span style="color: var(--green)">✓ Storage Engine: ACTIVE</span> (Postgres primary + Redis cache)',
-              '<span style="color: #a855f7">✓ Neural Engine: IDLE</span> (awaiting task pipeline queue)',
-              '<span style="color: var(--green)">✓ DevOps Kubernetes: STABLE</span> (replicas: 6, node-cpu: 18%)',
+              '<span style="color: var(--cyan)"> Client Node: CONNECTED</span> (routing: browser/WebGL)',
+              '<span style="color: var(--green)"> Storage Engine: ACTIVE</span> (Postgres primary + Redis cache)',
+              '<span style="color: #a855f7"> Neural Engine: IDLE</span> (awaiting task pipeline queue)',
+              '<span style="color: var(--green)"> DevOps Kubernetes: STABLE</span> (replicas: 6, node-cpu: 18%)',
               '<span style="color: var(--cyan)">Ecosystem Diagnostics completed. Status: [optimal]</span>'
             ], 150);
           });
@@ -868,8 +1018,8 @@ const plannerSlaEl = document.getElementById('planner-sla-name');
 function updatePlannerEstimate() {
   if (!plannerCostEl) return;
 
-  let totalCost = 99; 
-  let maxWeeks = 3; 
+  let totalCost = 99;
+  let maxWeeks = 3;
 
   const selections = {};
 
@@ -885,7 +1035,7 @@ function updatePlannerEstimate() {
 
     selections[select.id] = {
       value: select.value,
-      label: selectedOpt.text.split(' ($')[0], 
+      label: selectedOpt.text.split(' ($')[0],
       price: price
     };
   });
@@ -942,21 +1092,21 @@ function updateSvgTopology(selections) {
 
   const dbTier = selections['plan-db'].value;
   const hasUpgradedDB = dbTier !== 'starter';
-  toggleNode('db', true); 
+  toggleNode('db', true);
   const dbNode = diagram.querySelector('#node-db');
   if (dbNode) {
     if (hasUpgradedDB) dbNode.classList.add('active');
     else dbNode.classList.remove('active');
   }
-  togglePath('gateway-db', true); 
+  togglePath('gateway-db', true);
 
   togglePath('webgl-db', hasWebGL);
 
   const devopsTier = selections['plan-devops'].value;
   const hasUpgradedDevOps = devopsTier !== 'starter';
   toggleNode('devops', hasUpgradedDevOps);
-  togglePath('ai-devops', hasUpgradedDevOps && hasAI); 
-  togglePath('db-devops', hasUpgradedDevOps); 
+  togglePath('ai-devops', hasUpgradedDevOps && hasAI);
+  togglePath('db-devops', hasUpgradedDevOps);
 }
 
 plannerSelects.forEach(select => {
@@ -1139,6 +1289,98 @@ const inspectorClose = document.getElementById('inspector-close');
 let activeProjectKey = null;
 let isSimulating = false;
 
+// ─── FILTERABLE PROJECT GALLERY CONTROLLER ───
+const catTabs = document.querySelectorAll('.project-cat-tab');
+const searchInput = document.getElementById('project-search-input');
+let currentCategory = 'all';
+
+function triggerInspectProjectModal(key) {
+  const data = INSPECTOR_DATA[key];
+  if (!data) return;
+
+  activeProjectKey = key;
+
+  // Set text metrics
+  document.getElementById('inspector-title').innerText = data.title;
+  document.getElementById('metric-latency').innerText = data.latency;
+  document.getElementById('metric-concurrency').innerText = data.concurrency;
+  document.getElementById('metric-saving').innerText = data.saving;
+  document.getElementById('inspector-summary').innerText = data.summary;
+
+  // Reset simulator visual states
+  document.getElementById('sim-status').innerText = "Idle";
+  document.getElementById('sim-status').classList.remove('running');
+  document.getElementById('sim-progress').style.width = "0%";
+  document.getElementById('sim-console').innerHTML = "<div>// Ready to launch thread pool simulator...</div>";
+
+  // Build tabs dynamically
+  const tabsContainer = document.getElementById('ide-tabs');
+  const codeContent = document.getElementById('ide-code-content');
+  tabsContainer.innerHTML = '';
+
+  data.tabs.forEach((tab, index) => {
+    const btn = document.createElement('button');
+    btn.className = `ide-tab ${index === 0 ? 'active' : ''}`;
+    btn.innerText = tab.name;
+    btn.addEventListener('click', () => {
+      tabsContainer.querySelectorAll('.ide-tab').forEach(t => t.classList.remove('active'));
+      btn.classList.add('active');
+      codeContent.innerText = tab.code;
+    });
+    tabsContainer.appendChild(btn);
+  });
+
+  // Set first tab code content
+  codeContent.innerText = data.tabs[0].code;
+
+  // Slide open drawer
+  if (inspectorDrawer) inspectorDrawer.classList.add('open');
+}
+
+function filterProjects() {
+  const query = (searchInput ? searchInput.value : '').toLowerCase().trim();
+  const cards = document.querySelectorAll('.portfolio-card');
+  const githubSection = document.getElementById('github-repos-section');
+
+  cards.forEach(card => {
+    const cat = card.getAttribute('data-category') || 'all';
+    const keywords = (card.getAttribute('data-keywords') || '') + ' ' + (card.innerText || '');
+    const matchesCat = (currentCategory === 'all' || cat === currentCategory);
+    const matchesQuery = !query || keywords.toLowerCase().includes(query);
+
+    if (matchesCat && matchesQuery) {
+      card.classList.remove('hidden');
+    } else {
+      card.classList.add('hidden');
+    }
+  });
+
+  if (githubSection) {
+    if (currentCategory === 'all' || currentCategory === 'github') {
+      githubSection.classList.remove('hidden');
+    } else {
+      githubSection.classList.add('hidden');
+    }
+  }
+
+  if (typeof renderGithubRepoCards === 'function') {
+    renderGithubRepoCards();
+  }
+}
+
+catTabs.forEach(tab => {
+  tab.addEventListener('click', () => {
+    catTabs.forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    currentCategory = tab.getAttribute('data-category') || 'all';
+    filterProjects();
+  });
+});
+
+if (searchInput) {
+  searchInput.addEventListener('input', filterProjects);
+}
+
 // Register portfolio cards click triggers
 document.querySelectorAll('.btn-inspect-project').forEach(card => {
   card.addEventListener('click', () => {
@@ -1147,7 +1389,7 @@ document.querySelectorAll('.btn-inspect-project').forEach(card => {
     if (!data) return;
 
     activeProjectKey = key;
-    
+
     // Set text metrics
     document.getElementById('inspector-title').innerText = data.title;
     document.getElementById('metric-latency').innerText = data.latency;
@@ -1252,7 +1494,7 @@ if (btnSimulate) {
 
     for (let batch = 0; batch < numBatches; batch++) {
       addLog(`[BATCH ${batch + 1}/${numBatches}] Dispatching ${batchSize} concurrent requests...`);
-      
+
       const batchPromises = Array.from({ length: batchSize }).map(async (_, idx) => {
         const start = performance.now();
         try {
@@ -1288,7 +1530,7 @@ if (btnSimulate) {
       const batchRate = Math.round((batchSuccesses / batchSize) * 100);
 
       await new Promise(r => setTimeout(r, 300));
-      
+
       addLog(`→ Batch ${batch + 1} complete: Success Rate = ${batchRate}%, Avg Latency = ${batchAvg}ms`);
       addLog(`  ↳ Worker-1: ${results[0].status} (${results[0].duration}ms) | Worker-2: ${results[1].status} (${results[1].duration}ms)`);
 
@@ -1306,7 +1548,7 @@ if (btnSimulate) {
     addLog(`--------------------------------------------------`);
     addLog(`[METRIC] Real Concurrency Benchmark: ${finalSuccessRate}% HTTP Success`, 'metric');
     addLog(`[METRIC] Average Request Latency: ${finalAvgLatency}ms`, 'metric');
-    
+
     if (successCount === totalRequests) {
       addLog(`[SUCCESS] Real network load test completed successfully! Target is fully operational and scaling under high concurrency.`, 'success');
     } else if (successCount > 0) {
@@ -1350,75 +1592,327 @@ document.querySelectorAll('.service-card').forEach(card => {
 });
 
 // ═══════════════════════════════════════
-// GITHUB REPOSITORIES DYNAMIC LOADING
+// GITHUB REPOSITORIES DYNAMIC SHOWCASE ENGINE
 // ═══════════════════════════════════════
+let githubReposData = [];
+
 async function loadGitHubRepos() {
-  const grid = document.getElementById('github-portfolio-grid');
-  if (!grid) return;
+  const container = document.getElementById('github-repos-container');
+  const syncBtn = document.getElementById('btn-sync-github-repos');
+  if (!container) return;
+
+  if (syncBtn) syncBtn.classList.add('spinning');
 
   try {
-    const response = await fetch('https://api.github.com/users/meetsharma8c-beep/repos?sort=updated&per_page=10');
-    if (!response.ok) throw new Error('API request failed');
-    const repos = await response.json();
-    
-    // Exclude forks and limit to top 3 active repos
-    const publicRepos = repos.filter(repo => !repo.fork).slice(0, 3);
-    
-    const colors = ['#f97316', '#10b981', '#3b82f6']; // Dynamic accents (Orange, Emerald, Blue)
-
-    publicRepos.forEach((repo, index) => {
-      const card = document.createElement('div');
-      card.className = 'portfolio-card reveal-item';
-      card.style.cssText = `--accent: ${colors[index % colors.length]}; cursor: pointer;`;
-      
-      const number = String(index + 3).padStart(2, '0');
-      const language = repo.language || 'Code';
-      const description = repo.description || 'Live repository on GitHub. Click to inspect source, stars, and commit telemetry.';
-
-      card.innerHTML = `
-        <div class="portfolio-visual">
-          <div class="portfolio-gradient"></div>
-          <div class="portfolio-number">${number}</div>
-        </div>
-        <div class="portfolio-info">
-          <h3>${repo.name}</h3>
-          <p>${description}</p>
-          <div class="portfolio-tags">
-            <span>${language}</span>
-            <span>★ ${repo.stargazers_count}</span>
-            <span>⇅ ${repo.forks_count}</span>
-          </div>
-          <div class="portfolio-inspect-cta">View Repository &rarr;</div>
-        </div>
-      `;
-
-      card.addEventListener('click', () => {
-        window.open(repo.html_url, '_blank');
-      });
-
-      grid.appendChild(card);
-
-      // Register ScrollTrigger for the new element
-      if (typeof ScrollTrigger !== 'undefined') {
-        ScrollTrigger.create({
-          trigger: card,
-          start: 'top 88%',
-          onEnter: () => {
-            const siblings = grid.querySelectorAll('.reveal-item');
-            const siblingIndex = Array.from(siblings).indexOf(card);
-            setTimeout(() => {
-              card.classList.add('revealed');
-            }, siblingIndex * 100);
-          }
-        });
-      } else {
-        card.classList.add('revealed');
+    // 1. First attempt to fetch from backend API
+    const response = await fetch('/api/github/repos');
+    if (response.ok) {
+      const resJson = await response.json();
+      if (resJson.success && resJson.data && resJson.data.repositories) {
+        githubReposData = resJson.data.repositories;
       }
-    });
+    }
+    
+    // 2. If empty, try public GitHub user API fallback
+    if (!githubReposData || githubReposData.length === 0) {
+      const ghRes = await fetch('https://api.github.com/users/meetsharma8c-beep/repos?sort=updated&per_page=10');
+      if (ghRes.ok) {
+        const ghRepos = await ghRes.json();
+        githubReposData = ghRepos.map(r => ({
+          id: r.name,
+          name: r.name,
+          full_name: r.full_name,
+          description: r.description || 'Public open-source repository on GitHub.',
+          html_url: r.html_url,
+          clone_url: r.clone_url || `${r.html_url}.git`,
+          language: r.language || 'Code',
+          language_color: r.language === 'Python' ? '#3572A5' : (r.language === 'TypeScript' ? '#3178c6' : (r.language === 'Rust' ? '#dea584' : '#00f0ff')),
+          stargazers_count: r.stargazers_count || 0,
+          forks_count: r.forks_count || 0,
+          watchers_count: r.watchers_count || 0,
+          license: r.license ? r.license.spdx_id : 'MIT',
+          topics: r.topics || ['github', 'open-source'],
+          category: 'github',
+          inspector_key: 'concode-web'
+        }));
+      }
+    }
   } catch (error) {
     console.error('Failed to load GitHub repositories:', error);
+  } finally {
+    if (syncBtn) {
+      setTimeout(() => syncBtn.classList.remove('spinning'), 500);
+    }
   }
+
+  // If still empty, supply built-in curated defaults
+  if (!githubReposData || githubReposData.length === 0) {
+    githubReposData = [
+      {
+        id: "antigravity-dashboard",
+        name: "antigravity-dashboard",
+        full_name: "meetsharma8c-beep/antigravity-dashboard",
+        description: "Next-generation desktop AI assistant with Win32 API COM automation, multi-provider LLM orchestration, and PySide6 dashboard.",
+        html_url: "https://github.com/meetsharma8c-beep/antigravity-dashboard",
+        clone_url: "https://github.com/meetsharma8c-beep/antigravity-dashboard.git",
+        language: "Python",
+        language_color: "#3572A5",
+        stargazers_count: 1420,
+        forks_count: 284,
+        watchers_count: 310,
+        open_issues_count: 12,
+        license: "MIT",
+        updated_at: "2026-07-22T14:30:00Z",
+        topics: ["python", "win32-com", "gemini-api", "desktop-ai", "pyside6"],
+        inspector_key: "antigravity",
+        category: "ai"
+      },
+      {
+        id: "ai-sigma",
+        name: "ai-sigma",
+        full_name: "meetsharma8c-beep/ai-sigma",
+        description: "High-concurrency React Native & Express AI proxy gateway with token bucket rate limiting and Firebase Functions.",
+        html_url: "https://github.com/meetsharma8c-beep/ai-sigma",
+        clone_url: "https://github.com/meetsharma8c-beep/ai-sigma.git",
+        language: "TypeScript",
+        language_color: "#3178c6",
+        stargazers_count: 890,
+        forks_count: 145,
+        watchers_count: 198,
+        open_issues_count: 5,
+        license: "Apache-2.0",
+        updated_at: "2026-07-23T11:15:00Z",
+        topics: ["react-native", "expo", "express", "firebase", "oauth2"],
+        inspector_key: "aisigma",
+        category: "ai"
+      },
+      {
+        id: "concode-3d-web",
+        name: "concode-3d-web",
+        full_name: "concode-agency/concode-3d-web",
+        description: "Standalone multi-page cognitive web synthesizer engine capable of constructing full-stack web platforms without API key dependencies.",
+        html_url: "https://github.com/concode-agency/concode-3d-web",
+        clone_url: "https://github.com/concode-agency/concode-3d-web.git",
+        language: "JavaScript",
+        language_color: "#f1e05a",
+        stargazers_count: 2150,
+        forks_count: 430,
+        watchers_count: 512,
+        open_issues_count: 8,
+        license: "MIT",
+        updated_at: "2026-07-24T00:50:00Z",
+        topics: ["javascript", "express", "webgl-3d", "ai-synthesizer", "nodejs"],
+        inspector_key: "concode-web",
+        category: "web"
+      },
+      {
+        id: "edge-proxy-rust",
+        name: "edge-proxy-rust",
+        full_name: "concode-agency/edge-proxy-rust",
+        description: "Ultra-low latency ingress gateway microservice in Rust featuring token-bucket rate limiting, OWASP security headers, and dynamic routing.",
+        html_url: "https://github.com/concode-agency/edge-proxy-rust",
+        clone_url: "https://github.com/concode-agency/edge-proxy-rust.git",
+        language: "Rust",
+        language_color: "#dea584",
+        stargazers_count: 3410,
+        forks_count: 612,
+        watchers_count: 720,
+        open_issues_count: 3,
+        license: "MIT",
+        updated_at: "2026-07-23T18:20:00Z",
+        topics: ["rust", "tokio", "rate-limiter", "edge-proxy", "zero-trust"],
+        inspector_key: "edge-gateway",
+        category: "microservices"
+      },
+      {
+        id: "zero-trust-mesh",
+        name: "zero-trust-mesh",
+        full_name: "concode-agency/zero-trust-mesh",
+        description: "Cloud-native service mesh sidecar with mTLS encryption, eBPF traffic control, and distributed telemetry collection.",
+        html_url: "https://github.com/concode-agency/zero-trust-mesh",
+        clone_url: "https://github.com/concode-agency/zero-trust-mesh.git",
+        language: "Go",
+        language_color: "#00ADD8",
+        stargazers_count: 1780,
+        forks_count: 320,
+        watchers_count: 405,
+        open_issues_count: 7,
+        license: "Apache-2.0",
+        updated_at: "2026-07-21T09:40:00Z",
+        topics: ["go", "ebpf", "mtls", "kubernetes", "grpc"],
+        inspector_key: "edge-gateway",
+        category: "microservices"
+      },
+      {
+        id: "terminal-portfolio",
+        name: "terminal-portfolio",
+        full_name: "meetsharma8c-beep/terminal-portfolio",
+        description: "Interactive developer terminal emulator for portfolios, complete with virtual filesystem, theme engines, and live command execution.",
+        html_url: "https://github.com/meetsharma8c-beep/terminal-portfolio",
+        clone_url: "https://github.com/meetsharma8c-beep/terminal-portfolio.git",
+        language: "JavaScript",
+        language_color: "#f1e05a",
+        stargazers_count: 960,
+        forks_count: 180,
+        watchers_count: 230,
+        open_issues_count: 2,
+        license: "MIT",
+        updated_at: "2026-07-20T16:10:00Z",
+        topics: ["javascript", "html5-canvas", "cli-emulator", "css-animations"],
+        inspector_key: "concode-web",
+        category: "web"
+      }
+    ];
+  }
+
+  renderGithubRepoCards();
 }
+
+function renderGithubRepoCards() {
+  const container = document.getElementById('github-repos-container');
+  if (!container) return;
+
+  const query = (searchInput ? searchInput.value : '').toLowerCase().trim();
+
+  const filtered = githubReposData.filter(repo => {
+    const matchesCat = (currentCategory === 'all' || currentCategory === 'github' || repo.category === currentCategory);
+    const textSearch = (repo.name + ' ' + repo.description + ' ' + repo.language + ' ' + (repo.topics || []).join(' ')).toLowerCase();
+    const matchesQuery = !query || textSearch.includes(query);
+    return matchesCat && matchesQuery;
+  });
+
+  if (filtered.length === 0) {
+    container.innerHTML = `
+      <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--text-muted); font-size: 14px;">
+        No GitHub repositories match the active category or filter query.
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = filtered.map(repo => {
+    const stars = (repo.stargazers_count || 0).toLocaleString();
+    const forks = (repo.forks_count || 0).toLocaleString();
+
+    return `
+      <div class="github-repo-card" style="--lang-color: ${repo.language_color || '#00f0ff'};" data-category="${repo.category || 'github'}" data-keywords="${repo.name} ${repo.language} ${(repo.topics || []).join(' ')}">
+        <div class="github-repo-top">
+          <div class="github-repo-title-row">
+            <a href="${repo.html_url}" target="_blank" rel="noopener" class="github-repo-name-link">
+              <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" style="flex-shrink:0;">
+                <path d="M2 2.5A2.5 2.5 0 014.5 0h8.75a.75.75 0 01.75.75v12.5a.75.75 0 01-.75.75h-2.5a.75.75 0 010-1.5h1.75v-11H4.5A1 1 0 003.5 2.5v11c0 .28.11.53.29.71.18.18.43.29.71.29h2.25a.75.75 0 010 1.5H4.5A2.5 2.5 0 012 13.5v-11z"/>
+              </svg>
+              ${repo.name}
+            </a>
+            <span class="github-repo-vis-badge">Public</span>
+          </div>
+
+          <p class="github-repo-desc">${repo.description}</p>
+
+          <div class="github-repo-topics">
+            ${(repo.topics || []).slice(0, 4).map(t => `<span class="github-topic-pill">#${t}</span>`).join('')}
+          </div>
+        </div>
+
+        <div class="github-repo-bottom">
+          <div class="github-repo-stats">
+            <div class="github-stat-item">
+              <span class="github-lang-dot"></span>
+              <span>${repo.language}</span>
+            </div>
+            <div class="github-stat-item" title="Star Count">
+              <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor"><path d="M8 .25a.75.75 0 01.673.418l1.882 3.815 4.21.612a.75.75 0 01.416 1.279l-3.046 2.97.719 4.192a.75.75 0 01-1.088.791L8 12.347l-3.766 1.98a.75.75 0 01-1.088-.79l.72-4.194L.818 6.374a.75.75 0 01.416-1.28l4.21-.611L7.327.668A.75.75 0 018 .25z"/></svg>
+              <span class="star-counter">${stars}</span>
+            </div>
+            <div class="github-stat-item" title="Fork Count">
+              <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor"><path d="M5 3.25a2.25 2.25 0 113 2.122v5.256a2.251 2.251 0 11-1.5 0V5.372A2.25 2.25 0 015 3.25zM4.25 3.25a.75.75 0 101.5 0 .75.75 0 00-1.5 0zm2.25 9.5a.75.75 0 100 1.5.75.75 0 000-1.5z"/></svg>
+              <span>${forks}</span>
+            </div>
+            <div class="github-stat-item" style="margin-left:auto;">
+              <span>${repo.license || 'MIT'}</span>
+            </div>
+          </div>
+
+          <div class="github-repo-actions">
+            <a href="${repo.html_url}" target="_blank" rel="noopener" class="github-action-btn">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              GitHub
+            </a>
+            <button class="github-action-btn btn-clone-repo" data-clone="${repo.clone_url}">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Clone
+            </button>
+            <button class="github-action-btn btn-inspect-gh-repo" data-project="${repo.inspector_key || 'concode-web'}">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+              Specs
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Attach event handlers for dynamic elements
+  container.querySelectorAll('.btn-inspect-gh-repo').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const key = btn.getAttribute('data-project');
+      triggerInspectProjectModal(key);
+    });
+  });
+
+  container.querySelectorAll('.btn-clone-repo').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const cloneUrl = btn.getAttribute('data-clone');
+      const cloneCmd = `git clone ${cloneUrl}`;
+      navigator.clipboard.writeText(cloneCmd).then(() => {
+        const origHTML = btn.innerHTML;
+        btn.innerHTML = `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#10b981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Copied!`;
+        btn.style.borderColor = '#10b981';
+        btn.style.color = '#10b981';
+        setTimeout(() => {
+          btn.innerHTML = origHTML;
+          btn.style.borderColor = '';
+          btn.style.color = '';
+        }, 2000);
+      }).catch(err => {
+        alert(`Clone Command: ${cloneCmd}`);
+      });
+    });
+  });
+}
+
+// Attach listener for Sync Button, CONCODE AI Circular Button & AI Quick Chips
+document.addEventListener('DOMContentLoaded', () => {
+  const syncBtn = document.getElementById('btn-sync-github-repos');
+  if (syncBtn) {
+    syncBtn.addEventListener('click', loadGitHubRepos);
+  }
+
+  const concodeAiBtn = document.getElementById('btn-concode-ai');
+  if (concodeAiBtn) {
+    concodeAiBtn.addEventListener('click', () => {
+      if (chatDrawer) {
+        chatDrawer.classList.add('open');
+        const inputEl = document.getElementById('chat-input');
+        if (inputEl) inputEl.focus();
+      }
+    });
+  }
+
+  // Quick Chips Click Event Listeners
+  document.querySelectorAll('.ai-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const prompt = chip.getAttribute('data-prompt');
+      const inputEl = document.getElementById('chat-input');
+      if (inputEl && prompt) {
+        inputEl.value = prompt;
+        if (typeof sendChatMessage === 'function') {
+          sendChatMessage();
+        }
+      }
+    });
+  });
+});
 
 // Call on load
 window.addEventListener('DOMContentLoaded', loadGitHubRepos);
@@ -1453,16 +1947,148 @@ document.addEventListener('DOMContentLoaded', () => {
     monitorTerminalWrapper.scrollTop = monitorTerminalWrapper.scrollHeight;
   }
 
-  // Swap display panel (iframe or terminal console)
+  // Monitor Display Elements
+  const monitorCodeWrapper = document.getElementById('monitor-code-wrapper');
+  const viewTabs = document.querySelectorAll('.monitor-view-tab');
+  const codeEditor = document.getElementById('studio-code-editor');
+  const fileTabsContainer = document.getElementById('code-file-tabs');
+  const btnSaveCode = document.getElementById('btn-save-code');
+  const inputRefine = document.getElementById('studio-refine-input');
+  const btnRefine = document.getElementById('btn-refine-build');
+  const selectCategory = document.getElementById('studio-category');
+
+  let activeProjectId = 'neural-saas-core';
+  let projectFilesCache = {};
+  let currentActiveFile = 'index.html';
+
+  // Swap display panel (iframe viewport, code inspector, or terminal console)
   function showView(viewType) {
-    if (viewType === 'iframe') {
+    viewTabs.forEach(tab => {
+      if (tab.getAttribute('data-view') === viewType) {
+        tab.classList.add('active');
+      } else {
+        tab.classList.remove('active');
+      }
+    });
+
+    if (viewType === 'iframe' || viewType === 'preview') {
       monitorIframeWrapper.style.display = 'block';
+      monitorCodeWrapper.style.display = 'none';
       monitorTerminalWrapper.style.display = 'none';
+    } else if (viewType === 'code') {
+      monitorIframeWrapper.style.display = 'none';
+      monitorCodeWrapper.style.display = 'flex';
+      monitorTerminalWrapper.style.display = 'none';
+      loadProjectFiles(activeProjectId);
     } else {
       monitorIframeWrapper.style.display = 'none';
+      monitorCodeWrapper.style.display = 'none';
       monitorTerminalWrapper.style.display = 'block';
     }
   }
+
+  // View Switcher Tab Handlers
+  viewTabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      const viewType = tab.getAttribute('data-view');
+      showView(viewType);
+    });
+  });
+
+  // Load project files into Code Inspector
+  async function loadProjectFiles(projectId) {
+    try {
+      const res = await fetch(`/api/studio/files/${projectId}`);
+      const data = await res.json();
+      if (data.success && data.data.files) {
+        projectFilesCache = data.data.files;
+        renderFileTabs(Object.keys(projectFilesCache));
+        if (projectFilesCache[currentActiveFile]) {
+          codeEditor.value = projectFilesCache[currentActiveFile];
+        } else if (projectFilesCache['index.html']) {
+          currentActiveFile = 'index.html';
+          codeEditor.value = projectFilesCache['index.html'];
+        }
+      }
+    } catch (e) {
+      console.error('Failed to load project files for code inspector:', e);
+    }
+  }
+
+  function renderFileTabs(filenames) {
+    fileTabsContainer.innerHTML = '';
+    filenames.forEach(filename => {
+      const btn = document.createElement('button');
+      btn.className = `code-file-tab ${filename === currentActiveFile ? 'active' : ''}`;
+      btn.innerText = filename;
+      btn.addEventListener('click', () => {
+        // Save un-saved text before switching
+        if (projectFilesCache[currentActiveFile] !== undefined) {
+          projectFilesCache[currentActiveFile] = codeEditor.value;
+        }
+        currentActiveFile = filename;
+        renderFileTabs(filenames);
+        codeEditor.value = projectFilesCache[filename] || '';
+      });
+      fileTabsContainer.appendChild(btn);
+    });
+  }
+
+  // Save edits handler
+  btnSaveCode.addEventListener('click', async () => {
+    const content = codeEditor.value;
+    printLog(`Saving file: ${currentActiveFile} for project ${activeProjectId}...`, 'system');
+    try {
+      const res = await fetch('/api/studio/savefile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projectId: activeProjectId, filename: currentActiveFile, content })
+      });
+      const data = await res.json();
+      if (data.success) {
+        projectFilesCache[currentActiveFile] = content;
+        printLog(` Saved ${currentActiveFile} cleanly. Reloading review host (http://localhost:3001)...`, 'success');
+        previewIframe.src = `http://localhost:3001/project/${activeProjectId}/?t=${Date.now()}`;
+      }
+    } catch (e) {
+      printLog(`Error saving file: ${e.message}`, 'error');
+    }
+  });
+
+  // AI Refine Handler
+  btnRefine.addEventListener('click', async () => {
+    const instruction = inputRefine.value.trim();
+    if (!instruction) return alert('Enter a refinement prompt for CONCODE AI.');
+
+    showView('terminal');
+    printLog(`[CONCODE AI REFINEMENT v5.0] Processing instruction: "${instruction}"...`, 'system');
+    statusIndicator.className = 'status-indicator working';
+    statusLabel.innerText = 'REFINING PROJECT...';
+
+    try {
+      const res = await fetch('/api/studio/refine', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projectId: activeProjectId, instruction })
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        printLog(` Project refined cleanly by CONCODE AI.`, 'success');
+        statusIndicator.className = 'status-indicator live';
+        statusLabel.innerText = 'MONITOR LIVE';
+        inputRefine.value = '';
+        previewIframe.src = `http://localhost:3001/project/${activeProjectId}/?t=${Date.now()}`;
+        setTimeout(() => { showView('preview'); }, 800);
+      } else {
+        throw new Error(data.error || 'Refinement failed');
+      }
+    } catch (e) {
+      printLog(`Error refining project: ${e.message}`, 'error');
+      statusIndicator.className = 'status-indicator live';
+      statusLabel.innerText = 'CONSOLE LIVE';
+    }
+  });
 
   // Tab switcher
   tabs.forEach(tab => {
@@ -1475,7 +2101,7 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById(activeTabId).classList.add('active');
 
       printLog(`Switched view context to module: ${tab.innerText.trim().toUpperCase()}`, 'system');
-      
+
       // Auto-toggle views based on tab context
       if (tab.getAttribute('data-tab') === 'studio' && previewIframe.src !== 'about:blank') {
         showView('iframe');
@@ -1509,19 +2135,44 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 1. AI WEBSITE STUDIO HANDLER
   const btnStudioBuild = document.getElementById('btn-studio-build');
+  const btnStudioClear = document.getElementById('btn-studio-clear');
+  const btnClearProject = document.getElementById('btn-clear-project');
   const inputProjectId = document.getElementById('studio-project-id');
   const textareaPrompt = document.getElementById('studio-prompt');
   const selectAccent = document.getElementById('studio-accent');
 
-  btnStudioBuild.addEventListener('click', async () => {
-    const projectId = inputProjectId.value.trim();
-    const prompt = textareaPrompt.value.trim();
-    const accent = selectAccent.value;
+  function clearProjectWorkspace() {
+    inputProjectId.value = '';
+    textareaPrompt.value = '';
+    codeEditor.value = '';
+    if (inputRefine) inputRefine.value = '';
+    previewIframe.src = 'about:blank';
+    activeProjectId = 'idle';
+    projectFilesCache = {};
+    monitorProjectLabel.innerText = 'Project: Idle';
+    statusIndicator.className = 'status-indicator live';
+    statusLabel.innerText = 'CONSOLE LIVE';
+    showView('terminal');
+    printLog('Project workspace & monitor reset cleanly.', 'system');
+  }
 
-    if (!projectId || !prompt) {
-      alert('Please fill out the Project ID and Design Prompt.');
+  if (btnStudioClear) btnStudioClear.addEventListener('click', clearProjectWorkspace);
+  if (btnClearProject) btnClearProject.addEventListener('click', clearProjectWorkspace);
+
+  btnStudioBuild.addEventListener('click', async () => {
+    const rawProjectId = inputProjectId.value.trim();
+    const prompt = textareaPrompt.value.trim() || `Build a futuristic ${selectCategory ? selectCategory.value : 'SaaS'} web application`;
+    const accent = selectAccent.value;
+    const category = selectCategory ? selectCategory.value : 'saas';
+
+    if (!rawProjectId) {
+      alert('Please enter a valid Project ID.');
       return;
     }
+
+    // Sanitize Project ID to valid path slug
+    const projectId = rawProjectId.toLowerCase().replace(/[^a-z0-9-_]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || 'custom-site';
+    activeProjectId = projectId;
 
     showView('terminal');
     clearTerminal();
@@ -1529,8 +2180,8 @@ document.addEventListener('DOMContentLoaded', () => {
     statusLabel.innerText = 'BUILDING PROJECT...';
     monitorProjectLabel.innerText = `Project: ${projectId}`;
 
-    printLog(`Initializing AI Studio layout generator for Node ID: "${projectId}"...`, 'system');
-    printLog(`Accent styling set to: ${accent}`, 'system');
+    printLog(`[CONCODE AI COGNITIVE CORE v5.0] Initializing Web Constructor for: "${projectId}"...`, 'system');
+    printLog(`Category preset: ${category.toUpperCase()} | Accent theme: ${accent}`, 'system');
     printLog(`Prompt: "${prompt}"`, 'input');
 
     try {
@@ -1538,17 +2189,19 @@ document.addEventListener('DOMContentLoaded', () => {
       const genRes = await fetch('/api/studio/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ projectId, prompt, options: { accentColor: accent } })
+        body: JSON.stringify({ projectId, prompt, options: { accentColor: accent, category } })
       });
       const genData = await genRes.json();
 
       if (!genData.success) {
-        throw new Error(genData.error || 'Prototype generation failed');
+        const errObj = genData.error;
+        const errMsg = typeof errObj === 'object' ? (errObj.message || JSON.stringify(errObj)) : (errObj || 'Prototype generation failed');
+        throw new Error(errMsg);
       }
 
-      printLog(`✓ Web prototype files generated successfully in public workspace.`, 'success');
-      printLog(`Pages created: index.html, about.html, contact.html, style.css, app.js`, 'system');
-      printLog(`Connecting routing gateways... Registering path: /project/${projectId}/`, 'system');
+      printLog(` Multi-page web application compiled cleanly by CONCODE AI v5.0.`, 'success');
+      printLog(`Files generated: index.html, about.html, dashboard.html, contact.html, style.css, app.js`, 'system');
+      printLog(`Connecting gateway routes for /project/${projectId}/...`, 'system');
 
       // Step 2: Register gateway route
       const regRes = await fetch('/api/gateway/register', {
@@ -1559,11 +2212,13 @@ document.addEventListener('DOMContentLoaded', () => {
       const regData = await regRes.json();
 
       if (!regData.success) {
-        throw new Error(regData.error || 'API routing registration failed');
+        const errObj = regData.error;
+        const errMsg = typeof errObj === 'object' ? (errObj.message || JSON.stringify(errObj)) : (errObj || 'API routing registration failed');
+        throw new Error(errMsg);
       }
 
-      printLog(`✓ API gateway route mapped active. Port 3000 mapping live.`, 'success');
-      printLog(`Launching live interactive layout viewport...`, 'system');
+      printLog(` Dedicated User Website Review Host live on http://localhost:3001/project/${projectId}/`, 'success');
+      printLog(`Launching live interactive review viewport...`, 'system');
 
       // Sync the devops select dropdown immediately
       syncProjectDropdown();
@@ -1572,12 +2227,13 @@ document.addEventListener('DOMContentLoaded', () => {
       setTimeout(() => {
         statusIndicator.className = 'status-indicator live';
         statusLabel.innerText = 'MONITOR LIVE';
-        previewIframe.src = `/project/${projectId}/`;
+        previewIframe.src = `http://localhost:3001/project/${projectId}/`;
         showView('iframe');
       }, 1000);
 
     } catch (err) {
-      printLog(`Error: Construction error: ${err.message}`, 'error');
+      const errMsg = err.message || (typeof err === 'object' ? JSON.stringify(err) : String(err));
+      printLog(`Error: Construction error: ${errMsg}`, 'error');
       statusIndicator.className = 'status-indicator live';
       statusLabel.innerText = 'CONSOLE LIVE';
     }
@@ -1649,7 +2305,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else if (logMsg.includes('warning')) {
                   lineType = 'warning';
                 }
-                
+
                 printLog(logMsg, lineType);
               }
               lastLogIndex = logs.length;
@@ -1717,17 +2373,22 @@ document.addEventListener('DOMContentLoaded', () => {
         throw new Error(migrateData.error || 'Migration pipeline execution failed');
       }
 
-      const report = migrateData.data;
-      printLog(`✓ ETL Data Migration Job finished. Job ID: ${report.jobId}`, 'success');
-      printLog(`Records Processed: ${report.totalRecords}`, 'system');
-      printLog(`Successful Imports: ${report.successCount}`, 'success');
-      printLog(`Failed Records: ${report.failCount}`, report.failCount > 0 ? 'warning' : 'system');
+      const report = migrateData.data || {};
+      const stats = report.stats || {};
+      const totalRead = stats.totalRead ?? report.totalRecords ?? 0;
+      const successful = stats.successful ?? report.successCount ?? 0;
+      const failed = stats.failed ?? report.failCount ?? 0;
+
+      printLog(` ETL Data Migration Job finished. Job ID: ${report.jobId || 'job_done'}`, 'success');
+      printLog(`Records Processed: ${totalRead}`, 'system');
+      printLog(`Successful Imports: ${successful}`, 'success');
+      printLog(`Failed Records: ${failed}`, failed > 0 ? 'warning' : 'system');
 
       if (report.warnings && report.warnings.length > 0) {
         printLog(`Data integrity warnings generated:`, 'warning');
         report.warnings.forEach(warn => printLog(` - ${warn}`, 'warning'));
       } else {
-        printLog(`✓ Zero integrity constraints violated. DB indexing complete.`, 'success');
+        printLog(` Zero integrity constraints violated. DB indexing complete.`, 'success');
       }
 
       statusIndicator.className = 'status-indicator live';

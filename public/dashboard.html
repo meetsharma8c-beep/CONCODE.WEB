@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CONCODE — Client Workspace</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="src/dashboard-style.css">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+</head>
+<body>
+
+  <!-- Main User Container -->
+  <div class="dashboard-container" id="dashboard-container">
+    
+    <!-- Header -->
+    <header class="dash-header">
+      <div class="logo-area">
+        <div class="logo-icon">C</div>
+        <h1 class="logo-text">CONCODE / WORKSPACE</h1>
+      </div>
+      
+      <div class="user-badge">
+        <button class="btn-logout" id="btn-logout">Logout</button>
+      </div>
+    </header>
+
+    <!-- Welcome Card -->
+    <section class="welcome-card">
+      <h2 class="welcome-title">Welcome to your Workspace</h2>
+      <p class="welcome-desc">Manage, preview, and monitor the development of your customized tech platforms built by our autonomous design networks.</p>
+    </section>
+
+    <!-- Grid workspace panels -->
+    <main class="grid-workspace">
+      
+      <!-- Panel 1: Profile card -->
+      <div class="workspace-card">
+        <h3 class="card-title">Profile Settings</h3>
+        <div class="profile-info">
+          <div class="info-item">
+            <div class="info-label">Full Name</div>
+            <div class="info-value" id="profile-name">Client User</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Email Address</div>
+            <div class="info-value" id="profile-email">email@concode.io</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Auth Provider</div>
+            <div class="info-value" id="profile-provider">local</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Workspace Role</div>
+            <div class="info-value" id="profile-role">client</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel 2: Projects list -->
+      <div class="workspace-card">
+        <h3 class="card-title">Active Projects</h3>
+        <div id="projects-list">
+          <div class="project-item">
+            <span class="project-name">ConCode Landing Demo</span>
+            <span class="project-status">Active</span>
+          </div>
+          <div class="project-item">
+            <span class="project-name">Vite Portfolio Prototype</span>
+            <span class="project-status">Completed</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Panel 3: Action center -->
+      <div class="workspace-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+        <div>
+          <h3 class="card-title">Interactive Design</h3>
+          <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1.5rem;">Would you like to build another product prototype or expand your existing digital platform specification?</p>
+        </div>
+        <a href="/index.html#chatbot" class="btn-cta">Start New Project Spec</a>
+      </div>
+
+    </main>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Check query parameter token first (if redirected from OAuth callback)
+      const urlParams = new URLSearchParams(window.location.search);
+      const queryToken = urlParams.get('token');
+      if (queryToken) {
+        localStorage.setItem('concode_admin_token', queryToken);
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+
+      const token = localStorage.getItem('concode_admin_token');
+      const container = document.getElementById('dashboard-container');
+      const logoutBtn = document.getElementById('btn-logout');
+
+      if (!token) {
+        window.location.href = 'login.html';
+        return;
+      }
+
+      // Fetch user profile from backend
+      fetch('/api/user/profile', {
+        headers: {
+          'x-admin-token': token
+        }
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          // Fill profile details
+          const user = data.data;
+          document.getElementById('profile-name').textContent = user.name || 'Client';
+          document.getElementById('profile-email').textContent = user.email || 'N/A';
+          document.getElementById('profile-provider').textContent = user.provider || 'local';
+          document.getElementById('profile-role').textContent = user.role || 'user';
+          
+          // Display page
+          container.classList.add('loaded');
+        } else {
+          throw new Error('Verification failed');
+        }
+      })
+      .catch(() => {
+        localStorage.removeItem('concode_admin_token');
+        window.location.href = 'login.html';
+      });
+
+      logoutBtn.addEventListener('click', () => {
+        localStorage.removeItem('concode_admin_token');
+        window.location.href = 'index.html';
+      });
+    });
+  </script>
+
+</body>
+</html>

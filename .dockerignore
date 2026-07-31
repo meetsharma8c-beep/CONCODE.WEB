@@ -1,0 +1,21 @@
+node_modules
+npm-debug.log
+data/*.json
+!data/.gitkeep
+public/projects/*
+!public/projects/.DS_Store
+.env
+.git
+.gitignore
+Dockerfile
+docker-compose.yml
+.vscode
+*.command
+run.sh
+
+# Private credentials configuration
+config/*.json
+
+# Local MongoDB volume data
+mongo-data/
+

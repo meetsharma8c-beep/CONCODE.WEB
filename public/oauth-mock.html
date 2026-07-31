@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CONCODE — OAuth Gateway Consent</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  
+  <style>
+    :root {
+      --bg: #060b16;
+      --card-bg: rgba(13, 22, 47, 0.45);
+      --border: rgba(255, 255, 255, 0.08);
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --cyan: #00f0ff;
+      --cyan-glow: rgba(0, 240, 255, 0.35);
+      --red: #ef4444;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: var(--bg);
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(139, 92, 246, 0.08) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(0, 240, 255, 0.05) 0px, transparent 50%);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 1.5rem;
+    }
+
+    .consent-card {
+      width: 100%;
+      max-width: 460px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2.5rem;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+      text-align: center;
+    }
+
+    .provider-badges {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .badge-concode {
+      width: 50px;
+      height: 50px;
+      border: 2px solid var(--cyan);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--cyan);
+      font-weight: bold;
+      font-size: 1.25rem;
+      box-shadow: 0 0 15px var(--cyan-glow);
+    }
+
+    .badge-provider {
+      width: 50px;
+      height: 50px;
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .link-line {
+      height: 1px;
+      width: 40px;
+      background: var(--border);
+      position: relative;
+    }
+
+    .link-line::after {
+      content: '⇄';
+      position: absolute;
+      top: -10px;
+      left: 12px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .consent-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .consent-desc {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 2rem;
+    }
+
+    .permissions-list {
+      background: rgba(255, 255, 255, 0.01);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.25rem;
+      text-align: left;
+      margin-bottom: 2rem;
+    }
+
+    .perm-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      font-size: 0.85rem;
+      margin-bottom: 0.75rem;
+      color: var(--text);
+    }
+
+    .perm-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .perm-icon {
+      color: var(--cyan);
+      font-size: 1.1rem;
+      line-height: 1;
+    }
+
+    .perm-details strong {
+      display: block;
+      color: #fff;
+      font-size: 0.9rem;
+      margin-bottom: 0.15rem;
+    }
+
+    .perm-details span {
+      color: var(--text-muted);
+      font-size: 0.8rem;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .btn {
+      flex: 1;
+      border: none;
+      padding: 0.85rem;
+      border-radius: 8px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .btn-cancel {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+    }
+
+    .btn-cancel:hover {
+      border-color: var(--red);
+      color: var(--red);
+    }
+
+    .btn-authorize {
+      background: var(--cyan);
+      color: #030712;
+      box-shadow: 0 4px 15px var(--cyan-glow);
+    }
+
+    .btn-authorize:hover {
+      background: #fff;
+      box-shadow: 0 6px 20px rgba(255, 255, 255, 0.2);
+    }
+  </style>
+</head>
+<body>
+
+  <main class="consent-card">
+    
+    <div class="provider-badges">
+      <div class="badge-concode">C</div>
+      <div class="link-line"></div>
+      <div class="badge-provider" id="provider-badge">G</div>
+    </div>
+
+    <h2 class="consent-title">Permissions Requested</h2>
+    <p class="consent-desc">ConCode App is requesting authorization to connect with your <span id="provider-name-text">Google</span> account.</p>
+
+    <div class="permissions-list">
+      <div class="perm-item">
+        <span class="perm-icon"></span>
+        <div class="perm-details">
+          <strong>Email Address</strong>
+          <span>Access your primary email address details</span>
+        </div>
+      </div>
+      <div class="perm-item">
+        <span class="perm-icon"></span>
+        <div class="perm-details">
+          <strong>Profile Information</strong>
+          <span>Access your name, public bio, and avatar image</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="button-group">
+      <button class="btn btn-cancel" id="btn-cancel">Cancel</button>
+      <button class="btn btn-authorize" id="btn-authorize">Authorize</button>
+    </div>
+
+  </main>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const provider = urlParams.get('provider') || 'google';
+      
+      const providerBadge = document.getElementById('provider-badge');
+      const providerNameText = document.getElementById('provider-name-text');
+      
+      // Update badge visuals based on provider
+      if (provider === 'github') {
+        providerBadge.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width: 28px; height: 28px; display: block;"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.462-1.11-1.462-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482C19.138 20.162 22 16.418 22 12c0-5.523-4.477-10-10-10z" /></svg>';
+        providerNameText.textContent = 'GitHub';
+      } else if (provider === 'apple') {
+        providerBadge.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width: 28px; height: 28px; display: block;"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 4.17c.66-.81 1.11-1.93.99-3.06-1 .04-2.21.67-2.93 1.49-.62.69-1.16 1.84-1.01 2.96 1.12.09 2.27-.56 2.95-1.39z"/></svg>';
+        providerNameText.textContent = 'Apple';
+      } else {
+        providerBadge.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 28px; height: 28px; display: block;"><path fill="#EA4335" d="M12 5.04c1.66 0 3.2.57 4.38 1.69l3.27-3.27C17.67 1.55 15.02 1 12 1 7.28 1 3.28 3.73 1.34 7.74l3.86 3C6.12 7.74 8.84 5.04 12 5.04z"/><path fill="#4285F4" d="M23.49 12.27c0-.81-.07-1.59-.2-2.36H12v4.51h6.46c-.29 1.48-1.14 2.73-2.42 3.57l3.77 2.92c2.2-2.03 3.68-5.02 3.68-8.64z"/><path fill="#FBBC05" d="M5.2 14.74c-.25-.74-.39-1.53-.39-2.36s.14-1.62.39-2.36l-3.86-3C.53 8.78 0 10.33 0 12s.53 3.22 1.34 4.98l3.86-3.24z"/><path fill="#34A853" d="M12 23c3.24 0 5.97-1.07 7.96-2.92l-3.77-2.92c-1.12.75-2.54 1.2-4.19 1.2-3.16 0-5.88-2.15-6.84-5.04l-3.86 3C3.28 20.27 7.28 23 12 23z"/></svg>';
+        providerNameText.textContent = 'Google';
+      }
+
+      document.getElementById('btn-cancel').addEventListener('click', () => {
+        window.location.href = 'login.html';
+      });
+
+      document.getElementById('btn-authorize').addEventListener('click', () => {
+        // Send authorization callback
+        const randomNum = Math.floor(Math.random() * 900) + 100;
+        const mockName = `${provider.charAt(0).toUpperCase() + provider.slice(1)} User ${randomNum}`;
+        const mockEmail = `${provider}_user_${randomNum}@concode-mock.io`;
+        
+        const callbackUrl = `/api/auth/callback/${provider}?code=mock_code_${randomNum}&email=${encodeURIComponent(mockEmail)}&name=${encodeURIComponent(mockName)}`;
+        window.location.href = callbackUrl;
+      });
+    });
+  </script>
+
+</body>
+</html>

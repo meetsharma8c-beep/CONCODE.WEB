@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CONCODE — Developer Control Center</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="src/admin-style.css">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="src/admin-main.js" defer></script>
+</head>
+<body>
+
+  <!-- Main Dashboard Container -->
+  <div class="admin-container" id="admin-container">
+    
+    <!-- Header -->
+    <header class="admin-header">
+      <div class="logo-area">
+        <div class="logo-icon">C</div>
+        <h1 class="logo-text">CONCODE / CONTROL CENTER</h1>
+      </div>
+      
+      <div class="header-status">
+        <div class="status-indicator">
+          <span class="pulse-dot"></span>
+          <span>Gateway Active</span>
+        </div>
+        <button class="btn-logout" id="btn-logout">Logout</button>
+      </div>
+    </header>
+
+    <!-- Statistics Overview Grid -->
+    <section class="stats-grid">
+      <div class="stat-card accent-cyan">
+        <div class="stat-label">Active Routes</div>
+        <div class="stat-value" id="stat-total-routes">0</div>
+      </div>
+      <div class="stat-card accent-orange">
+        <div class="stat-label">Specs & Briefs</div>
+        <div class="stat-value" id="stat-total-leads">0</div>
+      </div>
+      <div class="stat-card accent-indigo">
+        <div class="stat-label">Inquiries</div>
+        <div class="stat-value" id="stat-total-contacts">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Conversations</div>
+        <div class="stat-value" id="stat-total-chats">0</div>
+      </div>
+    </section>
+
+    <!-- Navigation Tabs -->
+    <nav class="tabs-navigation">
+      <button class="tab-btn active" data-tab="overview"> System Telemetry</button>
+      <button class="tab-btn" data-tab="routes"> Ingress Gateways</button>
+      <button class="tab-btn" data-tab="deployments"> DevOps Rollouts</button>
+      <button class="tab-btn" data-tab="inquiries"> Project Briefs</button>
+      <button class="tab-btn" data-tab="contacts"> General Inquiries</button>
+      <button class="tab-btn" data-tab="chats"> Conversation Logs</button>
+    </nav>
+
+    <!-- Tab Workspaces -->
+    <main class="tabs-content">
+      
+      <!-- Pane 1: Telemetry Overview -->
+      <div class="tab-pane active" id="tab-overview">
+        <div class="dashboard-card">
+          <div class="card-header">
+            <h3 class="card-title"> Real-Time Ingress Telemetry</h3>
+          </div>
+          
+          <div class="telemetry-grid">
+            
+            <div class="gauge-panel">
+              <div class="gauge-header">
+                <span class="gauge-label">Edge Load Balancing</span>
+                <span class="gauge-value" id="telemetry-edge-nodes">0 active</span>
+              </div>
+              <div class="gauge-header">
+                <span class="gauge-label">Average Route Latency</span>
+                <span class="gauge-value" id="telemetry-avg-latency">0 ms</span>
+              </div>
+              <div class="gauge-header">
+                <span class="gauge-label">Throughput Rate</span>
+                <span class="gauge-value" id="telemetry-request-rate">0 req/s</span>
+              </div>
+              <div class="gauge-header">
+                <span class="gauge-label">Telemetry Error Rate</span>
+                <span class="gauge-value" id="telemetry-error-rate">0%</span>
+              </div>
+            </div>
+
+            <div class="gauge-panel">
+              <div class="gauge-header">
+                <span class="gauge-label">Kubernetes Cluster RAM Allocation</span>
+                <span class="gauge-value" id="telemetry-memory-text">0%</span>
+              </div>
+              <div class="gauge-bar-bg" style="margin-bottom: 1.5rem;">
+                <div class="gauge-bar-fill" id="telemetry-memory-bar" style="width: 0%;"></div>
+              </div>
+              
+              <div class="gauge-label" style="margin-bottom: 0.5rem;">Ping Frequency Stream</div>
+              <div class="network-ticks" id="telemetry-ticks">
+                <!-- Ticks are dynamically generated here -->
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Pane 2: Routes -->
+      <div class="tab-pane" id="tab-routes">
+        <div class="dashboard-card">
+          <div class="card-header">
+            <h3 class="card-title"> Registered Gateway Mappings</h3>
+          </div>
+          
+          <div class="table-wrapper">
+            <table class="admin-table" id="routes-table">
+              <thead>
+                <tr>
+                  <th>Project ID</th>
+                  <th>Route Path</th>
+                  <th>Domain Binding</th>
+                  <th>Rate Limits</th>
+                  <th>Created At</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Routes rendered here -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pane 3: Onboarding Spec Briefs -->
+      <div class="tab-pane" id="tab-inquiries">
+        <div class="dashboard-card">
+          <div class="card-header">
+            <h3 class="card-title"> Customer Project Briefs</h3>
+          </div>
+          
+          <div class="table-wrapper">
+            <table class="admin-table" id="inquiries-table">
+              <thead>
+                <tr>
+                  <th>Client Name</th>
+                  <th>Email Address</th>
+                  <th>Target Plan</th>
+                  <th>Specification description</th>
+                  <th>Received</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Inquiries rendered here -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pane 4: Contacts log -->
+      <div class="tab-pane" id="tab-contacts">
+        <div class="dashboard-card">
+          <div class="card-header">
+            <h3 class="card-title"> General Inquiries Message Buffer</h3>
+          </div>
+          
+          <div class="table-wrapper">
+            <table class="admin-table" id="contacts-table">
+              <thead>
+                <tr>
+                  <th>Sender</th>
+                  <th>Email</th>
+                  <th>Message Body</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Contacts rendered here -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pane: DevOps Deployments -->
+      <div class="tab-pane" id="tab-deployments">
+        <div class="dashboard-card">
+          <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem; margin-bottom: 1.5rem;">
+            <h3 class="card-title" style="margin-bottom: 0;"> Infrastructure Deployment Control Panel</h3>
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+              <input type="text" id="deploy-project-id" placeholder="Enter Project ID..." class="form-input" style="width: 180px; padding: 0.45rem 0.75rem; font-size: 0.8rem; height: 32px; font-family: var(--font-mono);">
+              <select id="deploy-cloud-target" class="form-input" style="width: 100px; padding: 0.45rem 0.5rem; font-size: 0.8rem; height: 32px; font-family: var(--font-mono); background: rgba(13, 22, 47, 0.9);">
+                <option value="vercel">Vercel</option>
+                <option value="aws">AWS</option>
+                <option value="gcp">GCP</option>
+              </select>
+              <button class="btn-action-preview" id="btn-deploy-now" style="height: 32px; padding: 0 1rem; font-weight: 700; border-radius: 6px; font-family: var(--font-mono); font-size: 0.8rem; cursor: pointer;">Deploy Now</button>
+            </div>
+          </div>
+          
+          <div class="chat-logs-container" style="height: 400px;">
+            <!-- Left panel: deployment list -->
+            <div class="chat-sessions-list" id="deploy-history-list">
+              <!-- Deployments rendered here -->
+            </div>
+            
+            <!-- Right panel: deployment output logs -->
+            <div class="chat-messages-detail" style="display: flex; flex-direction: column; height: 100%;">
+              <div class="chat-messages-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <h4 id="active-deploy-title" style="font-family: var(--font-heading); font-size: 0.95rem; font-weight: 700; color: #fff;">Select a deployment rollout</h4>
+                <span id="active-deploy-status" class="badge" style="font-family: var(--font-mono); font-size: 0.75rem; text-transform: uppercase;"></span>
+              </div>
+              <div class="chat-messages-body" id="deploy-logs-body" style="font-family: var(--font-mono); font-size: 0.75rem; color: #10B981; background: rgba(0, 0, 0, 0.45); padding: 1.25rem; border: 1px solid var(--border-color); border-radius: 6px; flex: 1; overflow-y: auto; white-space: pre-wrap; margin-top: 1rem; line-height: 1.5;">
+                <!-- Logs rendered here -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pane 5: Chat logs -->
+      <div class="tab-pane" id="tab-chats">
+        <div class="dashboard-card" style="padding: 1.5rem;">
+          <div class="chat-logs-container">
+            
+            <!-- Left panel: session list -->
+            <div class="chat-sessions-list" id="chat-sessions-list">
+              <!-- Session items rendered here -->
+            </div>
+            
+            <!-- Right panel: message detail -->
+            <div class="chat-messages-detail">
+              <div class="chat-messages-header">
+                <h4 id="active-session-title" style="font-family: var(--font-heading); font-size: 0.95rem; font-weight: 700; color: #fff;">Select a session</h4>
+              </div>
+              <div class="chat-messages-body" id="chat-messages-body">
+                <!-- Messages rendered here -->
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+</body>
+</html>

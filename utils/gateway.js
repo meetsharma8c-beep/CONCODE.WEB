@@ -20,7 +20,9 @@ function isValidRoutePath(routePath) {
  * @returns {Promise<Object>}
  */
 async function registerRoute(projectId, customPath = '', customDomain = '', rateLimitRpm = 100) {
-  const normalizedPath = (customPath || projectId).trim().toLowerCase();
+  // Sanitize path by converting spaces and invalid characters to hyphens
+  const rawPath = customPath || projectId;
+  const normalizedPath = rawPath.trim().toLowerCase().replace(/[^a-z0-9-_]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || 'project-node';
   
   if (!isValidRoutePath(normalizedPath)) {
     throw new Error('Invalid path format. Use alphanumeric, hyphens, or underscores only.');
@@ -41,18 +43,13 @@ async function registerRoute(projectId, customPath = '', customDomain = '', rate
     path: normalizedPath,
     localDir: path.join(__dirname, '../public/projects', projectId),
     status: 'active',
-    customDomain: customDomain ? customDomain.trim().toLowerCase() : null,
+    customDomain: customDomain ? customDomain.trim() : null,
     rateLimitRpm: parseInt(rateLimitRpm) || 100,
     updatedAt: new Date().toISOString()
   };
 
   if (existingRoute) {
-    const allRoutes = await db.read('routes');
-    const filtered = allRoutes.filter(r => r.projectId !== projectId);
-    const file = path.join(db.baseDir || path.join(__dirname, '../data'), 'routes.json');
-    if (!db.useFirestore) {
-      fs.writeFileSync(file, JSON.stringify(filtered, null, 2), 'utf8');
-    }
+    await db.delete('routes', existingRoute.id);
   }
 
   const doc = await db.insert('routes', routeData);
@@ -76,6 +73,10 @@ async function getRoutes() {
 async function resolveRoute(routePath) {
   const routes = await db.read('routes');
   const match = routes.find(r => r.path === routePath.toLowerCase() && r.status === 'active');
+  if (match) {
+    // Dynamically adjust localDir relative to this module's directory to support both host and Docker layouts
+    match.localDir = path.join(__dirname, '../public/projects', match.projectId);
+  }
   return match || null;
 }
 

@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CONCODE — Terminal Authentication</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="src/login-style.css">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+</head>
+<body>
+
+  <div class="background-grid"></div>
+
+  <!-- Adding active pane classes dynamically to main card -->
+  <main class="login-card" id="login-card">
+    
+    <!-- stylized terminal logo header -->
+    <div class="logo-header">
+      <div class="logo-icon">
+        <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" style="width: 24px; height: 24px; display: block;">
+          <!-- 7 Eyelashes on top arc -->
+          <path d="M 20 39 L 13 28 M 29 31 L 23 18 M 39 26 L 35 12 M 50 24 L 50 10 M 61 26 L 65 12 M 71 31 L 77 18 M 80 39 L 87 28" stroke="#38bdf8" stroke-width="4.5" stroke-linecap="round"/>
+          <path d="M 15 50 C 30 20, 70 20, 85 50" stroke="#38bdf8" stroke-width="7" stroke-linecap="round"/>
+          <path d="M 15 50 C 30 80, 70 80, 85 50" stroke="#38bdf8" stroke-width="7" stroke-linecap="round"/>
+          <circle cx="50" cy="50" r="14" fill="#38bdf8"/>
+          <path d="M 45 44 L 39 50 L 45 56 M 55 44 L 61 50 L 55 56 M 52 42 L 48 58" stroke="#0f172a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <h1 class="logo-text">CONCODE</h1>
+    </div>
+
+    <!-- Toggle switcher -->
+    <div class="auth-toggle-container">
+      <button type="button" class="auth-toggle-btn active" id="btn-toggle-signin">Sign In</button>
+      <button type="button" class="auth-toggle-btn" id="btn-toggle-signup">Sign Up</button>
+      <button type="button" class="auth-toggle-btn" id="btn-toggle-phone">Phone OTP</button>
+    </div>
+
+    <h2 class="card-title" id="card-title">Sign In to ConCode</h2>
+    <p class="card-desc" id="card-desc">Sign in to access your digital realm</p>
+
+    <!-- Error container -->
+    <div class="error-message" id="error-message">Invalid email or password</div>
+
+    <!-- Terminal Login Form -->
+    <form id="login-form" class="login-form">
+      
+      <!-- [SIGNUP ONLY] Full Name -->
+      <div class="form-group signup-only">
+        <label for="name-input" class="form-label">Full Name</label>
+        <div class="input-wrapper">
+          <input type="text" id="name-input" class="form-input" placeholder="Enter your full name">
+          <span class="input-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 16px; height: 16px; display: block;">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+            </svg>
+          </span>
+        </div>
+      </div>
+
+      <!-- Email / Username input field (Sign In / Sign Up) -->
+      <div class="form-group" id="group-email">
+        <label for="username-input" class="form-label" id="label-user">Username / Email</label>
+        <div class="input-wrapper">
+          <input type="text" id="username-input" class="form-input" placeholder="Enter your username or email">
+          <span class="input-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 16px; height: 16px; display: block;">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
+            </svg>
+          </span>
+        </div>
+      </div>
+
+      <!-- Dedicated Phone Number Input Group (Phone OTP Mode Only) -->
+      <div class="form-group" id="group-phone" style="display: none;">
+        <label for="phone-input" class="form-label">Mobile Number</label>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          
+          <!-- Country Code Select Dropdown -->
+          <select id="country-code-select" style="height: 46px; width: 110px; background: rgba(15, 23, 42, 0.9); border: 1px solid var(--border); color: var(--cyan); font-family: var(--font-mono); font-size: 0.88rem; padding: 0 8px; border-radius: 8px; cursor: pointer; outline: none; flex-shrink: 0;">
+            <option value="+91"> +91</option>
+            <option value="+1"> +1</option>
+            <option value="+44"> +44</option>
+            <option value="+971"> +971</option>
+            <option value="+61"> +61</option>
+            <option value="+65"> +65</option>
+            <option value="+49"> +49</option>
+            <option value="+33"> +33</option>
+            <option value="+966"> +966</option>
+          </select>
+
+          <!-- Input Box with Phone Smartphone Icon -->
+          <div class="input-wrapper" style="flex: 1;">
+            <input type="tel" id="phone-input" class="form-input" placeholder="e.g. 9904717666" style="height: 46px; width: 100%;">
+            <span class="input-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 16px; height: 16px; color: var(--cyan); display: block;">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 0 0 6 3.75v16.5a2.25 2.25 0 0 0 2.25 2.25h7.5A2.25 2.25 0 0 0 18 20.25V3.75a2.25 2.25 0 0 0-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
+              </svg>
+            </span>
+          </div>
+
+          <!-- Action Button: Send Code -->
+          <button type="button" id="btn-send-otp" style="height: 46px; padding: 0 16px; background: var(--cyan); color: #000; border: none; font-size: 0.82rem; font-weight: 700; border-radius: 8px; cursor: pointer; flex-shrink: 0; white-space: nowrap;">Send Code</button>
+
+        </div>
+      </div>
+
+
+
+      <!-- Password / OTP input field -->
+      <div class="form-group">
+        <label for="password-input" class="form-label" id="label-pass">Password</label>
+        <div class="input-wrapper">
+          <input type="password" id="password-input" class="form-input" placeholder="Enter your password" required>
+          <span class="input-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 16px; height: 16px; display: block;" id="icon-pass">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+            </svg>
+          </span>
+        </div>
+      </div>
+
+      <!-- [SIGNUP ONLY] Confirm Password -->
+      <div class="form-group signup-only">
+        <label for="confirm-password-input" class="form-label">Confirm Password</label>
+        <div class="input-wrapper">
+          <input type="password" id="confirm-password-input" class="form-input" placeholder="Confirm your password">
+          <span class="input-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 16px; height: 16px; display: block;">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
+            </svg>
+          </span>
+        </div>
+      </div>
+
+      <!-- Primary Neon Button -->
+      <button type="submit" class="btn-login-submit" id="btn-submit">Sign In</button>
+    </form>
+
+    <div class="social-divider">Or Sign In with</div>
+
+    <!-- OAuth & Phone bindings -->
+    <div class="social-icons-wrapper">
+      <button type="button" class="social-icon" data-provider="google" title="Sign in with Google">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="width: 18px; height: 18px; display: block;">
+          <path fill="#EA4335" d="M12 5.04c1.66 0 3.2.57 4.38 1.69l3.27-3.27C17.67 1.55 15.02 1 12 1 7.28 1 3.28 3.73 1.34 7.74l3.86 3C6.12 7.74 8.84 5.04 12 5.04z"/>
+          <path fill="#4285F4" d="M23.49 12.27c0-.81-.07-1.59-.2-2.36H12v4.51h6.46c-.29 1.48-1.14 2.73-2.42 3.57l3.77 2.92c2.2-2.03 3.68-5.02 3.68-8.64z"/>
+          <path fill="#FBBC05" d="M5.2 14.74c-.25-.74-.39-1.53-.39-2.36s.14-1.62.39-2.36l-3.86-3C.53 8.78 0 10.33 0 12s.53 3.22 1.34 4.98l3.86-3.24z"/>
+          <path fill="#34A853" d="M12 23c3.24 0 5.97-1.07 7.96-2.92l-3.77-2.92c-1.12.75-2.54 1.2-4.19 1.2-3.16 0-5.88-2.15-6.84-5.04l-3.86 3C3.28 20.27 7.28 23 12 23z"/>
+        </svg>
+      </button>
+      <button type="button" class="social-icon" data-provider="github" title="Sign in with GitHub">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width: 18px; height: 18px; display: block;">
+          <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.462-1.11-1.462-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482C19.138 20.162 22 16.418 22 12c0-5.523-4.477-10-10-10z" />
+        </svg>
+      </button>
+      <button type="button" class="social-icon" data-provider="phone" id="btn-phone-icon" title="Sign in with Phone OTP">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 18px; height: 18px; display: block; color: var(--cyan);">
+          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+        </svg>
+      </button>
+    </div>
+
+  </main>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Auto-redirect active session users
+      const existingToken = localStorage.getItem('concode_admin_token');
+      if (existingToken) {
+        fetch('/api/admin/dashboard', {
+          headers: { 'x-admin-token': existingToken }
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            window.location.href = 'admin.html';
+          }
+        })
+        .catch(() => {
+          localStorage.removeItem('concode_admin_token');
+        });
+      }
+
+      const loginCard = document.getElementById('login-card');
+      const loginForm = document.getElementById('login-form');
+      const btnToggleSignIn = document.getElementById('btn-toggle-signin');
+      const btnToggleSignUp = document.getElementById('btn-toggle-signup');
+      const btnTogglePhone = document.getElementById('btn-toggle-phone');
+      const btnPhoneIcon = document.getElementById('btn-phone-icon');
+      const groupEmail = document.getElementById('group-email');
+      const groupPhone = document.getElementById('group-phone');
+      const phoneInput = document.getElementById('phone-input');
+      const countrySelect = document.getElementById('country-code-select');
+      
+      const nameInput = document.getElementById('name-input');
+      const usernameInput = document.getElementById('username-input');
+      const passwordInput = document.getElementById('password-input');
+      const confirmInput = document.getElementById('confirm-password-input');
+      
+      const cardTitle = document.getElementById('card-title');
+      const cardDesc = document.getElementById('card-desc');
+      const labelPass = document.getElementById('label-pass');
+      const btnSubmit = document.getElementById('btn-submit');
+      const btnSendOtp = document.getElementById('btn-send-otp');
+      const errorMsg = document.getElementById('error-message');
+
+      let currentMode = 'signin'; // 'signin', 'signup', or 'phone'
+      let otpTimerId = null;
+
+      function getFormattedPhone() {
+        const raw = phoneInput.value.trim().replace(/^[\+\s\-\(\)]+/, '');
+        const dial = countrySelect.value;
+        const dialDigits = dial.replace('+', '');
+        let num = raw;
+        if (num.startsWith(dialDigits)) {
+          num = num.slice(dialDigits.length);
+        }
+        return `${dial}${num}`;
+      }
+
+      function setAuthMode(mode) {
+        currentMode = mode;
+        btnToggleSignIn.classList.remove('active');
+        btnToggleSignUp.classList.remove('active');
+        btnTogglePhone.classList.remove('active');
+        loginCard.classList.remove('mode-signup');
+
+        if (mode === 'signup') {
+          btnToggleSignUp.classList.add('active');
+          loginCard.classList.add('mode-signup');
+          
+          cardTitle.textContent = 'Create an Account';
+          cardDesc.textContent = 'Sign up to register your workspace';
+          groupEmail.style.display = 'block';
+          groupPhone.style.display = 'none';
+          
+          labelPass.textContent = 'Password';
+          passwordInput.type = 'password';
+          passwordInput.placeholder = 'Enter your password';
+          btnSubmit.textContent = 'Sign Up';
+          
+          usernameInput.required = true;
+          phoneInput.required = false;
+          nameInput.required = true;
+          confirmInput.required = true;
+          errorMsg.style.display = 'none';
+
+        } else if (mode === 'phone') {
+          btnTogglePhone.classList.add('active');
+          
+          cardTitle.textContent = 'Real Phone OTP Login';
+          cardDesc.textContent = 'Select country code & enter 10-digit mobile number';
+          groupEmail.style.display = 'none';
+          groupPhone.style.display = 'block';
+
+          labelPass.textContent = '6-Digit Security OTP';
+          passwordInput.type = 'text';
+          passwordInput.placeholder = 'Enter 6-digit OTP code';
+          btnSubmit.textContent = 'Verify OTP & Enter';
+          
+          usernameInput.required = false;
+          phoneInput.required = true;
+          nameInput.required = false;
+          confirmInput.required = false;
+          errorMsg.style.display = 'none';
+
+        } else {
+          // Default Sign In mode
+          btnToggleSignIn.classList.add('active');
+          
+          cardTitle.textContent = 'Sign In to ConCode';
+          cardDesc.textContent = 'Sign in to access your digital realm';
+          groupEmail.style.display = 'block';
+          groupPhone.style.display = 'none';
+
+          labelPass.textContent = 'Password';
+          passwordInput.type = 'password';
+          passwordInput.placeholder = 'Enter your password';
+          btnSubmit.textContent = 'Sign In';
+          
+          usernameInput.required = true;
+          phoneInput.required = false;
+          nameInput.required = false;
+          confirmInput.required = false;
+          errorMsg.style.display = 'none';
+        }
+      }
+
+      // Toggle panels
+      btnToggleSignIn.addEventListener('click', () => setAuthMode('signin'));
+      btnToggleSignUp.addEventListener('click', () => setAuthMode('signup'));
+      btnTogglePhone.addEventListener('click', () => setAuthMode('phone'));
+      if (btnPhoneIcon) btnPhoneIcon.addEventListener('click', () => setAuthMode('phone'));
+
+      // Send Real OTP Handler with 60s Resend Cooldown
+      btnSendOtp.addEventListener('click', async () => {
+        const fullPhone = getFormattedPhone();
+        const rawDigits = phoneInput.value.trim().replace(/\D/g, '');
+        if (!rawDigits || rawDigits.length < 5) {
+          errorMsg.textContent = 'Please enter a valid mobile number.';
+          errorMsg.style.display = 'block';
+          return;
+        }
+
+        btnSendOtp.textContent = 'Sending...';
+        btnSendOtp.disabled = true;
+        errorMsg.style.display = 'none';
+
+        try {
+          const res = await fetch('/api/auth/phone/otp', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phone: fullPhone })
+          });
+          const data = await res.json();
+          if (data.success) {
+            let countdown = 60;
+            btnSendOtp.textContent = `Resend (${countdown}s)`;
+            btnSendOtp.disabled = true;
+
+            if (otpTimerId) clearInterval(otpTimerId);
+            otpTimerId = setInterval(() => {
+              countdown--;
+              if (countdown <= 0) {
+                clearInterval(otpTimerId);
+                btnSendOtp.textContent = 'Send Code';
+                btnSendOtp.disabled = false;
+              } else {
+                btnSendOtp.textContent = `Resend (${countdown}s)`;
+              }
+            }, 1000);
+
+          } else {
+            throw new Error(data.error.message || 'Failed to dispatch OTP verification code');
+          }
+        } catch (err) {
+          errorMsg.textContent = err.message || 'OTP dispatch failed';
+          errorMsg.style.display = 'block';
+          btnSendOtp.textContent = 'Send Code';
+          btnSendOtp.disabled = false;
+        }
+      });
+
+      // Check URL query parameters for initial mode & error messages
+      const urlParams = new URLSearchParams(window.location.search);
+      const errorMsgParam = urlParams.get('error');
+      if (errorMsgParam) {
+        errorMsg.textContent = errorMsgParam;
+        errorMsg.style.display = 'block';
+      }
+
+      const requestedMode = (urlParams.get('mode') || urlParams.get('tab') || urlParams.get('action') || urlParams.get('provider') || '').toLowerCase();
+      if (requestedMode === 'signup' || requestedMode === 'register') {
+        setAuthMode('signup');
+      } else if (requestedMode === 'phone' || requestedMode === 'otp' || requestedMode === 'sms') {
+        setAuthMode('phone');
+      } else {
+        setAuthMode('signin');
+      }
+
+      // Submit Form Handler
+      loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        errorMsg.style.display = 'none';
+        
+        const username = usernameInput.value.trim();
+        const password = passwordInput.value.trim();
+        
+        if (currentMode === 'signup') {
+          const name = nameInput.value.trim();
+          const confirmPassword = confirmInput.value.trim();
+          
+          if (password !== confirmPassword) {
+            errorMsg.textContent = 'Passwords do not match.';
+            errorMsg.style.display = 'block';
+            return;
+          }
+
+          btnSubmit.textContent = 'Creating Account...';
+          btnSubmit.disabled = true;
+
+          try {
+            const res = await fetch('/api/auth/register', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ name, email: username, password })
+            });
+            const data = await res.json();
+            
+            if (data.success) {
+              localStorage.setItem('concode_admin_token', data.data.token);
+              const role = data.data.user.role || 'user';
+              if (role === 'admin') {
+                window.location.href = 'admin.html';
+              } else {
+                window.location.href = 'dashboard.html';
+              }
+            } else {
+              throw new Error(data.error.message || 'Registration failed');
+            }
+          } catch (err) {
+            errorMsg.textContent = err.message || 'Unable to contact registration gateway';
+            errorMsg.style.display = 'block';
+            btnSubmit.textContent = 'Sign Up';
+            btnSubmit.disabled = false;
+          }
+
+        } else if (currentMode === 'phone') {
+          // Real Phone OTP Verification mode
+          const fullPhone = getFormattedPhone();
+          btnSubmit.textContent = 'Verifying Security OTP...';
+          btnSubmit.disabled = true;
+
+          try {
+            const res = await fetch('/api/auth/phone/verify', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ phone: fullPhone, otp: password })
+            });
+            const data = await res.json();
+
+            if (data.success) {
+              localStorage.setItem('concode_admin_token', data.data.token);
+              const role = data.data.user.role || 'user';
+              if (role === 'admin') {
+                window.location.href = 'admin.html';
+              } else {
+                window.location.href = 'dashboard.html';
+              }
+            } else {
+              throw new Error(data.error.message || 'OTP verification failed');
+            }
+          } catch (err) {
+            errorMsg.textContent = err.message || 'Invalid or expired security OTP code';
+            errorMsg.style.display = 'block';
+            btnSubmit.textContent = 'Verify OTP & Enter';
+            btnSubmit.disabled = false;
+          }
+
+        } else {
+          // Sign In mode
+          btnSubmit.textContent = 'Signing In...';
+          btnSubmit.disabled = true;
+
+          try {
+            const res = await fetch('/api/auth/login', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email: username, password })
+            });
+            const data = await res.json();
+            
+            if (data.success) {
+              localStorage.setItem('concode_admin_token', data.data.token);
+              const role = data.data.user.role || 'user';
+              if (role === 'admin') {
+                window.location.href = 'admin.html';
+              } else {
+                window.location.href = 'dashboard.html';
+              }
+            } else {
+              throw new Error(data.error.message || 'Invalid credentials');
+            }
+          } catch (err) {
+            errorMsg.textContent = err.message || 'Unable to contact authentication gateway';
+            errorMsg.style.display = 'block';
+            btnSubmit.textContent = 'Sign In';
+            btnSubmit.disabled = false;
+          }
+        }
+      });
+
+      // OAuth & Phone Button triggers
+      document.querySelectorAll('.social-icon').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const provider = btn.getAttribute('data-provider');
+          if (provider === 'phone') {
+            setAuthMode('phone');
+          } else {
+            window.location.href = `/api/auth/oauth/${provider}`;
+          }
+        });
+      });
+    });
+  </script>
+
+</body>
+</html>
