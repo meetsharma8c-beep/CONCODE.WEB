@@ -1,5 +1,6 @@
 {
   "version": 2,
+  "alias": ["concode-sys.vercel.app"],
   "cleanUrls": true,
   "builds": [
     {
