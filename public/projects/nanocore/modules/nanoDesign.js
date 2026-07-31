@@ -50,7 +50,7 @@ export class NanoDesignEngine {
 
     // Scene
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0x0a0c16);
+    this.scene.background = new THREE.Color(0x030508);
 
     // Camera
     const width = this.container.clientWidth || 800;
@@ -75,18 +75,18 @@ export class NanoDesignEngine {
     }
     if (this.controls) {
       this.controls.enableDamping = true;
-      this.controls.dampingFactor = 0.05;
+      this.controls.dampingFactor = 0.04;
     }
 
-    // Lighting
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    // Sensitive Dark Lighting
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
     this.scene.add(ambientLight);
 
-    const dirLight1 = new THREE.DirectionalLight(0x00f0ff, 1.2);
+    const dirLight1 = new THREE.DirectionalLight(0x10b981, 0.9);
     dirLight1.position.set(10, 20, 15);
     this.scene.add(dirLight1);
 
-    const dirLight2 = new THREE.DirectionalLight(0x00ff9d, 0.8);
+    const dirLight2 = new THREE.DirectionalLight(0xe2e8f0, 0.5);
     dirLight2.position.set(-10, -20, -15);
     this.scene.add(dirLight2);
 
@@ -375,8 +375,8 @@ export class NanoDesignEngine {
     this.disposeGroup(this.bondGroup);
     this.disposeGroup(this.cloudGroup);
 
-    const defaultAtomColor = isMetallic ? 0x00f0ff : 0x00ff9d;
-    const defaultBondColor = isMetallic ? 0x0088cc : 0x00aa66;
+    const defaultAtomColor = isMetallic ? 0x10b981 : 0xe2e8f0;
+    const defaultBondColor = isMetallic ? 0x059669 : 0x64748b;
 
     if (!this._sharedSphereGeo) this._sharedSphereGeo = new THREE.SphereGeometry(1, 12, 12);
     if (!this._sharedCylinderGeo) this._sharedCylinderGeo = new THREE.CylinderGeometry(0.03, 0.03, 1, 6);

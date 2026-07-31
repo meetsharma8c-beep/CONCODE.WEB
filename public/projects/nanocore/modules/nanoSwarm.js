@@ -241,24 +241,24 @@ export class NanoSwarmEngine {
       this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     }
 
-    // Clear Canvas
-    this.ctx.fillStyle = '#060913';
+    // Clear Canvas with Pitch Dark Background
+    this.ctx.fillStyle = '#030508';
     this.ctx.fillRect(0, 0, w, h);
 
-    // Draw Fluid Streamlines (Micro-Vessel)
-    this.ctx.strokeStyle = 'rgba(0, 240, 255, 0.08)';
-    this.ctx.lineWidth = 1.5;
+    // Draw Sensitive Fluid Streamlines
+    this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.025)';
+    this.ctx.lineWidth = 1.2;
     for (let y = 60; y < h - 50; y += 30) {
       this.ctx.beginPath();
       this.ctx.moveTo(0, y);
-      this.ctx.bezierCurveTo(w * 0.3, y + Math.sin(y) * 20, w * 0.7, y - Math.sin(y) * 20, w, y);
+      this.ctx.bezierCurveTo(w * 0.3, y + Math.sin(y) * 15, w * 0.7, y - Math.sin(y) * 15, w, y);
       this.ctx.stroke();
     }
 
-    // Draw Obstacles (Vessel Walls & Bifurcation Barriers)
-    this.ctx.fillStyle = '#1e293b';
-    this.ctx.strokeStyle = '#00f0ff';
-    this.ctx.lineWidth = 2;
+    // Draw Obstacles (Minimalist Glass Vessel Barriers)
+    this.ctx.fillStyle = '#0a0e17';
+    this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+    this.ctx.lineWidth = 1.5;
 
     this.obstacles.forEach(obs => {
       if (obs.type === 'rect') {
@@ -277,30 +277,30 @@ export class NanoSwarmEngine {
       this.target.x, this.target.y, 5,
       this.target.x, this.target.y, this.target.radius
     );
-    targetGrad.addColorStop(0, 'rgba(0, 255, 157, 0.6)');
-    targetGrad.addColorStop(1, 'rgba(0, 255, 157, 0.05)');
+    targetGrad.addColorStop(0, 'rgba(16, 185, 129, 0.35)');
+    targetGrad.addColorStop(1, 'rgba(16, 185, 129, 0.02)');
 
     this.ctx.fillStyle = targetGrad;
     this.ctx.beginPath();
     this.ctx.arc(this.target.x, this.target.y, this.target.radius, 0, Math.PI * 2);
     this.ctx.fill();
 
-    this.ctx.strokeStyle = '#00ff9d';
+    this.ctx.strokeStyle = '#10b981';
     this.ctx.setLineDash([4, 4]);
     this.ctx.stroke();
     this.ctx.setLineDash([]);
 
-    this.ctx.fillStyle = '#00ff9d';
-    this.ctx.font = '600 12px "JetBrains Mono"';
+    this.ctx.fillStyle = '#10b981';
+    this.ctx.font = '500 11px "JetBrains Mono"';
     this.ctx.fillText('TARGET TISSUE SITE', this.target.x - 55, this.target.y + 4);
 
-    // Draw Swarm Particles (Microrobots)
+    // Draw Sensitive Swarm Particles (Microrobots)
     this.particles.forEach(p => {
       if (p.reachedTarget) return;
 
-      this.ctx.fillStyle = p.stuck ? '#ef4444' : '#00f0ff';
-      this.ctx.shadowColor = '#00f0ff';
-      this.ctx.shadowBlur = 8;
+      this.ctx.fillStyle = p.stuck ? '#ef4444' : '#10b981';
+      this.ctx.shadowColor = '#10b981';
+      this.ctx.shadowBlur = 6;
 
       this.ctx.beginPath();
       this.ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);

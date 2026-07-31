@@ -107,10 +107,10 @@ class NanoCoreApp {
   updateActiveModuleUI() {
     document.querySelectorAll('.nav-tab-btn').forEach(btn => {
       if (btn.getAttribute('data-module') === this.activeModule) {
-        btn.classList.add('active', 'border-cyan-500', 'text-cyan-400', 'bg-slate-800/80');
+        btn.classList.add('active', 'border-[#10B981]/30', 'text-[#10B981]', 'bg-[#030508]');
         btn.classList.remove('border-transparent', 'text-slate-400');
       } else {
-        btn.classList.remove('active', 'border-cyan-500', 'text-cyan-400', 'bg-slate-800/80');
+        btn.classList.remove('active', 'border-[#10B981]/30', 'text-[#10B981]', 'bg-[#030508]');
         btn.classList.add('border-transparent', 'text-slate-400');
       }
     });
