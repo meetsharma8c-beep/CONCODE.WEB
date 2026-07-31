@@ -1,39 +1,22 @@
 {
   "version": 2,
-  "alias": ["concode-sys.vercel.app"],
   "cleanUrls": true,
-  "builds": [
+  "rewrites": [
     {
-      "src": "server.js",
-      "use": "@vercel/node",
-      "config": {
-        "includeFiles": ["public/**", "data/**", "utils/**", "config/**"]
-      }
+      "source": "/api/(.*)",
+      "destination": "/server.js"
     },
     {
-      "src": "public/**",
-      "use": "@vercel/static"
-    }
-  ],
-  "routes": [
-    {
-      "handle": "filesystem"
+      "source": "/project/(.*)",
+      "destination": "/server.js"
     },
     {
-      "src": "/api/(.*)",
-      "dest": "server.js"
+      "source": "/projects/(.*)",
+      "destination": "/server.js"
     },
     {
-      "src": "/project/(.*)",
-      "dest": "server.js"
-    },
-    {
-      "src": "/projects/(.*)",
-      "dest": "server.js"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "server.js"
+      "source": "/(.*)",
+      "destination": "/server.js"
     }
   ]
 }
