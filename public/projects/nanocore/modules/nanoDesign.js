@@ -148,16 +148,17 @@ export class NanoDesignEngine {
       if (this.ambientParticles.material) this.ambientParticles.material.dispose();
     }
 
-    const count = 300;
+    const count = 500;
     const geometry = new THREE.BufferGeometry();
     const positions = new Float32Array(count * 3);
     const colors = new Float32Array(count * 3);
 
     const emerald = new THREE.Color(0x10b981);
     const silver = new THREE.Color(0xe2e8f0);
+    const cyan = new THREE.Color(0x06b6d4);
 
     for (let i = 0; i < count; i++) {
-      const radius = 2.0 + Math.random() * 4.0;
+      const radius = 1.8 + Math.random() * 4.5;
       const theta = Math.random() * Math.PI * 2;
       const phi = Math.random() * Math.PI - Math.PI / 2;
 
@@ -165,7 +166,8 @@ export class NanoDesignEngine {
       positions[i * 3 + 1] = radius * Math.sin(phi);
       positions[i * 3 + 2] = radius * Math.sin(theta) * Math.cos(phi);
 
-      const c = Math.random() > 0.4 ? emerald : silver;
+      const rnd = Math.random();
+      const c = rnd > 0.6 ? emerald : (rnd > 0.3 ? silver : cyan);
       colors[i * 3] = c.r;
       colors[i * 3 + 1] = c.g;
       colors[i * 3 + 2] = c.b;
@@ -175,10 +177,10 @@ export class NanoDesignEngine {
     geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
 
     const material = new THREE.PointsMaterial({
-      size: 0.04,
+      size: 0.07,
       vertexColors: true,
       transparent: true,
-      opacity: 0.5,
+      opacity: 0.8,
       blending: THREE.AdditiveBlending
     });
 
@@ -425,6 +427,7 @@ export class NanoDesignEngine {
     this.disposeGroup(this.atomGroup);
     this.disposeGroup(this.bondGroup);
     this.disposeGroup(this.cloudGroup);
+    this.createAmbientParticleCloud();
 
     const defaultAtomColor = isMetallic ? 0x10b981 : 0xe2e8f0;
     const defaultBondColor = isMetallic ? 0x059669 : 0x64748b;
