@@ -198,20 +198,32 @@ class NanoCoreApp {
     const lengthNm = parseFloat(document.getElementById('input-cnt-length')?.value || '3.0');
     const type = document.getElementById('select-nano-type')?.value || 'cnt';
 
-    document.getElementById('val-chiral-n').textContent = n;
-    document.getElementById('val-chiral-m').textContent = m;
-    document.getElementById('val-cnt-length').textContent = `${lengthNm.toFixed(1)} nm`;
+    const elN = document.getElementById('val-chiral-n');
+    const elM = document.getElementById('val-chiral-m');
+    const elLen = document.getElementById('val-cnt-length');
+    if (elN) elN.textContent = n;
+    if (elM) elM.textContent = m;
+    if (elLen) elLen.textContent = `${lengthNm.toFixed(1)} nm`;
 
     const metrics = this.designEngine.generateNanostructure({ type, n, m, lengthNm });
+    if (!metrics) return;
 
-    document.getElementById('metric-diameter').textContent = `${metrics.diameterNm.toFixed(3)} nm`;
-    document.getElementById('metric-chiral-angle').textContent = `${metrics.chiralAngleDeg.toFixed(1)}°`;
-    document.getElementById('metric-chiral-vector').textContent = `${metrics.chiralLengthNm.toFixed(3)} nm`;
-    document.getElementById('metric-bandgap-state').textContent = metrics.bandgapType;
-    document.getElementById('metric-bandgap-state').className = metrics.isMetallic
-      ? 'text-cyan-400 font-bold font-mono'
-      : 'text-emerald-400 font-bold font-mono';
-    document.getElementById('metric-est-bandgap').textContent = metrics.isMetallic ? '0.0 eV' : `${metrics.estimatedBandgapEv} eV`;
+    const elDiam = document.getElementById('metric-diameter');
+    const elAngle = document.getElementById('metric-chiral-angle');
+    const elVec = document.getElementById('metric-chiral-vector');
+    const elState = document.getElementById('metric-bandgap-state');
+    const elEst = document.getElementById('metric-est-bandgap');
+
+    if (elDiam) elDiam.textContent = `${metrics.diameterNm.toFixed(3)} nm`;
+    if (elAngle) elAngle.textContent = `${metrics.chiralAngleDeg.toFixed(1)}°`;
+    if (elVec) elVec.textContent = `${metrics.chiralLengthNm.toFixed(3)} nm`;
+    if (elState) {
+      elState.textContent = metrics.bandgapType;
+      elState.className = metrics.isMetallic
+        ? 'text-[#10B981] font-bold font-mono'
+        : 'text-[#E2E8F0] font-bold font-mono';
+    }
+    if (elEst) elEst.textContent = metrics.isMetallic ? '0.0 eV' : `${metrics.estimatedBandgapEv} eV`;
   }
 
   /* ------------------------------------------------------------------------

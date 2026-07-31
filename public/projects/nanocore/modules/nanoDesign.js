@@ -66,10 +66,24 @@ export class NanoDesignEngine {
     this.camera.position.set(0, 0, 8);
 
     // Renderer
-    this.renderer = new ThreeLib.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
+    try {
+      this.renderer = new ThreeLib.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
+    } catch (e1) {
+      try {
+        this.renderer = new ThreeLib.WebGLRenderer({ alpha: true });
+      } catch (e2) {
+        console.error('WebGL Unavailable:', e2);
+        return;
+      }
+    }
+
     this.renderer.setSize(width, height);
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
     this.renderer.shadowMap.enabled = false;
+
+    this.renderer.domElement.style.width = '100%';
+    this.renderer.domElement.style.height = '100%';
+    this.renderer.domElement.style.display = 'block';
 
     this.container.innerHTML = '';
     this.container.appendChild(this.renderer.domElement);
