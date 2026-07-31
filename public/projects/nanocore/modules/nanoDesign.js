@@ -48,18 +48,25 @@ export class NanoDesignEngine {
   initThree() {
     if (!this.container) return;
 
+    const ThreeLib = window.THREE || (typeof THREE !== 'undefined' ? THREE : null);
+    if (!ThreeLib) {
+      console.warn('NanoDesignEngine: Three.js not yet ready, retrying in 150ms...');
+      setTimeout(() => this.initThree(), 150);
+      return;
+    }
+
     // Scene
-    this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0x030508);
+    this.scene = new ThreeLib.Scene();
+    this.scene.background = new ThreeLib.Color(0x030508);
 
     // Camera
     const width = this.container.clientWidth || 800;
     const height = this.container.clientHeight || 500;
-    this.camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+    this.camera = new ThreeLib.PerspectiveCamera(45, width / height, 0.1, 1000);
     this.camera.position.set(0, 0, 8);
 
     // Renderer
-    this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
+    this.renderer = new ThreeLib.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
     this.renderer.setSize(width, height);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     this.renderer.shadowMap.enabled = false;
