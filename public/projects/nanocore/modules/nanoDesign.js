@@ -75,41 +75,47 @@ export class NanoDesignEngine {
     this.container.appendChild(this.renderer.domElement);
 
     // OrbitControls
-    if (window.THREE && window.THREE.OrbitControls) {
-      this.controls = new window.THREE.OrbitControls(this.camera, this.renderer.domElement);
-    } else if (typeof OrbitControls !== 'undefined') {
-      this.controls = new OrbitControls(this.camera, this.renderer.domElement);
-    }
-    if (this.controls) {
-      this.controls.enableDamping = true;
-      this.controls.dampingFactor = 0.04;
+    const OrbitControlsClass = ThreeLib.OrbitControls || window.OrbitControls || (typeof OrbitControls !== 'undefined' ? OrbitControls : null);
+    if (OrbitControlsClass) {
+      try {
+        this.controls = new OrbitControlsClass(this.camera, this.renderer.domElement);
+        this.controls.enableDamping = true;
+        this.controls.dampingFactor = 0.04;
+      } catch (e) {
+        console.warn('OrbitControls init bypassed:', e.message);
+      }
     }
 
     // Sensitive Dark Lighting
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+    const ambientLight = new ThreeLib.AmbientLight(0xffffff, 0.4);
     this.scene.add(ambientLight);
 
-    const dirLight1 = new THREE.DirectionalLight(0x10b981, 0.9);
+    const dirLight1 = new ThreeLib.DirectionalLight(0x10b981, 0.9);
     dirLight1.position.set(10, 20, 15);
     this.scene.add(dirLight1);
 
-    const dirLight2 = new THREE.DirectionalLight(0xe2e8f0, 0.5);
+    const dirLight2 = new ThreeLib.DirectionalLight(0xe2e8f0, 0.5);
     dirLight2.position.set(-10, -20, -15);
     this.scene.add(dirLight2);
 
-    const pointLight = new THREE.PointLight(0xffffff, 0.5, 50);
+    const pointLight = new ThreeLib.PointLight(0xffffff, 0.5, 50);
     pointLight.position.set(0, 0, 10);
     this.scene.add(pointLight);
 
     // Groups
-    this.atomGroup = new THREE.Group();
-    this.bondGroup = new THREE.Group();
-    this.cloudGroup = new THREE.Group();
+    this.atomGroup = new ThreeLib.Group();
+    this.bondGroup = new ThreeLib.Group();
+    this.cloudGroup = new ThreeLib.Group();
     this.scene.add(this.atomGroup);
     this.scene.add(this.bondGroup);
     this.scene.add(this.cloudGroup);
 
     this.createAmbientParticleCloud();
+
+    // Trigger initial structural render if currentData is populated
+    if (this.currentData && this.currentData.type) {
+      this.generateNanostructure(this.currentData);
+    }
 
     // Animation Loop
     const animate = () => {
@@ -431,6 +437,9 @@ export class NanoDesignEngine {
    * Render Three.js meshes for atoms, bonds, and pi-orbitals
    */
   render3DMesh(atoms, bonds, isMetallic) {
+    const ThreeLib = window.THREE || (typeof THREE !== 'undefined' ? THREE : null);
+    if (!ThreeLib || !this.atomGroup) return;
+
     this.disposeGroup(this.atomGroup);
     this.disposeGroup(this.bondGroup);
     this.disposeGroup(this.cloudGroup);
@@ -439,14 +448,14 @@ export class NanoDesignEngine {
     const defaultAtomColor = isMetallic ? 0x10b981 : 0xe2e8f0;
     const defaultBondColor = isMetallic ? 0x059669 : 0x64748b;
 
-    if (!this._sharedSphereGeo) this._sharedSphereGeo = new THREE.SphereGeometry(1, 12, 12);
-    if (!this._sharedCylinderGeo) this._sharedCylinderGeo = new THREE.CylinderGeometry(0.03, 0.03, 1, 6);
+    if (!this._sharedSphereGeo) this._sharedSphereGeo = new ThreeLib.SphereGeometry(1, 12, 12);
+    if (!this._sharedCylinderGeo) this._sharedCylinderGeo = new ThreeLib.CylinderGeometry(0.03, 0.03, 1, 6);
     if (!this._materialCache) this._materialCache = new Map();
 
     const getMaterial = (color, wireframe, isBond = false) => {
       const key = `${color}_${wireframe}_${isBond}`;
       if (!this._materialCache.has(key)) {
-        this._materialCache.set(key, new THREE.MeshStandardMaterial({
+        this._materialCache.set(key, new ThreeLib.MeshStandardMaterial({
           color,
           roughness: isBond ? 0.4 : 0.3,
           metalness: isBond ? 0.6 : 0.8,
@@ -462,15 +471,15 @@ export class NanoDesignEngine {
       const color = this.renderStyleMode === 'cpk' ? spec.cpkColor : spec.color;
 
       const atomMat = getMaterial(color, this.wireframeMode, false);
-      const mesh = new THREE.Mesh(this._sharedSphereGeo, atomMat);
+      const mesh = new ThreeLib.Mesh(this._sharedSphereGeo, atomMat);
       mesh.scale.set(radius, radius, radius);
       mesh.position.set(atom.x, atom.y, atom.z);
       mesh.userData = { atomId: atom.id, x: atom.x, y: atom.y, z: atom.z, element: atom.element };
       this.atomGroup.add(mesh);
 
       if (this.renderStyleMode === 'pi_orbital') {
-        const cloudMat = getMaterial(0x00ffff, true, false);
-        const cloudMesh = new THREE.Mesh(this._sharedSphereGeo, cloudMat);
+        const cloudMat = getMaterial(0x10b981, true, false);
+        const cloudMesh = new ThreeLib.Mesh(this._sharedSphereGeo, cloudMat);
         cloudMesh.scale.set(radius * 1.8, radius * 1.8, radius * 1.8);
         cloudMesh.position.set(atom.x, atom.y, atom.z);
         this.cloudGroup.add(cloudMesh);
@@ -479,18 +488,18 @@ export class NanoDesignEngine {
 
     if (this.renderStyleMode !== 'cpk') {
       const bondMat = getMaterial(defaultBondColor, this.wireframeMode, true);
-      const yAxis = new THREE.Vector3(0, 1, 0);
+      const yAxis = new ThreeLib.Vector3(0, 1, 0);
 
       bonds.forEach(bond => {
         const a1 = atoms[bond.atom1Index];
         const a2 = atoms[bond.atom2Index];
         if (!a1 || !a2) return;
 
-        const p1 = new THREE.Vector3(a1.x, a1.y, a1.z);
-        const p2 = new THREE.Vector3(a2.x, a2.y, a2.z);
+        const p1 = new ThreeLib.Vector3(a1.x, a1.y, a1.z);
+        const p2 = new ThreeLib.Vector3(a2.x, a2.y, a2.z);
         const distance = p1.distanceTo(p2);
 
-        const bondMesh = new THREE.Mesh(this._sharedCylinderGeo, bondMat);
+        const bondMesh = new ThreeLib.Mesh(this._sharedCylinderGeo, bondMat);
         bondMesh.scale.set(1, distance, 1);
 
         const midpoint = p1.clone().add(p2).multiplyScalar(0.5);
