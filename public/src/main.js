@@ -283,17 +283,34 @@ onboardModal.addEventListener('click', (e) => {
 });
 
 // AI Chat drawer
-document.getElementById('btn-chat').addEventListener('click', () => {
-  chatDrawer.classList.add('open');
-});
+const openChatDrawer = () => {
+  if (chatDrawer) chatDrawer.classList.add('open');
+  if (window.concodeVoiceAgent && typeof window.concodeVoiceAgent.setShiftLeft === 'function') {
+    window.concodeVoiceAgent.setShiftLeft(true);
+  }
+};
 
-document.getElementById('chat-close').addEventListener('click', () => {
-  chatDrawer.classList.remove('open');
-});
+const closeChatDrawer = () => {
+  if (chatDrawer) chatDrawer.classList.remove('open');
+  if (window.concodeVoiceAgent && typeof window.concodeVoiceAgent.setShiftLeft === 'function') {
+    window.concodeVoiceAgent.setShiftLeft(false);
+  }
+};
 
-chatDrawer.addEventListener('click', (e) => {
-  if (e.target === chatDrawer) chatDrawer.classList.remove('open');
-});
+const btnChat = document.getElementById('btn-chat');
+if (btnChat) btnChat.addEventListener('click', openChatDrawer);
+
+const btnConcodeAi = document.getElementById('btn-concode-ai');
+if (btnConcodeAi) btnConcodeAi.addEventListener('click', openChatDrawer);
+
+const chatClose = document.getElementById('chat-close');
+if (chatClose) chatClose.addEventListener('click', closeChatDrawer);
+
+if (chatDrawer) {
+  chatDrawer.addEventListener('click', (e) => {
+    if (e.target === chatDrawer) closeChatDrawer();
+  });
+}
 
 // Pricing tier selection → opens modal with pre-fill
 document.querySelectorAll('.btn-select-tier').forEach(btn => {
@@ -408,10 +425,53 @@ document.getElementById('chat-input').addEventListener('keypress', (e) => {
   if (e.key === 'Enter') sendChatMessage();
 });
 
+window.sendChatMessage = sendChatMessage;
+window.addEventListener('concode:voice-command', (evt) => {
+  const inputEl = document.getElementById('chat-input');
+  if (inputEl && evt.detail && evt.detail.command) {
+    inputEl.value = evt.detail.command;
+    sendChatMessage();
+  }
+});
+
+// Section voice trigger button handler
+const btnTriggerVoice = document.getElementById('btn-trigger-voice-section');
+if (btnTriggerVoice) {
+  btnTriggerVoice.addEventListener('click', () => {
+    if (window.concodeVoiceAgent) {
+      window.concodeVoiceAgent.activateVoiceCommandMode();
+    }
+  });
+}
+
+// Section HUD state buttons handler
+document.querySelectorAll('.hud-state-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.hud-state-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const state = btn.getAttribute('data-state');
+    if (window.concodeVoiceAgent) {
+      const stateMap = {
+        'IDLE': 'PASSIVE',
+        'WAKE': 'ACTIVATED',
+        'WAKE_DETECTED': 'ACTIVATED',
+        'LISTENING': 'ACTIVATED',
+        'PROCESSING': 'PROCESSING',
+        'SPEAKING': 'SPEAKING'
+      };
+      window.concodeVoiceAgent.setState(stateMap[state] || state);
+    }
+  });
+});
+
 async function sendChatMessage() {
   const inputEl = document.getElementById('chat-input');
   const query = inputEl.value.trim();
   if (!query) return;
+
+  if (window.concodeVoiceAgent) {
+    window.concodeVoiceAgent.setState('PROCESSING');
+  }
 
   const logEl = document.getElementById('chat-output');
   logEl.innerHTML += `<p class="user-msg">${query}</p>`;
@@ -439,6 +499,9 @@ async function sendChatMessage() {
     const typingIndicator = document.getElementById(typingId);
     if (typingIndicator) typingIndicator.remove();
     await handleCliCommand(query, logEl);
+    if (window.concodeVoiceAgent) {
+      window.concodeVoiceAgent.setState('PASSIVE');
+    }
     return;
   }
 
@@ -456,9 +519,36 @@ async function sendChatMessage() {
 
     if (result.success) {
       let thoughtHtml = '';
+      const nb = result.data.neuralBrain || {};
+
+      // Empathetic Social Intelligence Wrapper Banner
+      let socialBannerHtml = '';
+      if (nb.personalizedMessage) {
+        const sentimentColor = nb.sentiment === 'confused' ? '#f59e0b' : nb.sentiment === 'negative' ? '#ef4444' : '#10b981';
+        socialBannerHtml = `
+          <div class="neural-empathy-banner" style="margin-bottom: 10px; padding: 8px 12px; background: rgba(15, 23, 42, 0.6); border-left: 3px solid ${sentimentColor}; border-radius: 6px; font-size: 11px; color: #cbd5e1;">
+            <span style="font-size: 12px; margin-right: 6px;">🧠</span> <em>${nb.personalizedMessage}</em>
+          </div>
+        `;
+      }
+
+      // Clarifying Question Card (when user intent is ambiguous)
+      let clarifyingHtml = '';
+      if (nb.isClarifying && nb.clarifyingQuestion) {
+        clarifyingHtml = `
+          <div class="neural-clarifying-card" style="margin-bottom: 10px; padding: 12px; background: rgba(30, 41, 59, 0.85); border: 1px solid rgba(245, 158, 11, 0.4); border-radius: 8px; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15);">
+            <div style="display: flex; align-items: center; gap: 8px; font-weight: 600; color: #fbbf24; font-size: 12px;">
+              <span>❓ CONCODE AI Needs Clarification</span>
+            </div>
+            <p style="margin: 6px 0 0 0; color: #f3f4f6; font-size: 12px;">${nb.clarifyingQuestion}</p>
+          </div>
+        `;
+      }
+
       if (result.data.thought || (result.data.thoughtSteps && result.data.thoughtSteps.length > 0)) {
         const badge = result.data.agentBadge || '📐 Architect Agent';
         const modelTag = result.data.modelUsed || 'concode-native-v7';
+        const repairBadge = nb.repairApplied ? `<span style="background: rgba(236, 72, 153, 0.2); border: 1px solid rgba(244, 114, 182, 0.4); color: #f472b6; padding: 2px 8px; border-radius: 12px; font-size: 10px;">✨ Neural Repair</span>` : '';
         
         let stepsHtml = '';
         if (result.data.thoughtSteps && result.data.thoughtSteps.length > 0) {
@@ -477,7 +567,8 @@ async function sendChatMessage() {
           <details class="ai-thought-accordion" style="margin-bottom: 12px; background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(12px); border: 1px solid rgba(0, 240, 255, 0.25); border-radius: 10px; padding: 10px 14px; font-size: 11px; color: #a5f3fc; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
             <summary style="cursor: pointer; font-weight: 700; color: #00f0ff; outline: none; user-select: none; display: flex; align-items: center; justify-content: space-between; width: 100%;">
               <span>🧠 CONCODE AI Cognitive Matrix</span>
-              <div style="display: flex; gap: 6px; align-items: center;">
+              <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                ${repairBadge}
                 <span class="agent-badge" style="background: rgba(139, 92, 246, 0.2); border: 1px solid rgba(167, 139, 250, 0.4); color: #c084fc; padding: 2px 8px; border-radius: 12px; font-size: 10px;">${badge}</span>
                 <span class="model-badge" style="background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(52, 211, 153, 0.4); color: #34d399; padding: 2px 8px; border-radius: 12px; font-size: 10px;">⚡ ${modelTag}</span>
               </div>
@@ -497,7 +588,11 @@ async function sendChatMessage() {
         smartRepliesHtml = `<div class="ai-smart-replies-container" style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px;">${chipsStr}</div>`;
       }
 
-      logEl.innerHTML += `<div class="bot-msg">${thoughtHtml}${marked.parse(result.data.reply)}${smartRepliesHtml}</div>`;
+      logEl.innerHTML += `<div class="bot-msg">${socialBannerHtml}${clarifyingHtml}${thoughtHtml}${marked.parse(result.data.reply)}${smartRepliesHtml}</div>`;
+
+      if (window.concodeVoiceAgent && typeof window.concodeVoiceAgent.speak === 'function') {
+        window.concodeVoiceAgent.speak(result.data.voiceSummary || result.data.reply);
+      }
 
       // Bind handlers for new smart reply buttons
       logEl.querySelectorAll('.smart-reply-btn:not(.bound)').forEach(btn => {
@@ -519,6 +614,10 @@ async function sendChatMessage() {
     const typingIndicator = document.getElementById(typingId);
     if (typingIndicator) typingIndicator.remove();
     logEl.innerHTML += `<div class="bot-msg" style="color: #ef4444">Couldn't reach the server. Please try again.</div>`;
+  } finally {
+    if (window.concodeVoiceAgent && window.concodeVoiceAgent.state !== 'SPEAKING') {
+      window.concodeVoiceAgent.setState('PASSIVE');
+    }
   }
   logEl.scrollTop = logEl.scrollHeight;
 }
@@ -2401,6 +2500,64 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+
+// ═══════════════════════════════════════
+// AI ENGINE & VOICE SHOWCASE SECTION LOGIC
+// ═══════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  const voiceSecBtn = document.getElementById('btn-trigger-voice-section');
+  const liveLog = document.getElementById('voice-live-log');
+  const stateBadge = document.getElementById('ai-current-state-badge');
+
+  if (voiceSecBtn) {
+    voiceSecBtn.addEventListener('click', () => {
+      const orb = document.getElementById('voice-orb-wrapper');
+      if (orb) {
+        orb.click();
+      } else if (window.concodeVoiceAgent) {
+        window.concodeVoiceAgent.toggleListening();
+      }
+      if (liveLog) {
+        const timeStr = new Date().toLocaleTimeString();
+        liveLog.innerHTML += `<div>[${timeStr}] Voice Assistant Triggered via Web Interface.</div>`;
+        liveLog.scrollTop = liveLog.scrollHeight;
+      }
+    });
+  }
+
+  // HUD State Testing Buttons
+  const stateBtns = document.querySelectorAll('#hud-state-btn-group .hud-state-btn');
+  stateBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      stateBtns.forEach(b => {
+        b.classList.remove('active');
+        b.style.background = 'rgba(255,255,255,0.05)';
+        b.style.borderColor = 'rgba(255,255,255,0.1)';
+        b.style.color = '#ccc';
+      });
+      btn.classList.add('active');
+      btn.style.background = 'rgba(0,240,255,0.15)';
+      btn.style.borderColor = '#00f0ff';
+      btn.style.color = '#fff';
+
+      const newState = btn.getAttribute('data-state');
+      if (stateBadge) {
+        stateBadge.textContent = `[STATE: ${newState}]`;
+      }
+
+      if (window.concodeVoiceAgent) {
+        window.concodeVoiceAgent.setState(newState);
+      }
+
+      if (liveLog) {
+        const timeStr = new Date().toLocaleTimeString();
+        liveLog.innerHTML += `<div>[${timeStr}] HUD Visualizer State set to: [STATE: ${newState}]</div>`;
+        liveLog.scrollTop = liveLog.scrollHeight;
+      }
+    });
+  });
+});
+
 
 
 

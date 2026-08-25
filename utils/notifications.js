@@ -1,6 +1,19 @@
 const DatabaseManager = require('./DatabaseManager');
 const db = new DatabaseManager();
 
+/**
+ * Escapes HTML special characters to prevent XSS in email templates.
+ */
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 const ADMIN_EMAIL = process.env.ADMIN_ALERT_EMAIL || 'ms.concode@gmail.com';
 const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL || '';
 const SLACK_WEBHOOK_URL = process.env.SLACK_WEBHOOK_URL || '';
@@ -81,7 +94,7 @@ async function sendLeadAlert(title, data) {
             <div style="font-family: Arial, sans-serif; background: #060b16; color: #fff; padding: 24px; border-radius: 12px; max-width: 600px;">
               <h2 style="color: #00f0ff;"> ${title}</h2>
               <hr style="border-color: rgba(255,255,255,0.1);" />
-              ${Object.entries(data).map(([k, v]) => `<p><strong>${k.toUpperCase()}:</strong> ${v}</p>`).join('')}
+              ${Object.entries(data).map(([k, v]) => `<p><strong>${escapeHtml(k.toUpperCase())}:</strong> ${escapeHtml(v)}</p>`).join('')}
               <br />
               <a href="http://localhost:3000/login.html" style="background: #00f0ff; color: #060b16; padding: 10px 20px; text-decoration: none; font-weight: bold; border-radius: 6px; display: inline-block;">View in Admin Panel</a>
             </div>
@@ -120,7 +133,7 @@ async function sendLeadAlert(title, data) {
           <div style="font-family: Arial, sans-serif; background: #060b16; color: #fff; padding: 24px; border-radius: 12px; max-width: 600px;">
             <h2 style="color: #00f0ff;"> ${title}</h2>
             <hr style="border-color: rgba(255,255,255,0.1);" />
-            ${Object.entries(data).map(([k, v]) => `<p><strong>${k.toUpperCase()}:</strong> ${v}</p>`).join('')}
+            ${Object.entries(data).map(([k, v]) => `<p><strong>${escapeHtml(k.toUpperCase())}:</strong> ${escapeHtml(v)}</p>`).join('')}
             <br />
             <a href="http://localhost:3000/login.html" style="background: #00f0ff; color: #060b16; padding: 10px 20px; text-decoration: none; font-weight: bold; border-radius: 6px; display: inline-block;">View in Admin Panel</a>
           </div>

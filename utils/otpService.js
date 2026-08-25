@@ -42,7 +42,7 @@ async function generateAndSendOTP(rawPhone) {
     lastSentAt: now
   });
 
-  console.log(`\n [REAL OTP SERVICE] Generated 6-digit authentication token for ${phone}: ${otpCode}`);
+  console.log(`\n [REAL OTP SERVICE] Generated 6-digit authentication token for ${phone}: ***REDACTED***`);
 
   let smsStatus = 'simulated';
   let providerMessage = 'OTP generated and sent to local inbox simulation.';

@@ -11,13 +11,16 @@ services:
       - .env
     environment:
       - OLLAMA_HOST=http://host.docker.internal:11434
-      - MONGO_URI=mongodb://concode-db:27017/concode
+      - NEURAL_BRAIN_URL=http://host.docker.internal:8000
+      - MONGO_URI=mongodb://concode_admin:${MONGO_PASSWORD:-concode_secure_db_pw}@concode-db:27017/concode?authSource=admin
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
       - ./data:/app/data
       - ./public:/app/public
       - ./config:/app/config
+      - ./utils:/app/utils
+      - ./server.js:/app/server.js
 
   concode-db:
     image: mongo:6.0
@@ -27,4 +30,7 @@ services:
       - "27017:27017"
     volumes:
       - ./mongo-data:/data/db
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=concode_admin
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD:-concode_secure_db_pw}
 

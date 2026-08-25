@@ -11,6 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="src/style.css?v=2.4">
+  <link rel="stylesheet" href="src/voice/voice-style.css?v=1.0">
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
@@ -43,6 +44,7 @@
       </a>
       <ul class="nav-menu" id="nav-menu">
         <li><a href="#services">Services</a></li>
+        <li><a href="#ai-engine">AI Brain</a></li>
         <li><a href="#portfolio">Portfolio</a></li>
         <li><a href="#work">Work</a></li>
         <li><a href="#process">Process</a></li>
@@ -265,8 +267,121 @@
   </section>
 
   <!-- ═══════════════════════════════════════════ -->
-  <!-- WHY CHOOSE US / BUSINESS OUTCOME SECTION -->
+  <!-- CONCODE AI COMPUTERIZED BRAIN & VOICE ENGINE -->
   <!-- ═══════════════════════════════════════════ -->
+  <section class="section" id="ai-engine" style="position: relative; overflow: hidden; background: radial-gradient(circle at 50% 20%, rgba(0, 240, 255, 0.06), transparent 70%); border-top: 1px solid rgba(0,240,255,0.15); border-bottom: 1px solid rgba(0,240,255,0.15);">
+    <div class="container">
+      <div class="section-header" style="text-align: center; max-width: 800px; margin: 0 auto 36px;">
+        <span class="section-label" style="color: #00f0ff; border-color: rgba(0,240,255,0.3);">Standalone AI Engine v10.0</span>
+        <h2 class="section-title scramble-text">In-Process AI Brain &amp;<br>Hands-Free Voice Assistant</h2>
+        <p class="section-desc scroll-highlight">Zero external service dependencies—no cloud APIs, no background daemons, no network required. Powered by bare-metal GGUF LLMs, in-process LanceDB vector search, OpenWakeWord stream listeners, and PyQt6 visual HUDs.</p>
+      </div>
+
+      <!-- Live Hardware Telemetry Banner -->
+      <div class="ai-telemetry-banner" id="ai-telemetry-banner" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 36px;">
+        <div class="telemetry-card" style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(0, 240, 255, 0.2); border-radius: 12px; padding: 16px 20px; display: flex; align-items: center; gap: 14px;">
+          <div class="telemetry-icon" style="font-size: 14px; font-weight: 700; color: #00f0ff; font-family: monospace;">[GPU]</div>
+          <div class="telemetry-info" style="display: flex; flex-direction: column;">
+            <span class="telemetry-label" style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em;">Hardware Acceleration</span>
+            <span class="telemetry-value" id="tel-backend" style="font-size: 13px; font-weight: 600; color: #00f0ff;">METAL / CUDA Auto-Gated</span>
+          </div>
+        </div>
+        <div class="telemetry-card" style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(0, 240, 255, 0.2); border-radius: 12px; padding: 16px 20px; display: flex; align-items: center; gap: 14px;">
+          <div class="telemetry-icon" style="font-size: 14px; font-weight: 700; color: #a855f7; font-family: monospace;">[MEM]</div>
+          <div class="telemetry-info" style="display: flex; flex-direction: column;">
+            <span class="telemetry-label" style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em;">VRAM &amp; Memory</span>
+            <span class="telemetry-value" id="tel-memory" style="font-size: 13px; font-weight: 600; color: #a855f7;">100% Unified VRAM Offload</span>
+          </div>
+        </div>
+        <div class="telemetry-card" style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(0, 240, 255, 0.2); border-radius: 12px; padding: 16px 20px; display: flex; align-items: center; gap: 14px;">
+          <div class="telemetry-icon" style="font-size: 14px; font-weight: 700; color: #10b981; font-family: monospace;">[AST]</div>
+          <div class="telemetry-info" style="display: flex; flex-direction: column;">
+            <span class="telemetry-label" style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em;">AST Knowledge Matrix</span>
+            <span class="telemetry-value" id="tel-ast" style="font-size: 13px; font-weight: 600; color: #10b981;">114 Workspace Nodes</span>
+          </div>
+        </div>
+        <div class="telemetry-card" style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(0, 240, 255, 0.2); border-radius: 12px; padding: 16px 20px; display: flex; align-items: center; gap: 14px;">
+          <div class="telemetry-icon" style="font-size: 14px; font-weight: 700; color: #f59e0b; font-family: monospace;">[MIC]</div>
+          <div class="telemetry-info" style="display: flex; flex-direction: column;">
+            <span class="telemetry-label" style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em;">Voice Activation</span>
+            <span class="telemetry-value" id="tel-wake" style="font-size: 13px; font-weight: 600; color: #f59e0b;">Always Active ("Hey ConCode")</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Interactive Voice Engine & State Machine Showcase Grid -->
+      <div class="ai-showcase-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: start;">
+        
+        <!-- Left: Interactive Voice Loop Controller Card -->
+        <div class="ai-interactive-card" style="background: rgba(10, 16, 30, 0.85); border: 1px solid rgba(0, 240, 255, 0.25); border-radius: 16px; padding: 28px; backdrop-filter: blur(12px); box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span class="pulse-dot" style="width: 10px; height: 10px; border-radius: 50%; background: #10b981; box-shadow: 0 0 10px #10b981; display: inline-block;"></span>
+              <h3 style="margin: 0; font-size: 1.25rem; font-weight: 600; color: #fff;">Voice Agent Live Control (Always Activated)</h3>
+            </div>
+            <span class="state-badge" id="ai-current-state-badge" style="padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3);">[STATE: LISTENING]</span>
+          </div>
+
+          <!-- Interactive Visualizer Controls -->
+          <div style="text-align: center; padding: 20px 0;">
+            <button class="btn btn-primary" id="btn-trigger-voice-section" style="padding: 14px 28px; font-size: 1rem; border-radius: 30px; background: linear-gradient(135deg, #10b981, #00f0ff); box-shadow: 0 0 25px rgba(0, 240, 255, 0.4); border: none; cursor: pointer;">
+              Voice Assistant Active (Listening)
+            </button>
+            <p style="font-size: 12px; color: var(--text-secondary); margin-top: 12px;">Speak directly: "Hey ConCode", "ConCode", or "Refactor this function" into your microphone.</p>
+          </div>
+
+          <!-- Live State Transition Selector Test Bar -->
+          <div style="margin-top: 16px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 16px;">
+            <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); display: block; margin-bottom: 10px;">Test HUD Visualizer Reactive States</span>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px;" id="hud-state-btn-group">
+              <button class="hud-state-btn" data-state="IDLE" style="padding: 6px 12px; border-radius: 6px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #ccc; font-size: 12px; cursor: pointer;">1. IDLE</button>
+              <button class="hud-state-btn" data-state="WAKE_DETECTED" style="padding: 6px 12px; border-radius: 6px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #ccc; font-size: 12px; cursor: pointer;">2. WAKE</button>
+              <button class="hud-state-btn active" data-state="LISTENING" style="padding: 6px 12px; border-radius: 6px; background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #fff; font-size: 12px; cursor: pointer;">3. LISTENING</button>
+              <button class="hud-state-btn" data-state="PROCESSING" style="padding: 6px 12px; border-radius: 6px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #ccc; font-size: 12px; cursor: pointer;">4. PROCESSING</button>
+              <button class="hud-state-btn" data-state="SPEAKING" style="padding: 6px 12px; border-radius: 6px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #ccc; font-size: 12px; cursor: pointer;">5. SPEAKING</button>
+            </div>
+          </div>
+
+          <!-- Real-Time Voice Log Output -->
+          <div class="voice-live-log" id="voice-live-log" style="margin-top: 16px; padding: 12px 16px; background: rgba(0,0,0,0.5); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #38bdf8; max-height: 120px; overflow-y: auto;">
+            <div>// ConCode AI Voice Engine v10.0 active. Microphone stream listening...</div>
+          </div>
+        </div>
+
+        <!-- Right: 4-Pillar Subsystems Architecture Cards -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <!-- Pillar 1 -->
+          <div class="ai-feature-card" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 20px;">
+            <div style="font-size: 12px; font-weight: 700; color: #00f0ff; font-family: monospace; margin-bottom: 8px;">[LLM]</div>
+            <h4 style="margin: 0 0 6px; color: #fff; font-size: 1rem;">Bare-Metal LLM Core</h4>
+            <p style="margin: 0; font-size: 13px; color: var(--text-secondary); line-height: 1.5;">Direct GGUF model execution in RAM/VRAM via <code>llama-cpp-python</code> (Qwen 2.5 Coder / Llama 3).</p>
+          </div>
+
+          <!-- Pillar 2 -->
+          <div class="ai-feature-card" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 20px;">
+            <div style="font-size: 12px; font-weight: 700; color: #10b981; font-family: monospace; margin-bottom: 8px;">[RAG]</div>
+            <h4 style="margin: 0 0 6px; color: #fff; font-size: 1rem;">Embedded LanceDB RAG</h4>
+            <p style="margin: 0; font-size: 13px; color: var(--text-secondary); line-height: 1.5;">Offline vector search engine indexing active codebase AST symbol graphs and scopes.</p>
+          </div>
+
+          <!-- Pillar 3 -->
+          <div class="ai-feature-card" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 20px;">
+            <div style="font-size: 12px; font-weight: 700; color: #f59e0b; font-family: monospace; margin-bottom: 8px;">[VAD]</div>
+            <h4 style="margin: 0 0 6px; color: #fff; font-size: 1rem;">OpenWakeWord Stream</h4>
+            <p style="margin: 0; font-size: 13px; color: var(--text-secondary); line-height: 1.5;">Low-latency audio ring buffer + Silero VAD filtering out keyboard typing &amp; ambient noise.</p>
+          </div>
+
+          <!-- Pillar 4 -->
+          <div class="ai-feature-card" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 20px;">
+            <div style="font-size: 12px; font-weight: 700; color: #a855f7; font-family: monospace; margin-bottom: 8px;">[HUD]</div>
+            <h4 style="margin: 0 0 6px; color: #fff; font-size: 1rem;">PyQt6 &amp; Canvas Floating HUD</h4>
+            <p style="margin: 0; font-size: 13px; color: var(--text-secondary); line-height: 1.5;">Always-on-top frameless 5-state visualizer pulsing to real-time speech pitch and model states.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
   <section class="section section-dark" id="why-choose-us">
     <div class="container">
       <div class="section-header">
@@ -1178,6 +1293,10 @@
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
   <script src="src/three-scene.js?v=2.4"></script>
+  <script src="src/voice/wake-word-listener.js?v=1.0"></script>
+  <script src="src/voice/voice-orb-visualizer.js?v=1.0"></script>
+  <script src="src/voice/voice-command-dispatcher.js?v=1.0"></script>
+  <script src="src/voice/concode-voice-agent.js?v=1.0"></script>
   <script src="src/main.js?v=2.4"></script>
 </body>
 </html>

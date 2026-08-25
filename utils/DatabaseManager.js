@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 
 let admin = null;
 if (process.env.USE_FIRESTORE === 'true') {
@@ -58,6 +59,7 @@ class DatabaseManager {
 
   initLocalFallback() {
     this.memoryStore = new Map();
+    this._writeLocks = new Map(); // Per-collection mutex locks
     this.baseDir = path.join(__dirname, '../data');
     try {
       if (!fs.existsSync(this.baseDir)) {
@@ -67,6 +69,20 @@ class DatabaseManager {
       console.log('DatabaseManager: Read-only filesystem detected; using in-memory store.');
     }
     console.log('DatabaseManager: Initialized local JSON database fallback.');
+  }
+
+  /**
+   * Acquires a per-collection write lock to prevent race conditions.
+   */
+  async _acquireLock(collection) {
+    while (this._writeLocks && this._writeLocks.get(collection)) {
+      await new Promise(resolve => setTimeout(resolve, 5));
+    }
+    if (this._writeLocks) this._writeLocks.set(collection, true);
+  }
+
+  _releaseLock(collection) {
+    if (this._writeLocks) this._writeLocks.set(collection, false);
   }
 
   /**
@@ -127,7 +143,7 @@ class DatabaseManager {
    * @returns {Promise<Object>} The inserted document with id and createdAt populated.
    */
   async insert(collection, document) {
-    document.id = Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+    document.id = crypto.randomUUID();
     document.createdAt = new Date().toISOString();
 
     if (this.useMongo && this.mongoDb) {
@@ -148,16 +164,21 @@ class DatabaseManager {
         return document;
       }
     } else {
-      const items = await this.read(collection);
-      items.push(document);
-      if (this.memoryStore) this.memoryStore.set(collection, items);
-      const file = path.join(this.baseDir, `${collection}.json`);
+      await this._acquireLock(collection);
       try {
-        fs.writeFileSync(file, JSON.stringify(items, null, 2), 'utf8');
-      } catch (e) {
-        console.log(`Local database file write bypassed (in-memory saved for "${collection}")`);
+        const items = await this.read(collection);
+        items.push(document);
+        if (this.memoryStore) this.memoryStore.set(collection, items);
+        const file = path.join(this.baseDir, `${collection}.json`);
+        try {
+          fs.writeFileSync(file, JSON.stringify(items, null, 2), 'utf8');
+        } catch (e) {
+          console.log(`Local database file write bypassed (in-memory saved for "${collection}")`);
+        }
+        return document;
+      } finally {
+        this._releaseLock(collection);
       }
-      return document;
     }
   }
 
@@ -185,18 +206,27 @@ class DatabaseManager {
         return false;
       }
     } else {
-      const items = await this.read(collection);
-      const filtered = items.filter(item => item.id !== docId);
-      if (this.memoryStore) this.memoryStore.set(collection, filtered);
-      const file = path.join(this.baseDir, `${collection}.json`);
+      await this._acquireLock(collection);
       try {
-        fs.writeFileSync(file, JSON.stringify(filtered, null, 2), 'utf8');
-      } catch (e) {
-        console.log(`Local database file write bypassed (in-memory updated for "${collection}")`);
+        const items = await this.read(collection);
+        const filtered = items.filter(item => item.id !== docId);
+        if (this.memoryStore) this.memoryStore.set(collection, filtered);
+        const file = path.join(this.baseDir, `${collection}.json`);
+        try {
+          fs.writeFileSync(file, JSON.stringify(filtered, null, 2), 'utf8');
+        } catch (e) {
+          console.log(`Local database file write bypassed (in-memory updated for "${collection}")`);
+        }
+        return true;
+      } finally {
+        this._releaseLock(collection);
       }
-      return true;
     }
   }
 }
 
+// Singleton instance to prevent duplicate DB connections across modules
+const _singleton = new DatabaseManager();
+
 module.exports = DatabaseManager;
+module.exports.instance = _singleton;

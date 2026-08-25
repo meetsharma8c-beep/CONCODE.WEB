@@ -1999,12 +1999,23 @@ async function saveProjectFile(projectId, filename, content = '') {
   const normalizedId = projectId.trim().toLowerCase().replace(/[^a-z0-9-_]/g, '');
   const safeName = path.basename(filename);
 
-  const projectDir = path.join(__dirname, '../public/projects', normalizedId);
+  // Security: reject any filename with path traversal or separator characters
+  if (!safeName || safeName.includes('..') || safeName !== filename.replace(/^\/+/, '')) {
+    throw new Error('Invalid filename. Filenames must not contain path separators or traversal sequences.');
+  }
+
+  const projectDir = path.resolve(__dirname, '../public/projects', normalizedId);
   if (!fs.existsSync(projectDir)) {
     fs.mkdirSync(projectDir, { recursive: true });
   }
 
-  const filePath = path.join(projectDir, safeName);
+  const filePath = path.resolve(projectDir, safeName);
+
+  // Security: ensure resolved path stays within the project directory
+  if (!filePath.startsWith(projectDir + path.sep) && filePath !== projectDir) {
+    throw new Error('Forbidden: File path escapes the project directory.');
+  }
+
   fs.writeFileSync(filePath, content, 'utf8');
 
   await gateway.registerRoute(normalizedId, normalizedId);

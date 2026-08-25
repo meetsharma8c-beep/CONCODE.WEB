@@ -183,7 +183,7 @@ function init3DScene() {
 
   renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -1784,11 +1784,18 @@ function setupInteraction(canvas) {
   }, { passive: true });
 }
 
+// Pause rendering when tab is hidden to save GPU/CPU energy and prevent overheating
+let isTabVisible = !document.hidden;
+document.addEventListener('visibilitychange', () => {
+  isTabVisible = !document.hidden;
+});
+
 // ==========================================
 // ANIMATION LOOP
 // ==========================================
 function animate() {
   requestAnimationFrame(animate);
+  if (!isTabVisible) return;
   
   const delta = clock.getDelta();
   const elapsed = clock.getElapsedTime();

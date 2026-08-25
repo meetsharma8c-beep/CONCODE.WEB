@@ -1,29 +1,59 @@
 const responses = require('./responses');
-const DatabaseManager = require('./DatabaseManager');
 const jwt = require('jsonwebtoken');
-const db = new DatabaseManager();
+
+function getJwtSecret() {
+  const secret = process.env.JWT_SECRET;
+  if (!secret || secret.length < 32) {
+    throw new Error('FATAL: JWT_SECRET environment variable must be set and at least 32 characters long.');
+  }
+  return secret;
+}
+
+function extractToken(req) {
+  if (req.headers['x-admin-token']) return req.headers['x-admin-token'];
+  const authHeader = req.headers['authorization'];
+  if (authHeader) {
+    if (authHeader.startsWith('Bearer ')) return authHeader.substring(7).trim();
+    return authHeader.trim();
+  }
+  return null;
+}
 
 async function verifyAdmin(req, res, next) {
-  const token = req.headers['x-admin-token'];
-  const adminToken = process.env.ADMIN_TOKEN || 'admin123';
-  if (token === adminToken) {
-    return next();
+  const token = extractToken(req);
+  if (!token) {
+    return responses.error(res, 'Unauthorized: Missing authentication token', 401);
   }
-  
-  if (token) {
-    try {
-      const jwtSecret = process.env.JWT_SECRET || 'concode_super_secret_session_token_key';
-      const decoded = jwt.verify(token, jwtSecret);
-      req.user = decoded;
-      if (decoded.role === 'admin') {
-        return next();
-      }
-    } catch (e) {
-      console.warn('verifyAdmin JWT Verification Failed:', e.message);
+
+  try {
+    const decoded = jwt.verify(token, getJwtSecret());
+    req.user = decoded;
+    if (decoded.role === 'admin') {
+      return next();
     }
+    return responses.error(res, 'Forbidden: Admin access required', 403);
+  } catch (e) {
+    console.warn('verifyAdmin JWT Verification Failed:', e.message);
+    return responses.error(res, 'Unauthorized: Invalid or expired token', 401);
   }
-  
-  responses.error(res, 'Unauthorized', 401);
+}
+
+/**
+ * Middleware to verify any authenticated user (admin or regular).
+ */
+async function verifyAuth(req, res, next) {
+  const token = extractToken(req);
+  if (!token) {
+    return responses.error(res, 'Unauthorized: Missing authentication token', 401);
+  }
+
+  try {
+    const decoded = jwt.verify(token, getJwtSecret());
+    req.user = decoded;
+    return next();
+  } catch (e) {
+    return responses.error(res, 'Unauthorized: Invalid or expired token', 401);
+  }
 }
 
 function requestLogger(req, res, next) {
@@ -38,6 +68,8 @@ function errorHandler(err, req, res, next) {
 
 module.exports = {
   verifyAdmin,
+  verifyAuth,
+  getJwtSecret,
   requestLogger,
   errorHandler
 };

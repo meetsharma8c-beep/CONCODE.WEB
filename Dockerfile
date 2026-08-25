@@ -16,6 +16,9 @@ RUN npm ci --only=production
 # Copy application source code
 COPY . .
 
+# Run as non-root user for security
+USER node
+
 # Expose server port
 EXPOSE 3000
 

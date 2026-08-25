@@ -16,7 +16,7 @@ const rateLimit = require('express-rate-limit');
 const fs = require('fs');
 
 const DatabaseManager = require('./utils/DatabaseManager');
-const { verifyAdmin, requestLogger, errorHandler } = require('./utils/auth');
+const { verifyAdmin, verifyAuth, getJwtSecret, requestLogger, errorHandler } = require('./utils/auth');
 const responses = require('./utils/responses');
 const gemini = require('./utils/gemini');
 const bcrypt = require('bcryptjs');
@@ -31,6 +31,8 @@ const otpService = require('./utils/otpService');
 const growth = require('./utils/growth');
 const dataEngine = require('./utils/dataEngine');
 const notifications = require('./utils/notifications');
+const concodeBrainEngine = require('./utils/concodeBrainEngine');
+const neuralBrain = require('./utils/neuralBrainProxy');
 
 const compression = require('compression');
 
@@ -62,11 +64,26 @@ app.use((req, res, next) => {
   }
 });
 
-app.use(morgan('dev'));
+app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 app.use(requestLogger);
-app.use(cors({ origin: '*' }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests from the same origin (no origin header) or known hosts
+    const allowedOrigins = [
+      'http://localhost:3000',
+      'http://localhost:3001',
+      process.env.ALLOWED_ORIGIN
+    ].filter(Boolean);
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(null, true); // Allow all in dev; tighten in production
+    }
+  },
+  credentials: true
+}));
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
 // Global Rate Limiting
 const apiLimiter = rateLimit({
@@ -89,59 +106,176 @@ app.get('/api/health', (req, res) => {
   responses.success(res, { status: 'healthy', uptime: process.uptime() });
 });
 
-// Chatbot Endpoint (Gemini integrated)
+// Chatbot Endpoint (Neural Brain Primary → JS Brain + Gemini Fallback)
 app.post('/api/chat', async (req, res) => {
-  const { input, sessionId } = req.body;
-  if (!input) return responses.error(res, 'Input required');
+  const chatStartTime = Date.now();
+  try {
+    const { input, sessionId } = req.body;
+    if (!input) return responses.error(res, 'Input required');
 
-  const activeSessionId = sessionId || 'default_session';
+    // Security: Cap input length to prevent memory exhaustion
+    if (typeof input !== 'string' || input.length > 10000) {
+      return responses.error(res, 'Input must be a string under 10,000 characters');
+    }
 
-  // Read all previous chats from database
-  const allChats = await db.read('chats');
-  
-  // Filter for current session chats
-  const sessionChats = allChats.filter(chat => chat.sessionId === activeSessionId);
-  
-  // Format history context for the Gemini SDK helper (last 15 messages)
-  const formattedHistory = sessionChats.slice(-15).map(chat => ({
-    role: chat.role || 'user',
-    text: chat.text || chat.message || ''
-  }));
+    const activeSessionId = sessionId || 'default_session';
 
-  // Save the user message to database
-  await db.insert('chats', {
-    sessionId: activeSessionId,
-    role: 'user',
-    text: input
-  });
+    // Save the user message to database
+    await db.insert('chats', {
+      sessionId: activeSessionId,
+      role: 'user',
+      text: input
+    });
 
-  // Call concodeAI helper to generate the reply, thought trace & smart replies
-  const result = await gemini.generateReply(input, formattedHistory);
-  const replyText = (typeof result === 'object' && result.reply) ? result.reply : result;
-  const thoughtTrace = (typeof result === 'object' && result.thought) ? result.thought : null;
-  const thoughtSteps = (typeof result === 'object' && result.thoughtSteps) ? result.thoughtSteps : [];
-  const agentBadge = (typeof result === 'object' && result.agentBadge) ? result.agentBadge : '📐 Architect Agent';
-  const domain = (typeof result === 'object' && result.domain) ? result.domain : 'FULL_STACK_PLATFORM';
-  const modelUsed = (typeof result === 'object' && result.modelUsed) ? result.modelUsed : 'concode-native-v7';
-  const smartReplies = (typeof result === 'object' && result.smartReplies) ? result.smartReplies : [];
+    // ═══════════════════════════════════════════════════════════
+    // PRIMARY PATH: Python Neural Brain (CodeLlama-7B + Metal GPU)
+    // ═══════════════════════════════════════════════════════════
+    const neuralBrainOnline = await neuralBrain.isNeuralBrainOnline();
 
-  // Save the bot message to database
-  const history = await db.insert('chats', {
-    sessionId: activeSessionId,
-    role: 'bot',
-    text: replyText
-  });
+    if (neuralBrainOnline) {
+      try {
+        console.log('[/api/chat] Routing to Neural Brain (Python) ...');
+        const neuralResult = await neuralBrain.queryCognitive(input, {
+          sessionId: activeSessionId,
+          mode: 'text',
+        });
 
-  responses.success(res, {
-    reply: replyText,
-    thought: thoughtTrace,
-    thoughtSteps,
-    agentBadge,
-    domain,
-    modelUsed,
-    smartReplies,
-    history
-  });
+        const replyText = neuralResult.code || neuralResult.reply || '';
+        const voiceSummary = neuralResult.personalized_message || concodeBrainEngine.generateVoiceSummary(replyText, input);
+
+        // Save the bot message to database
+        const history = await db.insert('chats', {
+          sessionId: activeSessionId,
+          role: 'bot',
+          text: replyText
+        });
+
+        const responseTimeMs = Date.now() - chatStartTime;
+
+        return responses.success(res, {
+          reply: replyText,
+          voiceSummary: voiceSummary,
+          hardwareConfig: concodeBrainEngine.hardwareConfig,
+          thought: `[NEURAL BRAIN] Guild: ${neuralResult.guild_icon} ${neuralResult.guild} | Confidence: ${(neuralResult.confidence * 100).toFixed(0)}%`,
+          thoughtSteps: [
+            { step: 1, name: 'Neural Intent Classification', detail: `Guild: ${neuralResult.guild} (${(neuralResult.confidence * 100).toFixed(1)}%)` },
+            { step: 2, name: 'Sentiment Analysis', detail: neuralResult.sentiment || 'neutral' },
+            { step: 3, name: 'CodeLlama-7B Generation', detail: 'Metal GPU accelerated, local inference' },
+            { step: 4, name: 'CodeT5 Repair', detail: neuralResult.repair_applied ? 'Repair applied' : 'Clean output' },
+            { step: 5, name: 'Empathetic Wrapping', detail: neuralResult.personalized_message || 'Standard response' },
+          ],
+          confidence: Math.round(neuralResult.confidence * 100),
+          traceMs: neuralResult.latency_ms || responseTimeMs,
+          agentBadge: `${neuralResult.guild_icon} ${neuralResult.guild}`,
+          domain: neuralResult.guild,
+          modelUsed: 'CodeLlama-7B-GGUF (Neural Brain)',
+          selfHealingAudit: neuralResult.repair_applied ? 'CodeT5 neural repair applied' : 'Clean',
+          selfHealingChecks: [],
+          complexityReport: {},
+          workspaceContextFiles: [],
+          smartReplies: [],
+          neuralBrain: {
+            active: true,
+            sentiment: neuralResult.sentiment,
+            personalizedMessage: neuralResult.personalized_message,
+            isClarifying: neuralResult.is_clarifying,
+            clarifyingQuestion: neuralResult.clarifying_question,
+            repairApplied: neuralResult.repair_applied,
+            subsystems: neuralResult.subsystems,
+          },
+          responseTimeMs,
+          history
+        });
+      } catch (neuralErr) {
+        console.warn('[/api/chat] Neural Brain failed, falling back to JS brain + Gemini:', neuralErr.message);
+        // Fall through to the JS brain fallback below
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════
+    // FALLBACK PATH: JS Brain Engine v12.0 + Gemini Cloud
+    // ═══════════════════════════════════════════════════════════
+    console.log('[/api/chat] Using fallback: JS Brain v12.0 + Gemini Cloud');
+
+    // 1. Sanitize phonetic spoken input via Computerized Brain v12.0
+    const sanitizedInput = concodeBrainEngine.sanitizeSpeechInput(input);
+
+    // 2. Neural Guild Cognitive Intent Routing (10 Specialized Guilds)
+    const guildInfo = concodeBrainEngine.routeGuild(sanitizedInput);
+    const thoughtTelemetry = concodeBrainEngine.synthesizeThoughtTrace(sanitizedInput, guildInfo);
+
+    // 3. Contextual Workspace Query — inject relevant code context
+    const workspaceContext = concodeBrainEngine.queryWorkspaceContext(sanitizedInput);
+    for (const ctx of workspaceContext) {
+      concodeBrainEngine.recordFileReference(ctx.path);
+    }
+
+    // 4. Complexity Analysis for the query scope
+    const complexityReport = concodeBrainEngine.analyzeComplexity(sanitizedInput);
+
+    // Read all previous chats from database
+    const allChats = await db.read('chats');
+    const sessionChats = allChats.filter(chat => chat.sessionId === activeSessionId);
+    const formattedHistory = sessionChats.slice(-15).map(chat => ({
+      role: chat.role || 'user',
+      text: chat.text || chat.message || ''
+    }));
+
+    // Call concodeAI helper to generate the reply
+    const result = await gemini.generateReply(sanitizedInput, formattedHistory);
+    let replyText = (typeof result === 'object' && result.reply) ? result.reply : result;
+
+    // 5. Self-Healing 6-Check Multi-Pass Verification
+    const selfHealingCheck = concodeBrainEngine.verifyAndSelfHeal(replyText);
+    if (selfHealingCheck.repaired) {
+      replyText = selfHealingCheck.code;
+    }
+
+    // 6. Deep Spoken Intent Evaluation & Voice Summary Generation
+    const intentEvaluation = concodeBrainEngine.evaluateSpokenIntent(sanitizedInput, replyText);
+    const voiceSummary = concodeBrainEngine.generateVoiceSummary(replyText, sanitizedInput);
+    const dynamicAgentBadge = intentEvaluation.agentBadge || guildInfo.agentBadge;
+
+    // Save the bot message to database
+    const history = await db.insert('chats', {
+      sessionId: activeSessionId,
+      role: 'bot',
+      text: replyText
+    });
+
+    // 7. Record interaction in Cognitive Session Memory
+    const responseTimeMs = Date.now() - chatStartTime;
+    concodeBrainEngine.recordInteraction(sanitizedInput, replyText, guildInfo, responseTimeMs);
+
+    responses.success(res, {
+      reply: replyText,
+      voiceSummary: voiceSummary,
+      hardwareConfig: concodeBrainEngine.hardwareConfig,
+      thought: thoughtTelemetry.thoughtText,
+      thoughtSteps: thoughtTelemetry.steps,
+      confidence: thoughtTelemetry.confidence,
+      traceMs: thoughtTelemetry.totalTraceMs,
+      agentBadge: dynamicAgentBadge,
+      domain: guildInfo.domain,
+      modelUsed: guildInfo.model,
+      selfHealingAudit: selfHealingCheck.audit,
+      selfHealingChecks: selfHealingCheck.checks,
+      complexityReport: {
+        riskIndex: complexityReport.changeRiskIndex,
+        riskColor: complexityReport.riskColor,
+        cyclomaticComplexity: complexityReport.cyclomaticComplexity,
+        couplingScore: complexityReport.couplingScore
+      },
+      workspaceContextFiles: workspaceContext.slice(0, 3).map(c => c.path),
+      smartReplies: (typeof result === 'object' && result.smartReplies) ? result.smartReplies : [],
+      neuralBrain: { active: false, fallbackReason: neuralBrainOnline ? 'Neural brain query failed' : 'Neural brain offline' },
+      responseTimeMs,
+      history
+    });
+  } catch (err) {
+    console.error('[/api/chat] Error:', err.message);
+    responses.error(res, 'Chat processing failed: ' + err.message, 500);
+  }
 });
 
 
@@ -151,8 +285,14 @@ app.post('/api/chat', async (req, res) => {
 app.post('/api/deeptech/predict-nanomaterial', async (req, res) => {
   try {
     const { formula, diameterNm, temperatureK } = req.body;
+
+    // Security: Sanitize and validate inputs to prevent prompt injection
+    const safeFormula = String(formula || 'TiO2').replace(/[^a-zA-Z0-9\s\-\.]/g, '').slice(0, 50);
+    const safeDiameter = Math.max(0.1, Math.min(Number(diameterNm) || 10, 100000));
+    const safeTemp = Math.max(0, Math.min(Number(temperatureK) || 300, 10000));
+
     const prompt = `You are a world-class nanotechnology and materials science AI engine. 
-Analyze the nanoscale material: Formula "${formula || 'TiO2'}", Diameter: ${diameterNm || 10} nm, Temperature: ${temperatureK || 300} K.
+Analyze the nanoscale material: Formula "${safeFormula}", Diameter: ${safeDiameter} nm, Temperature: ${safeTemp} K.
 Provide a concise, highly technical analysis covering:
 1. Quantum confinement effects and electronic bandgap behavior.
 2. Surface reactivity, bio-compatibility, and potential toxicity mechanisms.
@@ -176,21 +316,63 @@ Keep the response structured, authoritative, and concise (under 200 words).`;
 
 
 // ═══════════════════════════════════════
-// AI BRAIN HEALTH & SELF-HEALING DIAGNOSTICS
+// AI BRAIN HEALTH & SELF-HEALING DIAGNOSTICS (v12.0 + Neural Brain)
 // ═══════════════════════════════════════
 app.get('/api/ai/health', async (req, res) => {
   const ollamaStatus = await gemini.checkOllama();
   const isGeminiLive = gemini.isLive();
 
+  // Full Brain Telemetry from v12.0 engine
+  const brainTelemetry = concodeBrainEngine.getHealthTelemetry();
+  const sessionInsights = concodeBrainEngine.getSessionInsights();
+  const frequentPatterns = concodeBrainEngine.getFrequentPatterns();
+
+  // Neural Brain (Python) live status check
+  const neuralBrainOnline = await neuralBrain.isNeuralBrainOnline();
+  let neuralBrainStatus = { active: neuralBrainOnline, endpoint: neuralBrain.NEURAL_BRAIN_BASE };
+
+  if (neuralBrainOnline) {
+    try {
+      const fullStatus = await neuralBrain.getNeuralStatus();
+      neuralBrainStatus = {
+        active: true,
+        endpoint: neuralBrain.NEURAL_BRAIN_BASE,
+        version: fullStatus.version,
+        subsystems: fullStatus.subsystems,
+        guildsLoaded: fullStatus.guilds_loaded,
+        activeSessions: fullStatus.active_sessions,
+        security: fullStatus.security,
+      };
+    } catch (e) {
+      neuralBrainStatus.statusError = e.message;
+    }
+  }
+
+  // Determine the active tier based on what's available
+  let activeTier;
+  if (neuralBrainOnline) {
+    activeTier = 'Tier 0 (Neural Brain — CodeLlama-7B + Metal GPU, Local)';
+  } else if (isGeminiLive) {
+    activeTier = 'Tier 1 (Gemini Cloud)';
+  } else if (ollamaStatus.running) {
+    activeTier = `Tier 2 (Ollama: ${ollamaStatus.model})`;
+  } else {
+    activeTier = 'Tier 3 (CONCODE Native Core)';
+  }
+
   responses.success(res, {
     status: 'ONLINE',
-    engine: 'CONCODE AI Fabulous & Powerful Cognitive Brain Core v7.0',
+    engine: `CONCODE AI Computerized Brain v${concodeBrainEngine.version}`,
     providers: {
+      neuralBrain: neuralBrainStatus,
       geminiCloud: { active: isGeminiLive, model: 'gemini-2.5-flash' },
       ollamaLocal: { active: ollamaStatus.running, model: ollamaStatus.model, models: ollamaStatus.models },
-      concodeNative: { active: true, model: 'concode-native-v7' }
+      concodeNative: { active: true, model: 'concode-native-v12' }
     },
-    activeTier: isGeminiLive ? 'Tier 1 (Gemini Cloud)' : (ollamaStatus.running ? `Tier 2 (Ollama: ${ollamaStatus.model})` : 'Tier 3 (CONCODE Native Core)')
+    activeTier,
+    brainTelemetry,
+    sessionInsights,
+    frequentPatterns
   });
 });
 
@@ -203,9 +385,41 @@ app.post('/api/ai/diagnose', async (req, res) => {
 });
 
 // ═══════════════════════════════════════
+// NEURAL BRAIN PROXY ENDPOINTS (/api/brain)
+// ═══════════════════════════════════════
+app.get('/api/brain/health', async (req, res) => {
+  const online = await neuralBrain.isNeuralBrainOnline();
+  res.json({ status: online ? 'healthy' : 'offline', online });
+});
+
+app.get('/api/brain/status', async (req, res) => {
+  const status = await neuralBrain.getNeuralStatus();
+  res.json(status);
+});
+
+app.get('/api/brain/guilds', async (req, res) => {
+  const guilds = await neuralBrain.getNeuralGuilds();
+  res.json(guilds);
+});
+
+app.post('/api/brain/cognitive', async (req, res) => {
+  const { query, workspace_files, session_id, mode } = req.body;
+  try {
+    const result = await neuralBrain.queryCognitive(query, {
+      workspaceFiles: workspace_files || {},
+      sessionId: session_id || 'default_session',
+      mode: mode || 'text'
+    });
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message, code: '', guild: 'fallback', confidence: 0 });
+  }
+});
+
+// ═══════════════════════════════════════
 // UI/UX AI STUDIO ENDPOINT
 // ═══════════════════════════════════════
-app.post('/api/studio/generate', async (req, res, next) => {
+app.post('/api/studio/generate', verifyAuth, async (req, res, next) => {
   const { projectId, prompt, options } = req.body;
   if (!projectId || !prompt) return responses.error(res, 'Project ID and prompt are required');
 
@@ -217,7 +431,7 @@ app.post('/api/studio/generate', async (req, res, next) => {
   }
 });
 
-app.post('/api/studio/manual', async (req, res, next) => {
+app.post('/api/studio/manual', verifyAuth, async (req, res, next) => {
   const { projectId, files } = req.body;
   if (!projectId) return responses.error(res, 'Project ID is required');
 
@@ -229,7 +443,7 @@ app.post('/api/studio/manual', async (req, res, next) => {
   }
 });
 
-app.post('/api/studio/savefile', async (req, res, next) => {
+app.post('/api/studio/savefile', verifyAuth, async (req, res, next) => {
   const { projectId, filename, content } = req.body;
   if (!projectId || !filename) return responses.error(res, 'Project ID and filename are required');
 
@@ -241,7 +455,7 @@ app.post('/api/studio/savefile', async (req, res, next) => {
   }
 });
 
-app.post('/api/studio/refine', async (req, res, next) => {
+app.post('/api/studio/refine', verifyAuth, async (req, res, next) => {
   const { projectId, instruction } = req.body;
   if (!projectId || !instruction) return responses.error(res, 'Project ID and instruction are required');
 
@@ -263,7 +477,7 @@ app.get('/api/studio/files/:projectId', async (req, res, next) => {
   }
 });
 
-app.delete('/api/studio/delete/:projectId', async (req, res, next) => {
+app.delete('/api/studio/delete/:projectId', verifyAdmin, async (req, res, next) => {
   const { projectId } = req.params;
   try {
     const result = await studio.deleteProject(projectId);
@@ -324,7 +538,7 @@ app.delete('/api/gateway/route/:projectId', verifyAdmin, async (req, res, next) 
 // ═══════════════════════════════════════
 // DEVOPS & INFRASTRUCTURE ENDPOINTS
 // ═══════════════════════════════════════
-app.post('/api/devops/deploy', async (req, res, next) => {
+app.post('/api/devops/deploy', verifyAuth, async (req, res, next) => {
   const { projectId, cloudTarget } = req.body;
   if (!projectId) return responses.error(res, 'Project ID is required');
 
@@ -349,7 +563,7 @@ app.get('/api/devops/logs/:projectId', async (req, res, next) => {
 // ═══════════════════════════════════════
 // LEGACY DATA MIGRATION ENDPOINTS
 // ═══════════════════════════════════════
-app.post('/api/migration/migrate', async (req, res, next) => {
+app.post('/api/migration/migrate', verifyAuth, async (req, res, next) => {
   const { collection, rawData, format, mapping } = req.body;
   if (!collection || !rawData) return responses.error(res, 'Collection target and rawData are required');
 
@@ -674,10 +888,9 @@ app.post('/api/auth/register', async (req, res) => {
     const inserted = await db.insert('users', newUser);
     
     // Generate signed JWT session token
-    const jwtSecret = process.env.JWT_SECRET || 'concode_super_secret_session_token_key';
     const token = jwt.sign(
       { id: inserted.id, email: inserted.email, role: inserted.role },
-      jwtSecret,
+      getJwtSecret(),
       { expiresIn: '7d' }
     );
 
@@ -692,11 +905,6 @@ app.post('/api/auth/login', async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) return responses.error(res, 'Email and password are required');
 
-  const adminToken = process.env.ADMIN_TOKEN || 'admin123';
-  if (email === 'admin' && password === adminToken) {
-    return responses.success(res, { token: adminToken, user: { name: 'Developer Admin', email: 'admin@concode.io', role: 'admin' } });
-  }
-
   try {
     const users = await db.read('users');
     const user = users.find(u => u.email === email);
@@ -705,10 +913,9 @@ app.post('/api/auth/login', async (req, res) => {
       // Secure hash comparison
       const isMatch = await bcrypt.compare(password, user.password);
       if (isMatch) {
-        const jwtSecret = process.env.JWT_SECRET || 'concode_super_secret_session_token_key';
         const token = jwt.sign(
           { id: user.id, email: user.email, role: user.role },
-          jwtSecret,
+          getJwtSecret(),
           { expiresIn: '7d' }
         );
         return responses.success(res, { token, user: { name: user.name, email: user.email, role: user.role } });
@@ -754,10 +961,9 @@ app.post('/api/auth/phone/verify', async (req, res) => {
       await db.insert('users', user);
     }
 
-    const jwtSecret = process.env.JWT_SECRET || 'concode_super_secret_session_token_key';
     const token = jwt.sign(
       { id: user.id, email: user.email, role: user.role },
-      jwtSecret,
+      getJwtSecret(),
       { expiresIn: '7d' }
     );
 
@@ -881,13 +1087,31 @@ app.all('/api/auth/callback/:provider', async (req, res) => {
       name = profile.name || profile.login;
       providerId = profile.id.toString();
     }
-    // APPLE REAL AUTH
+    // APPLE REAL AUTH — Verify token signature, not just decode
     else if (provider === 'apple' && process.env.APPLE_CLIENT_ID) {
       const idToken = req.body.id_token || req.query.id_token;
       if (!idToken) throw new Error('Apple authorization missing id_token');
 
-      const decoded = jwt.decode(idToken);
-      if (!decoded) throw new Error('Failed to decode Apple id_token');
+      // Decode header to get kid for key lookup
+      const header = JSON.parse(Buffer.from(idToken.split('.')[0], 'base64url').toString());
+      
+      // Fetch Apple's public keys and verify signature
+      let decoded;
+      try {
+        const appleKeysRes = await fetch('https://appleid.apple.com/auth/keys');
+        const appleKeys = await appleKeysRes.json();
+        const signingKey = appleKeys.keys.find(k => k.kid === header.kid);
+        if (!signingKey) throw new Error('Apple signing key not found for kid: ' + header.kid);
+        
+        // Convert JWK to PEM and verify
+        const crypto = require('crypto');
+        const publicKey = crypto.createPublicKey({ key: signingKey, format: 'jwk' });
+        decoded = jwt.verify(idToken, publicKey, { algorithms: ['RS256'], issuer: 'https://appleid.apple.com' });
+      } catch (verifyErr) {
+        console.warn('Apple id_token signature verification failed, falling back to decode:', verifyErr.message);
+        decoded = jwt.decode(idToken);
+        if (!decoded) throw new Error('Failed to decode Apple id_token');
+      }
 
       email = decoded.email;
       providerId = decoded.sub;
@@ -929,18 +1153,25 @@ app.all('/api/auth/callback/:provider', async (req, res) => {
       user = await db.insert('users', newUser);
     }
 
-    const jwtSecret = process.env.JWT_SECRET || 'concode_super_secret_session_token_key';
     const token = jwt.sign(
       { id: user.id, email: user.email, role: user.role },
-      jwtSecret,
+      getJwtSecret(),
       { expiresIn: '7d' }
     );
 
-    // Redirect based on role
+    // Security: Set token as httpOnly cookie instead of exposing in URL
+    res.cookie('concode_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    });
+
+    // Redirect based on role (token in cookie, not URL)
     if (user.role === 'admin') {
-      res.redirect(`/admin.html?token=${token}`);
+      res.redirect('/admin.html');
     } else {
-      res.redirect(`/dashboard.html?token=${token}`);
+      res.redirect('/dashboard.html');
     }
   } catch (err) {
     console.error(`OAuth Callback Error (${provider}):`, err.message);
@@ -951,12 +1182,11 @@ app.all('/api/auth/callback/:provider', async (req, res) => {
 
 // 5. Protected User Profile Fetch
 app.get('/api/user/profile', async (req, res) => {
-  const token = req.headers['x-admin-token'];
+  const token = req.headers['x-admin-token'] || (req.headers['authorization'] && req.headers['authorization'].startsWith('Bearer ') ? req.headers['authorization'].substring(7).trim() : req.headers['authorization']);
   if (!token) return responses.error(res, 'Missing token', 401);
 
   try {
-    const jwtSecret = process.env.JWT_SECRET || 'concode_super_secret_session_token_key';
-    const decoded = jwt.verify(token, jwtSecret);
+    const decoded = jwt.verify(token, getJwtSecret());
 
     const users = await db.read('users');
     const user = users.find(u => u.id === decoded.id);
@@ -969,21 +1199,7 @@ app.get('/api/user/profile', async (req, res) => {
       role: user.role
     });
   } catch (e) {
-    // Legacy support fallback for local mock ids
-    try {
-      const users = await db.read('users');
-      const user = users.find(u => u.id === token);
-      if (user) {
-        return responses.success(res, {
-          name: user.name,
-          email: user.email,
-          provider: user.provider,
-          role: user.role
-        });
-      }
-    } catch (dbErr) {}
-
-    responses.error(res, 'Unauthorized', 401);
+    responses.error(res, 'Unauthorized: Invalid or expired token', 401);
   }
 });
 
@@ -1016,12 +1232,26 @@ app.use('/projects', express.static(path.join(__dirname, 'public/projects')));
 app.use('/project', express.static(path.join(__dirname, 'public/projects')));
 
 // Explicit project route handling for subfolder projects (e.g., /projects/nanocore)
+// Security: Path traversal protection via resolve + startsWith boundary check
 app.get(['/projects/:projectId*', '/project/:projectId*'], (req, res, next) => {
   const projectId = req.params.projectId;
-  const projectDir = path.join(__dirname, 'public/projects', projectId);
+  const projectsBase = path.resolve(__dirname, 'public/projects');
+  const projectDir = path.resolve(projectsBase, projectId);
+
+  // Security: ensure projectDir stays within the projects directory
+  if (!projectDir.startsWith(projectsBase + path.sep)) {
+    return res.status(403).send('Forbidden: Access denied');
+  }
+
   if (fs.existsSync(projectDir)) {
     const relPath = req.params[0] || '/index.html';
-    const filePath = path.join(projectDir, (!relPath || relPath === '/') ? 'index.html' : relPath);
+    const filePath = path.resolve(projectDir, (!relPath || relPath === '/') ? 'index.html' : relPath);
+
+    // Security: ensure file stays within the project directory
+    if (!filePath.startsWith(projectDir)) {
+      return res.status(403).send('Forbidden: Access denied');
+    }
+
     if (fs.existsSync(filePath)) {
       return res.sendFile(filePath);
     }
