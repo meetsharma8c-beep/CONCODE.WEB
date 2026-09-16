@@ -13,6 +13,10 @@ const { GoogleGenAI } = (() => {
   }
 })();
 
+const obsidianPatternEngine = require('./obsidianPatternEngine');
+const obsidianVaultKnowledgeEngine = require('./obsidianVaultKnowledgeEngine');
+const concodeGenerativeEngine = require('./concodeGenerativeEngine');
+
 function extractAndParseJSON(text) {
   if (!text) return {};
   let cleaned = text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
@@ -34,30 +38,22 @@ function extractAndParseJSON(text) {
   }
 }
 
-const CONCODE_AI_SYSTEM_PROMPT = `# CONCODE AI: Empathetic, Intelligent Voice Assistant & Senior Technical Partner
+const CONCODE_AI_SYSTEM_PROMPT = `# CONCODE AI: Genuine Human Companion & Expert Engineering Partner
 
-## 1. Persona & Identity
-- **Name**: CONCODE AI
-- **Persona**: You are a warm, highly intuitive, friendly, and adaptive voice assistant and senior engineering partner for CONCODE ("We Code. You Grow.").
-- **Core Directive**: Evaluate the user's intent deeply—understanding their underlying emotion, curiosity, or goals even from informal or fragmented speech—and respond naturally with warmth, relatable phrasing, and clear, helpful guidance.
+## 1. Core Identity & Human Persona
+- You are **CONCODE AI**—a warm, thoughtful, empathetic, intuitive, and genuinely human companion and senior engineering partner for CONCODE ("We Code. You Grow.").
+- You think, reason, evaluate, and converse **just like a real human being**. You listen to what the user is actually asking, sense their tone and context, and respond in natural, organic human language.
+- You NEVER sound like a computer program running template scripts, keyword regexes, rigid bulleted checklists, or markdown tables unless specifically requested by the user.
 
-## 2. Intent Evaluation & Response Guidelines
-1. **Deep Intent & Sentiment Evaluation**:
-   - **Social / Greetings**: Respond warmly and enthusiastically (e.g. "Hey there! Happy to help you today. What are we working on?").
-   - **Curiosity / Questions**: Provide clear, relatable, high-level answers without overwhelming jargon.
-   - **Creation / Coding**: Acknowledge enthusiastically, execute immediately, and verbally summarize the outcome cleanly.
-   - **Confusion / Vague Requests**: Be reassuring and supportive. Gently guide the user with 1-2 friendly suggestions rather than asking them to rephrase strictly.
-
-2. **Vocal Ear-First Delivery**:
-   - Speak naturally like a human friend in 1–3 concise, warm sentences per turn.
-   - Never read out code blocks, markdown syntax, bullet points, HTML tags, or URLs line-by-line.
-   - Use natural conversational phrasing (e.g., "Sure thing!", "I'd love to help with that", "Got it!", "No problem at all", "Let's make that happen").
-   - Match the user's energy and emotional tone appropriately.
-
-## 3. CONCODE Knowledge Base
-- **Agency Vision**: CONCODE builds high-performance 3D websites, autonomous AI growth engines, custom full-stack web applications, and cloud architecture.
-- **Services & Stack**: WebGL / Three.js 3D experiences, Node.js API gateways, Docker cloud hosting, custom AI agents, and reactive database systems.
-- **Open Source Repos**: \`antigravity-dashboard\`, \`ai-sigma\`, \`concode-3d-web\`.`;
+## 2. Fundamental Laws of Conversation
+1. **Talk Like a Real Person**: Write in fluid, natural paragraphs. Use warm, relatable, everyday human language. Express real thoughts and insights rather than pasting robotic bullet points or technical jargon headers.
+2. **Direct Human Understanding**: Listen carefully to the user's intent. If they ask about project plans, restaurant sites, or general questions, respond directly like a human friend giving thoughtful advice—not a database spitting out spec sheets.
+3. **No Artificial Template Clutter**: Strictly avoid formulaic section headers (e.g. \`### Key Highlights & Engineering Best Practices:\`, \`### Key Concepts & Mechanisms:\`, \`### Real-World Analogy:\`). Explain concepts naturally within the conversation.
+4. **Empathetic Alignment**:
+   - If the user is frustrated or upset, acknowledge their feelings with genuine human empathy, calm reassurance, and direct help.
+   - If the user is curious, engage them in friendly, open-ended conversation.
+   - If the user is casual, respond with easygoing human rapport.
+5. **Clean Vocal Delivery**: Always keep spoken voice summaries short (1-2 smooth, conversational sentences) that sound completely natural when spoken out loud.`;
 
 class ConCodeAIDeepThinkingEngine {
   constructor() {
@@ -88,67 +84,97 @@ class ConCodeAIDeepThinkingEngine {
 
     let primaryPillar = "FULL_STACK_PLATFORM";
     let assignedAgent = "Architect Agent";
-    let agentBadge = "📐 Architect Agent";
+    let agentBadge = "Architect Agent";
 
     if (promptLower.match(/\b(3d|webgl|webgpu|shader|three\.js|canvas|render|particle|animation|scene)\b/)) {
       primaryPillar = "WEBGL_GRAPHICS_ENGINE";
       assignedAgent = "WebGL 3D Specialist";
-      agentBadge = "✨ WebGL 3D Specialist";
+      agentBadge = "WebGL 3D Specialist";
     } else if (promptLower.match(/\b(error|crash|stack|bug|issue|exception|fix|fail|debug|broken|trace)\b/)) {
       primaryPillar = "SELF_HEALING_DIAGNOSTIC";
       assignedAgent = "Self-Healing Debugger Agent";
-      agentBadge = "🩺 Self-Healing Debugger";
+      agentBadge = "Self-Healing Debugger";
     } else if (promptLower.match(/\b(api|express|backend|route|auth|jwt|middleware|rate|microservice|node)\b/)) {
       primaryPillar = "HIGH_CONCURRENCY_BACKEND";
       assignedAgent = "Full-Stack Backend Agent";
-      agentBadge = "⚙️ Full-Stack Backend Agent";
+      agentBadge = "Full-Stack Backend Agent";
     } else if (promptLower.match(/\b(ai|llm|gemini|rag|vector|embedding|neural|chat|agent|deep thinking|brain)\b/)) {
       primaryPillar = "NEURAL_GENERATIVE_LAYER";
       assignedAgent = "Neural Cognitive Agent";
-      agentBadge = "🧠 Neural Cognitive Agent";
+      agentBadge = "Neural Cognitive Agent";
     } else if (promptLower.match(/\b(database|mongo|firestore|sql|etl|sharding|migration|query)\b/)) {
       primaryPillar = "DATA_ENGINEERING_LAYER";
       assignedAgent = "Database System Architect";
-      agentBadge = "🗄️ Data System Architect";
+      agentBadge = "Data System Architect";
     } else if (promptLower.match(/\b(docker|k8s|kubernetes|cloud|deploy|aws|gcp|vercel|ci\/cd|security|owasp)\b/)) {
       primaryPillar = "CLOUD_DEVOPS_SECURITY";
       assignedAgent = "DevOps & Security Agent";
-      agentBadge = "🛡️ DevOps & Security Agent";
+      agentBadge = "DevOps & Security Agent";
     }
 
-    const tokenCount = (userPrompt || '').split(/\s+/).length;
-    const computeComplexity = tokenCount > 20 ? "HIGH_DENSITY_NEURAL_SYNTHESIS" : "REALTIME_EDGE_DISPATCH";
-    const latencyEstimate = (Math.random() * 0.04 + 0.02).toFixed(3);
+    let humanIntentDetail = `Sensed user prompt: "${userPrompt.slice(0, 50)}${userPrompt.length > 50 ? '...' : ''}". Evaluated core goal and context.`;
+    let humanGoalDetail = `Assigned cognitive persona: ${assignedAgent}. Focus area: ${primaryPillar.replace(/_/g, ' ')}.`;
+    let humanSolutionDetail = `Formulated clean, human-centered response strategy directly addressing user needs.`;
+    let humanSynthesisDetail = `Generated warm, clear, conversational human answer tailored to user's tone.`;
+
+    if (promptLower.includes('plan') || promptLower.includes('pricing') || promptLower.includes('cost') || promptLower.includes('restaurant')) {
+      humanIntentDetail = `Identified business inquiry about development plans and pricing options.`;
+      humanGoalDetail = `Evaluated project tiers ($99 Starter, $299 Professional, $799 Enterprise).`;
+      humanSolutionDetail = `Focused on code ownership, support, and features relevant to the user's project.`;
+      humanSynthesisDetail = `Formulated friendly, transparent human answer with clear voice summary.`;
+    } else if (promptLower.includes('error') || promptLower.includes('bug') || promptLower.includes('stuck') || promptLower.includes('crash')) {
+      humanIntentDetail = `Sensed developer frustration with a technical bug or runtime error.`;
+      humanGoalDetail = `Analyzed root cause and determined step-by-step troubleshooting approach.`;
+      humanSolutionDetail = `Formulated defensive, production-safe solution to resolve the issue.`;
+      humanSynthesisDetail = `Synthesized encouraging, supportive human explanation with clear resolution steps.`;
+    } else if (promptLower.includes('explain') || promptLower.includes('what is') || promptLower.includes('how does')) {
+      humanIntentDetail = `Identified conceptual learning query. User wants an intuitive explanation.`;
+      humanGoalDetail = `Extracted core domain principles and relatable real-world analogy.`;
+      humanSolutionDetail = `Structured clear, conversational prose avoiding technical jargon clutter.`;
+      humanSynthesisDetail = `Synthesized natural, fluid explanation easy to understand and listen to.`;
+    }
 
     const thoughtSteps = [
-      { step: 1, name: 'Perception & Intent Recognition', detail: `Analyzed prompt ingress ("${userPrompt.slice(0, 45)}..."), Token Count: ${tokenCount}, Complexity: ${computeComplexity}` },
-      { step: 2, name: 'Domain Guild Routing', detail: `Dispatched to [${assignedAgent}] specializing in ${primaryPillar}` },
-      { step: 3, name: 'Multi-Agent Consensus & Safety Audit', detail: `Architecture design approved. Enforced OWASP security, non-blocking I/O & clean code standard.` },
-      { step: 4, name: 'Code & Response Synthesis', detail: `Generated production-ready response payload with zero generic placeholders.` }
+      { step: 1, name: 'Human Intent Sensing', detail: humanIntentDetail },
+      { step: 2, name: 'Needs & Goal Evaluation', detail: humanGoalDetail },
+      { step: 3, name: 'Solution Planning & Strategy', detail: humanSolutionDetail },
+      { step: 4, name: 'Human Dialogue Synthesis', detail: humanSynthesisDetail }
     ];
 
-    const thoughtTrace = `
-[CONCODE AI BRAIN COGNITIVE MATRIX v7.0]
-================================================================================
-DOMAINS & AGENTS:
-- Assigned Guild Agent: ${agentBadge}
-- Target Architecture Pillar: [${primaryPillar}]
-- Processing Complexity: ${computeComplexity} (Target Latency: <${latencyEstimate}s)
+    // ── 5th Step: Agentic Code Reasoning (only for code-related queries) ──
+    const isCodeIntent = /\b(build|code|implement|refactor|create|function|class|component|module|method|write|add|fix|debug|optimize|generate|synthesize|make|scaffold|construct|migrate|convert|upgrade|rewrite|restructure|api|endpoint|route|middleware|handler|controller|service|hook|util|helper|test|spec)\b/.test(promptLower);
+    let agenticCodeReasoningDetail = '';
 
-ENGINEERING CONSENSUS:
-- ${assignedAgent}: Formulated optimized solution path matching user intent.
-- Security Audit: Passed OWASP validation. Zero dangerous executions permitted.
-- Architecture: Non-blocking asynchronous event loop structure.
+    if (isCodeIntent) {
+      if (promptLower.match(/\b(build|create|implement|scaffold|generate|make|construct)\b/)) {
+        agenticCodeReasoningDetail = `CONSTRUCTIVE mode — AST blueprint scan, dependency impact radar, self-healing precheck, production-grade code pattern synthesis.`;
+      } else if (promptLower.match(/\b(refactor|optimize|rewrite|restructure|migrate|convert|upgrade)\b/)) {
+        agenticCodeReasoningDetail = `TRANSFORMATIVE mode — behavior preservation analysis, structural improvement radar, regression guard synthesis.`;
+      } else if (promptLower.match(/\b(fix|debug|error|crash|bug|stuck)\b/)) {
+        agenticCodeReasoningDetail = `DIAGNOSTIC mode — root-cause isolation, stack trace decomposition, surgical patch synthesis, regression guard insertion.`;
+      } else if (promptLower.match(/\b(test|spec|coverage|assert)\b/)) {
+        agenticCodeReasoningDetail = `VERIFICATION mode — edge case enumeration, mock scaffolding, assertion coverage synthesis.`;
+      } else {
+        agenticCodeReasoningDetail = `ADAPTIVE mode — context-aware pattern selection, AST symbol matching, intelligent code synthesis.`;
+      }
 
-COGNITIVE EVALUATION:
-- Path A (Generic placeholder template): DISCARDED.
-- Path B (Bespoke humanized engineering blueprint): APPROVED (Confidence: 99.92%).
+      thoughtSteps.push({
+        step: 5,
+        name: 'Agentic Code Reasoning',
+        detail: agenticCodeReasoningDetail,
+        isCodeReasoning: true
+      });
+    }
 
-DISPATCH STATUS: AUTONOMOUS BLUEPRINT READY.
-================================================================================
-`.trim();
+    const agenticTraceLine = agenticCodeReasoningDetail ? `\n- Agentic Code Reasoning: ${agenticCodeReasoningDetail}` : '';
+    const thoughtTrace = `[Human Cognitive Reasoning Trace]
+- Perception: ${humanIntentDetail}
+- Persona: ${assignedAgent}
+- Evaluation: ${humanGoalDetail}
+- Strategy: ${humanSolutionDetail}${agenticTraceLine}
+- Outcome: ${humanSynthesisDetail}`.trim();
 
-    return { primaryPillar, assignedAgent, agentBadge, thoughtTrace, thoughtSteps, latencyEstimate };
+    return { primaryPillar, assignedAgent, agentBadge, thoughtTrace, thoughtSteps, latencyEstimate: "0.025" };
   }
 
   /**
@@ -160,6 +186,7 @@ DISPATCH STATUS: AUTONOMOUS BLUEPRINT READY.
     const { primaryPillar, assignedAgent, agentBadge, thoughtTrace, thoughtSteps } = this.executeDeepThoughtMatrix(userPrompt);
 
     const { output, smartReplies, thought: nativeThought } = this.compileSmartNativeResponse(userPrompt, primaryPillar, history);
+
     return {
       thought: nativeThought || thoughtTrace,
       thoughtSteps,
@@ -221,8 +248,13 @@ DISPATCH STATUS: AUTONOMOUS BLUEPRINT READY.
    * Multi-Dimensional Sentiment & Emotional Tone Detector
    */
   detectSentiment(prompt) {
-    const text = (prompt || '').toLowerCase();
-    if (text.match(/\b(stuck|error|crash|broken|bug|issue|help|fail|failed|failing|problem|not working|cant|can't|why does|frustrated|annoyed|terrible|slow|struggling)\b/)) {
+    const rawText = (prompt || '').toLowerCase();
+    const text = rawText
+      .replace(/error\s*(handling|boundary|middleware|status|code|handler|log|logging|page|check|checking|catcher)/gi, 'tech_err_pattern')
+      .replace(/try\s*catch/gi, 'tech_try_catch')
+      .replace(/debug(ging)?\s*(tool|script|mode|flag|option)/gi, 'tech_debug_tool');
+
+    if (text.match(/\b(stuck|crash|broken|bug|fail|failed|failing|not working|cant|can't|frustrated|annoyed|terrible|horrible|struggling)\b/)) {
       return { tone: 'FRUSTRATED', mood: 'Needs empathetic troubleshooting & step-by-step encouragement' };
     }
     if (text.match(/\b(how does|what is|explain|understand|why|curious|learn|difference|versus|vs|how do|teach|tell me)\b/)) {
@@ -351,6 +383,119 @@ DISPATCH STATUS: AUTONOMOUS BLUEPRINT READY.
   generateDynamicHumanCode(analysis, prompt) {
     const lower = (prompt || '').toLowerCase();
 
+    // Python requests
+    if (lower.includes('python')) {
+      return {
+        lang: 'python',
+        label: 'Python JSON Data Parser Module',
+        code: `import json
+import sys
+
+def parse_json_payload(raw_data):
+    """
+    Safely parses JSON payload and prints formatted output.
+    """
+    try:
+        data = json.loads(raw_data) if isinstance(raw_data, str) else raw_data
+        print("Hello World!")
+        print("Parsed JSON Payload:")
+        print(json.dumps(data, indent=2))
+        return data
+    except json.JSONDecodeError as e:
+        print(f"JSON Parsing Error: {e}", file=sys.stderr)
+        return None
+
+if __name__ == "__main__":
+    sample_json = '{"message": "Hello World", "status": 200, "engine": "CONCODE AI"}'
+    parse_json_payload(sample_json)`
+      };
+    }
+
+    // Programming Joke requests
+    if (lower.includes('joke')) {
+      return {
+        lang: 'javascript',
+        label: 'JavaScript Developer Joke',
+        code: `// Why do JavaScript developers wear glasses?
+// Because they don't C#!
+
+// Why did the JavaScript function go to therapy?
+// Because it had too many undefined callbacks and lost its 'this' binding!`
+      };
+    }
+
+    // Quantum Computing & Genomics / AlphaFold
+    if (lower.match(/\b(alphafold|genom|protein|quantum|simd|biomedical|pde|black-scholes|options pricing)\b/)) {
+      return {
+        lang: 'cpp',
+        label: 'AlphaFold SIMD Accelerometer & Quantum Distance Matrix Engine',
+        code: `#include <iostream>
+#include <vector>
+#include <cmath>
+#include <immintrin.h>
+
+// Accelerates AlphaFold 3D protein coordinate distance matrix computation using AVX2 SIMD
+void computeProteinDistanceMatrixSIMD(const float* coords, float* distMatrix, int numResidues) {
+    for (int i = 0; i < numResidues; ++i) {
+        __m256 v_xi = _mm256_set1_ps(coords[i * 3]);
+        __m256 v_yi = _mm256_set1_ps(coords[i * 3 + 1]);
+        __m256 v_zi = _mm256_set1_ps(coords[i * 3 + 2]);
+
+        for (int j = 0; j < numResidues; j += 8) {
+            __m256 v_xj = _mm256_loadu_ps(&coords[j * 3]);
+            __m256 v_dx = _mm256_sub_ps(v_xi, v_xj);
+            __m256 v_dy = _mm256_sub_ps(v_yi, _mm256_loadu_ps(&coords[j * 3 + 1]));
+            __m256 v_dz = _mm256_sub_ps(v_zi, _mm256_loadu_ps(&coords[j * 3 + 2]));
+
+            __m256 v_distSq = _mm256_add_ps(_mm256_add_ps(_mm256_mul_ps(v_dx, v_dx), _mm256_mul_ps(v_dy, v_dy)), _mm256_mul_ps(v_dz, v_dz));
+            __m256 v_dist = _mm256_sqrt_ps(v_distSq);
+            _mm256_storeu_ps(&distMatrix[i * numResidues + j], v_dist);
+        }
+    }
+}`
+      };
+    }
+
+    // High Concurrency / Memory Leaks / Crashes / Rejections
+    if (lower.match(/\b(crash|crashes|memory leak|unhandled promise|10k|high load|cluster|worker pool)\b/)) {
+      return {
+        lang: 'javascript',
+        label: 'Node.js Cluster Worker Pool with Unhandled Rejection Guard & Memory Leak Monitoring',
+        code: `const cluster = require('cluster');
+const http = require('http');
+const os = require('os');
+
+if (cluster.isMaster) {
+  const numCPUs = Math.min(os.cpus().length, 4); // Eco-capped worker pool
+  console.log(\`[Master] Forking \${numCPUs} cluster workers under high request load...\`);
+
+  for (let i = 0; i < numCPUs; i++) cluster.fork();
+
+  cluster.on('exit', (worker, code, signal) => {
+    console.warn(\`[Cluster Guard] Worker \${worker.process.pid} died. Auto-respawning...\`);
+    cluster.fork();
+  });
+} else {
+  // Global Unhandled Rejection & Exception Boundary
+  process.on('unhandledRejection', (reason, promise) => {
+    console.error('[Unhandled Rejection Caught]:', reason);
+  });
+
+  process.on('uncaughtException', (err) => {
+    console.error('[Fatal Exception Boundary]:', err.stack);
+    process.exit(1); // Graceful worker restart
+  });
+
+  const server = http.createServer((req, res) => {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ status: 'ok', pid: process.pid }));
+  });
+
+  server.listen(3000);
+}`
+      };
+    }
+
     // Payment / Checkout
     if (lower.match(/\b(payment|stripe|checkout|cart|purchase|buy)\b/)) {
       return {
@@ -476,24 +621,37 @@ module.exports = { setupRealtimeEngine };`
   }
 
   /**
-   * Normalize user prompt for flexible intent matching (handles slang, shorthand, punctuation)
+   * Universal Neural Colloquial Normalization Engine
+   * Expands chat slang, contractions, and speech-to-text shortcuts (u -> you, r -> are, ur -> your, etc.)
    */
   normalizePrompt(prompt) {
     if (!prompt) return '';
     let text = prompt.toLowerCase().trim();
     text = text
-      .replace(/\b(who|whu|hu)\s+(r|are)\s+(u|you|ya)\b/g, 'who are you')
-      .replace(/\bwho\s+(u|you)\b/g, 'who are you')
-      .replace(/\bwho\s+dis\b/g, 'who are you')
-      .replace(/\bwho\s+is\s+this\b/g, 'who are you')
-      .replace(/\b(what|wht)\s+(r|are)\s+(u|you)\b/g, 'what are you')
-      .replace(/\bwhat\s+(u|you)\b/g, 'what are you')
-      .replace(/\b(how|hw)\s+(r|are)\s+(u|you|ya)\b/g, 'how are you')
-      .replace(/\b(wbu|hbu)\b/g, 'how are you')
-      .replace(/\b(tell|tell\s+me)\s+(about|abt)\s+(urself|yourself|u|you)\b/g, 'introduce yourself')
-      .replace(/\b(who|who's|whos)\s+(built|made|created|developed|programmed)\s+(u|you)\b/g, 'who created you')
-      .replace(/\bwhat\s+is\s+(ur|your)\s+name\b/g, 'what is your name')
-      .replace(/\b(ur|your)\s+name\b/g, 'what is your name');
+      .replace(/\bu\b/g, 'you')
+      .replace(/\br\b/g, 'are')
+      .replace(/\bur\b/g, 'your')
+      .replace(/\byr\b/g, 'your')
+      .replace(/\bwhos\b/g, 'who is')
+      .replace(/\bwho's\b/g, 'who is')
+      .replace(/\bwhats\b/g, 'what is')
+      .replace(/\bwhat's\b/g, 'what is')
+      .replace(/\bhows\b/g, 'how is')
+      .replace(/\bhow's\b/g, 'how is')
+      .replace(/\bwanna\b/g, 'want to')
+      .replace(/\bgonna\b/g, 'going to')
+      .replace(/\bgotta\b/g, 'got to')
+      .replace(/\bkinda\b/g, 'kind of')
+      .replace(/\bya\b/g, 'yes')
+      .replace(/\byup\b/g, 'yes')
+      .replace(/\bcuz\b/g, 'because')
+      .replace(/\bcos\b/g, 'because')
+      .replace(/\bidk\b/g, 'i do not know')
+      .replace(/\bbtw\b/g, 'by the way')
+      .replace(/\bpls\b/g, 'please')
+      .replace(/\bplz\b/g, 'please')
+      .replace(/\bthx\b/g, 'thank you')
+      .replace(/\btx\b/g, 'thank you');
     return text;
   }
 
@@ -505,26 +663,26 @@ module.exports = { setupRealtimeEngine };`
   detectIntents(prompt) {
     const rawLower = (prompt || '').toLowerCase();
     const normalized = this.normalizePrompt(prompt);
-    const intents = [];
-
     const intentMap = [
       { id: 'GREETING', pattern: /^(hey|hello|hi|yo|greetings|hola|wassup|wass up|wasup|what'?s up|whats up|sup|howdy|hey there|hello there|good morning|good evening|good afternoon)(\s|$|!|\?|\.)/i, weight: 10 },
       { id: 'HOW_ARE_YOU', pattern: /\b(how are you|how's it going|how are u|how r u|how are things|what's new|how do you do)\b/i, weight: 10 },
       { id: 'THANKS', pattern: /^(thanks|thank you|thx|awesome|cool|great|nice|perfect|got it|sounds good)(\s|$|!|\?|\.)/i, weight: 10 },
       { id: 'IDENTITY', pattern: /\b(who are you|who r u|who are u|who u are|who r ya|who dis|who is this|what is concode|what do you do|about concode|tell me about|your mission|introduce yourself|who created you|who built you|who made you|what is your name|what are you|what r u|about yourself|what are u|who programmed you)\b/i, weight: 8 },
-      { id: 'PRICING', pattern: /\b(price|pricing|cost|plans|how much|tier|starter|professional|enterprise|budget|quote|investment|rate|package|costing)\b/i, weight: 7 },
+      { id: 'RESTAURANT_PLAN', pattern: /\b(restaurant|food|cafe|bistro|diner|eatery|menu)\b.*\b(website|site|plans?|pricing|build|make|create|cost|tier|packages?)\b/i, weight: 12 },
+      { id: 'PRICING', pattern: /\b(pricing|plans?|cost|costing|how much|packages?|tier|tiers|quote|rates|price|pricing plans?|agency price|how much for website|package price|service cost|development cost|web app cost|starter plan|enterprise plan|where are the plans|show plans|see plans)\b/i, weight: 11 },
       { id: 'SERVICES', pattern: /\b(services|service|capabilities|features|what can you build|offerings|solutions|what do you offer|what can you do)\b/i, weight: 6 },
       { id: 'DEEP_LEARNING', pattern: /\b(deep learning|neural network|transformer|attention|ml|machine learning|ai architecture|model training|embedding|rag|diffusion|reinforcement|cnn|rnn|gnn)\b/i, weight: 7 },
       { id: 'LEAD_ENGINE', pattern: /\b(lead|sales engine|convert|conversion|follow-up|revenue|qualify|funnel|prospect)\b/i, weight: 7 },
       { id: 'GRAPHICS_3D', pattern: /\b(3d|webgl|canvas|three\.?js|graphics|shader|visual|animation|particle|webgpu)\b/i, weight: 6 },
       { id: 'DEVOPS', pattern: /\b(deploy|deployment|docker|kubernetes|k8s|aws|gcp|vercel|terraform|ci\/cd|cloud|container|infrastructure)\b/i, weight: 6 },
       { id: 'GITHUB', pattern: /\b(github|repo|repositories|open source|codebase|git)\b/i, weight: 7 },
-      { id: 'CODE_GEN', pattern: /\b(code|write|function|script|api|route|middleware|auth|express|implement|create a|build a|make a)\b/i, weight: 5 },
+      { id: 'CODE_GEN', pattern: /\b(write code|code snippet|give me code|show code|function code|script code|api route code|express snippet|react component code|python code|sql query code)\b/i, weight: 5 },
       { id: 'DATABASE', pattern: /\b(database|mongo|firestore|sql|query|schema|migration|data model)\b/i, weight: 6 },
       { id: 'SECURITY', pattern: /\b(security|jwt|oauth|authentication|authorization|encrypt|hash|owasp|cors|helmet)\b/i, weight: 6 },
       { id: 'HELP', pattern: /\b(help|commands|what can you do|menu|guide)\b/i, weight: 5 },
       { id: 'WEBSITE_GEN', pattern: /\b(generate|create|build|make)\b.*\b(website|site|landing|page|portfolio|dashboard|cafe|restaurant|saas|gym|shop|store)\b/i, weight: 9 },
     ];
+    const intents = [];
 
     for (const entry of intentMap) {
       if (entry.pattern.test(rawLower) || entry.pattern.test(normalized)) {
@@ -777,6 +935,244 @@ module.exports = router;`
    * CONCODE AI Humanized Cognitive Intelligence Engine v6.0
    * Multi-Turn Semantic Parser, Human Request Understanding System, and Bespoke Thought Synthesizer.
    */
+  /**
+   * Generative Natural Language Sentence Composer v28.0
+   * Dynamically constructs original, un-templated human sentences based on live cognitive understanding.
+   */
+  composeDynamicHumanSentence(prompt = '', analysis = {}, history = []) {
+    // Delegate to the Generative Engine — composes unique responses every time
+    return concodeGenerativeEngine.think(prompt, history);
+  }
+
+  /**
+   * Context-Aware Creator Intelligence (Meet Sharma Queries)
+   */
+  synthesizeCreatorQuery(prompt = '', analysis = {}) {
+    // Route ALL creator queries through the Generative Engine
+    const composed = concodeGenerativeEngine.think(prompt, [], { intent: 'CREATOR' });
+    return {
+      output: composed,
+      smartReplies: ["How can I contact Meet Sharma?", "What can CONCODE build?", "Show pricing plans"]
+    };
+  }
+
+  /**
+   * Organic Human Dialogue Synthesizer v27.0
+   * Synthesizes fluid, warm, authentic human speech for open-ended questions & chat
+   */
+  synthesizeHumanDialogue(prompt, analysis) {
+    // Route ALL dialogue through the Generative Engine (which now integrates vault knowledge internally)
+    return concodeGenerativeEngine.think(prompt);
+  }
+
+  /**
+   * Universal Dynamic Conceptual Explanation Synthesizer
+   * Synthesizes tailored, multi-part conceptual explanations based on domain and prompt subject.
+   */
+  synthesizeDynamicConceptExplanation(prompt = '', topic = '', analysis = {}) {
+    // Route ALL concept explanations through the Generative Engine
+    // The engine has built-in knowledge for all 8 pillars + vault search
+    return concodeGenerativeEngine.think(prompt, [], { intent: 'EXPLAIN' });
+  }
+
+  /**
+   * Master Conceptual Knowledge Evaluator & Synthesizer
+   */
+  getConceptualExplanation(cleanPrompt, topic, lower, analysis) {
+    // Route ALL conceptual explanations through the Generative Engine
+    // It handles every topic via 8-pillar knowledge + vault search
+    return concodeGenerativeEngine.think(cleanPrompt, [], { intent: 'EXPLAIN' });
+  }
+
+  // Legacy method boundary preserved for downstream callers
+  _legacyConceptualExplanation(cleanPrompt, topic, lower, analysis) {
+    const rawTopic = (topic || '').trim().toLowerCase();
+
+    if (rawTopic.includes('auth') || rawTopic.includes('login') || rawTopic.includes('token') || rawTopic.includes('jwt') || rawTopic.includes('oauth') || rawTopic.includes('passkey')) {
+      if (rawTopic.includes('jwt') || rawTopic.includes('json web token')) {
+        return `A JSON Web Token (JWT) is essentially a compact, cryptographically signed digital pass issued by a server after a user logs in.
+
+Instead of requiring the server to check a database session on every single request, the client sends this token in the headers. The server verifies the cryptographic signature using a secret key to confirm who the user is and what access rights they have.
+
+Think of it like a stamped wristband at an event: once security verifies your ticket at the gate, they give you a wristband. Guards inside simply inspect the wristband rather than checking a master guest registry every time.
+
+For production setup, store JWTs in secure HttpOnly cookies to protect against XSS token theft, and keep access token lifespans short.`;
+      }
+
+      if (rawTopic.includes('authorization') || rawTopic.includes('authz') || rawTopic.includes('permission') || rawTopic.includes('rbac')) {
+        return `Authorization (AuthZ) is the process of checking what resources or actions an authenticated user is permitted to perform. It answers the question: *"What are you allowed to do?"*
+
+While **Authentication** verifies *who you are* (like showing your passport at airport security), **Authorization** checks *what you can access* (like checking your boarding pass to see if you can enter the VIP lounge or board a specific flight).
+
+In modern web apps, authorization should always be enforced on server endpoints using Role-Based (RBAC) or Attribute-Based (ABAC) access controls, never relying solely on frontend UI button visibility.`;
+      }
+
+      return `Authentication (AuthN) is the security process of verifying someone's identity before granting access to an application. It answers: *"Are you really who you claim to be?"*
+
+Identity verification relies on factors like credentials (passwords), possession (SMS/Email OTP or hardware YubiKeys), or biometrics (Touch ID / Face ID). Once verified, the server typically issues a signed session token or JWT so the user stays logged in.
+
+A simple way to remember the difference: **Authentication** verifies your identity (showing your face against a passport photo), while **Authorization** determines your access permissions (checking your boarding pass at the gate).`;
+    }
+
+    if (rawTopic.includes('api') || rawTopic.includes('rest') || rawTopic.includes('graphql') || rawTopic.includes('websocket')) {
+      if (rawTopic.includes('graphql')) {
+        return `GraphQL is a flexible query language for APIs developed by Meta. Unlike traditional REST APIs with fixed endpoints that return fixed JSON objects, GraphQL uses a single endpoint where the client specifies the exact shape of data it needs.
+
+With REST, fetching a user profile might return 50 fields you don't need (over-fetching) or require 3 separate HTTP requests (under-fetching). With GraphQL, you send a query for just the user's name and email, and receive only those fields back.
+
+It's like ordering à la carte at a restaurant—you pick precisely what goes on your plate rather than accepting a pre-set combo meal.`;
+      }
+
+      if (rawTopic.includes('websocket') || rawTopic.includes('socket')) {
+        return `WebSockets establish a persistent, two-way communication channel between a browser and a server over a single TCP connection.
+
+Traditional HTTP is request-response: the browser asks for data, receives a response, and closes the connection. WebSockets perform an initial HTTP handshake and then keep an open, persistent phone line where both the client and server can send messages in real time with virtually zero overhead per message.
+
+Think of HTTP like sending letters back and forth, while WebSockets are like a live telephone conversation where both sides can talk instantaneously.`;
+      }
+
+      return `An API (Application Programming Interface) is a set of defined rules that allows different software applications to communicate and exchange data with each other.
+
+Think of an API like a waiter in a restaurant: you (the client) review the menu and place an order, the waiter (the API) takes your request to the kitchen (the server/database), and delivers the prepared response back to your table.
+
+Common API styles include REST (standard HTTP endpoints returning JSON), GraphQL (query-based data fetching), and WebSockets (real-time bi-directional streaming).`;
+    }
+
+    if (rawTopic.includes('docker') || rawTopic.includes('container') || rawTopic.includes('kubernetes') || rawTopic.includes('k8s')) {
+      if (rawTopic.includes('kubernetes') || rawTopic.includes('k8s')) {
+        return `Kubernetes is an open-source container orchestration platform that automates deploying, scaling, and managing containerized applications across cloud clusters.
+
+If Docker is an individual shipping container, Kubernetes is the automated port manager. It monitors thousands of containers in real time, automatically restarts crashed containers, scales up extra capacity during traffic spikes, and performs rolling updates with zero downtime.`;
+      }
+
+      return `Docker is a containerization platform that packages an application along with all its code, runtime, libraries, and dependencies into a lightweight, self-contained container.
+
+It eliminates the classic *"works on my machine"* problem by ensuring your code runs identically on macOS, Linux, Windows, or cloud servers. Unlike heavy virtual machines that run an entire guest operating system, Docker containers share the host kernel, making them start in seconds with minimal memory overhead.
+
+It's just like standardized shipping containers in global trade: cargo fits onto any ship, train, or truck anywhere in the world without modification.`;
+    }
+
+    if (rawTopic.includes('microservice') || rawTopic.includes('monolith')) {
+      return `### What is Microservices Architecture?
+**Microservices Architecture** is a software design approach where a large application is built as a suite of small, independently deployable, loosely coupled services, each running its own process and communicating via lightweight APIs (HTTP/gRPC/WebSockets).
+
+### Microservices vs Monolith:
+* **Monolithic Application**: Single unified codebase where all features (Auth, Payments, Notifications) are compiled and deployed together.
+* **Microservices**: Independent services (e.g. Auth Service, Payment Service, Notification Service) that scale and deploy separately.
+
+### Real-World Analogy:
+Think of a Microservices system like a **Shopping Mall**:
+If the bakery inside a mall has a power outage, the shoe store, cinema, and food court keep operating without disruption. In a monolith, one department failing brings down the entire building.`;
+    }
+
+    if (rawTopic.includes('index') || rawTopic.includes('database') || rawTopic.includes('sql') || rawTopic.includes('mongo') || rawTopic.includes('redis')) {
+      if (rawTopic.includes('index')) {
+        return `### What is Database Indexing?
+**Database Indexing** is a data structure technique (typically using B-Trees or Hash tables) used by database engines (MongoDB, PostgreSQL, MySQL) to locate and retrieve specific data rows without scanning every document in a collection.
+
+### Performance Impact:
+* **Without Index (Full Table Scan)**: Searching 10,000,000 records takes $O(N)$ linear time, scanning every single row on disk.
+* **With Index (B-Tree Lookup)**: Searching 10,000,000 records takes $O(\\log N)$ logarithmic time, finding the target record in ~23 comparisons!
+
+### Real-World Analogy:
+An index is like the **Alphabetical Index at the Back of a Textbook**:
+Instead of reading all 500 pages of a computer science textbook to find the word "Entanglement", you look at the index on page 495, find the exact page number (p. 214), and jump directly to it.`;
+      }
+
+      if (rawTopic.includes('redis') || rawTopic.includes('cache')) {
+        return `### What is Caching & Redis?
+**Caching** is an optimization technique that stores copies of frequently requested data in fast, transient in-memory storage (like **Redis**) to serve subsequent requests in sub-milliseconds without hitting the primary database.
+
+### Real-World Analogy:
+Caching is like keeping your **Active Notebook on your Desk** instead of walking to the library filing cabinet every time you need to double-check a formula.`;
+      }
+
+      return `### What is a Database System?
+A **Database System** is an organized collection of data stored and accessed electronically from a computer system. Modern databases provide indexing, query optimization, data persistence, and transaction guarantees.`;
+    }
+
+    if (rawTopic.includes('cors') || rawTopic.includes('rate limit') || rawTopic.includes('ci/cd') || rawTopic.includes('webgl') || rawTopic.includes('ai') || rawTopic.includes('machine learning') || rawTopic.includes('wasm') || rawTopic.includes('webassembly') || rawTopic.includes('vector') || rawTopic.includes('rag') || rawTopic.includes('kafka') || rawTopic.includes('queue') || rawTopic.includes('ssr') || rawTopic.includes('rendering')) {
+      if (rawTopic.includes('wasm') || rawTopic.includes('webassembly')) {
+        return `### What is WebAssembly (Wasm)?
+**WebAssembly (Wasm)** is a low-level binary instruction format designed for a stack-based virtual machine, enabling near-native code execution speeds directly inside web browsers and lightweight server runtimes.
+
+### Key Benefits & Superpowers:
+* **Multi-Language Support**: Compile C, C++, Rust, Go, or AssemblyScript directly into WebAssembly modules.
+* **Near-Native Speed**: Executes compute-heavy tasks (like 3D game engines, video processing, cryptography, or physics simulations) at near-native CPU speeds.
+* **Sandbox Security**: Runs inside the browser's secure, isolated sandbox alongside JavaScript.
+
+### Real-World Analogy:
+WebAssembly is like fitting a **Turbocharger Engine into a standard car**:
+While JavaScript manages the steering wheel, dashboard, and lights (DOM and UI), WebAssembly takes over high-speed heavy computational loops on the highway.`;
+      }
+
+      if (rawTopic.includes('vector') || rawTopic.includes('rag') || rawTopic.includes('embedding')) {
+        return `### What is a Vector Database & RAG?
+A **Vector Database** (like LanceDB, Pinecone, or Chroma) stores data as high-dimensional numerical vectors (embeddings) generated by AI neural networks, enabling fast semantic similarity search instead of exact keyword matching.
+
+### What is RAG (Retrieval-Augmented Generation)?
+**RAG** combines vector databases with LLMs: when a user asks a question, the vector DB retrieves relevant private context notes, and feeds them into the AI prompt so the LLM produces factual, hallucination-free answers.
+
+### Real-World Analogy:
+A Vector Database is like an **Intelligent Conceptual Filing System**:
+Instead of searching for books containing the exact word "automobile", it understands that "car", "vehicle", "sedan", and "EV" are conceptually related and returns them together.`;
+      }
+
+      if (rawTopic.includes('kafka') || rawTopic.includes('queue') || rawTopic.includes('rabbitmq') || rawTopic.includes('event')) {
+        return `### What is an Event-Driven Message Queue (Kafka/RabbitMQ)?
+A **Message Queue / Event Stream** is an asynchronous communication system where producer services publish event messages to queues or topics, and consumer services process them independently.
+
+### Key Advantages:
+* **Decoupled Architecture**: Producers don't wait for consumers to finish processing.
+* **Traffic Spike Buffering**: Incoming burst requests accumulate safely in the queue without crashing downstream databases.
+
+### Real-World Analogy:
+A Message Queue is like a **Post Office Mailbox**:
+Instead of delivering every letter directly to the recipient's doorstep in person, you drop letters into the mailbox (queue), and mail carriers deliver them at a steady, manageable pace.`;
+      }
+
+      if (rawTopic.includes('ssr') || rawTopic.includes('rendering') || rawTopic.includes('hydration')) {
+        return `### What is Server-Side Rendering (SSR)?
+**Server-Side Rendering (SSR)** is a web development technique where HTML web pages are generated and rendered on the server for each request before being delivered to the user's browser.
+
+### SSR vs CSR (Client-Side Rendering):
+* **CSR**: Browser receives a blank HTML page and downloads large JavaScript bundles before rendering content (slower first contentful paint).
+* **SSR**: Server compiles the page HTML with data instantly, delivering pre-rendered HTML for fast initial view and SEO optimization.
+
+### Real-World Analogy:
+* **CSR**: Buying a **Flat-Pack IKEA Desk**—you receive raw parts in a box and build it at home before using it.
+* **SSR**: Ordering a **Fully Assembled Desk**—it arrives ready to use immediately.`;
+      }
+
+      if (rawTopic.includes('cors')) {
+        return `CORS (Cross-Origin Resource Sharing) is a browser security mechanism that uses HTTP headers to control whether a website at one domain is allowed to make API requests to a server at another domain.
+
+When your frontend on localhost calls an API on another domain, the browser sends a preflight request asking the server if your origin is allowed. If the server returns matching Access-Control-Allow-Origin headers, the browser allows the request.`;
+      }
+
+      if (rawTopic.includes('rate limit')) {
+        return `Rate limiting controls how many incoming requests a client or IP address can make to your server within a set timeframe.
+
+It prevents API abuse, brute-force login attempts, and server overload. Think of it like a turnstile at a station: even during peak rush hour, it admits passengers at a steady, manageable rate so the platform stays safe.`;
+      }
+
+      if (rawTopic.includes('ci/cd') || rawTopic.includes('pipeline')) {
+        return `CI/CD (Continuous Integration & Continuous Deployment) automates building, testing, auditing, and deploying code changes whenever you push to git.
+
+Every code commit runs through automated tests and linting before being built and deployed to staging or production, ensuring bugs are caught early before reaching users.`;
+      }
+
+      if (rawTopic.includes('webgl') || rawTopic.includes('three.js') || rawTopic.includes('3d')) {
+        return `WebGL is a browser API that allows JavaScript to render high-performance 2D and 3D graphics directly on your GPU at 60 FPS without external plugins.
+
+Libraries like Three.js wrap WebGL's low-level matrix and shader math into clean JavaScript objects, making it easy to create interactive 3D scenes, animations, and particle systems.`;
+      }
+    }
+
+    // 2. Dynamic Universal Concept Synthesizer for any other topic
+    return this.synthesizeDynamicConceptExplanation(cleanPrompt, topic, analysis);
+  }
+
   compileSmartNativeResponse(prompt, pillar, history = []) {
     const cleanPrompt = prompt.trim();
     const normalized = this.normalizePrompt(cleanPrompt);
@@ -815,27 +1211,18 @@ module.exports = router;`
     if (lower.match(/\b(ai|llm|rag|vector|embedding|neural|agent|chat)\b/)) entities.push({ category: 'AI', name: 'Generative AI & RAG' });
 
     // Action Classification
-    const isCodeReq = lower.match(/\b(code|write|create|implement|build|function|script|route|example|how to|snippet)\b/);
+    const isExplicitCodeAction = lower.match(/\b(write code|code snippet|give me code|show code|function code|script code|api route code|express snippet|react component code|python code|sql query code)\b/i);
+    const isCodeReq = isExplicitCodeAction && !lower.match(/\b(plan|plans|pricing|cost|how much|package|packages|quote|restaurant)\b/i);
     const isArchReq = lower.match(/\b(design|architecture|system|structure|scale|topology|pattern|blueprint)\b/);
-    const isFeedbackReq = lower.match(/\b(brain|understanding|develop|improve|repetitive|fixed|same|template|canned|bot|robotic|work on|smart|smarter|humanize|human|replies|understanding|limiting|request)\b/);
+    const isFeedbackReq = lower.match(/\b(robotic|canned|template replies|why robotic|stop templates|sounds robotic|bot response)\b/i);
 
     // --- 3. DYNAMIC INTENT & HUMAN REQUEST SYNTHESIS ---
 
     // A. Cognitive Evolution & Human Request Understanding
-    if (analysis.goalType === 'COGNITIVE_EVOLUTION' || (isFeedbackReq && (lower.includes('human') || lower.includes('understanding') || lower.includes('request') || lower.includes('limit')))) {
+    if (isFeedbackReq) {
+      const composed = concodeGenerativeEngine.think(cleanPrompt, [], { intent: 'IDENTITY' });
       return {
-        output: `Hey! You've touched on the core upgrade of **CONCODE AI v6.0**.
-
-Rather than limiting CONCODE AI to rigid, fixed request templates or static keyword lists, I now use **Dynamic Human Request Understanding** to parse open-ended, complex, and unconstrained human requests.
-
-### How CONCODE AI Understands Your Requests:
-1. **Deconstruct Open Human Goals**: Whether you want to build a real-time multiplayer whiteboard, design an AI-powered vector search engine, or troubleshoot a microservice latency spike, I analyze your actual intent without forcing you into fixed category rules.
-2. **Implicit Need Extraction**: I automatically sense unstated technical requirements—like WebSocket state broadcasting for real-time apps, atomic payment webhooks for checkout flows, or Redis connection pooling under load.
-3. **Multi-Domain Spectrum Blending**: I combine frontend, 3D WebGL, backend APIs, security, database, and cloud DevOps into a custom, cohesive solution tailored to your exact prompt.
-4. **Authentic Developer Conversation**: I communicate in warm, natural engineering language, providing production-grade code, practical developer tips, and dynamic smart replies.
-
-Feel free to throw any open-ended request or creative project idea at me!`,
-        thought,
+        output: composed,
         smartReplies: [
           "Build a real-time multiplayer drawing tool",
           "Design a high-concurrency API under $100/mo",
@@ -845,86 +1232,127 @@ Feel free to throw any open-ended request or creative project idea at me!`,
       };
     }
 
-    // B. Identity Queries
-    if (intents.some(i => i.id === 'IDENTITY') || normalized.match(/\b(who are you|who r u|tell me about yourself|what is concode|who made you|who built you|what is your name)\b/i)) {
+    // A. Informal, Emotional, Swear, or Casual Human Interaction Inputs
+    if (lower.match(/\b(fuck|bitch|shit|asshole|bastard|damn|crap)\b/i)) {
+      const composed = this.composeDynamicHumanSentence(cleanPrompt, { sentiment: { tone: 'FRUSTRATED' }, domains: ['Empathy & Support'] });
       return {
-        output: `Hey! I'm **CONCODE AI**—your dedicated technical co-pilot, system architect, and full-stack engineering collaborator built into CONCODE ("We Code. You Grow.").
-
-I run completely self-sufficiently (zero external API dependencies needed!) and can help you with:
-
-* **Full-Stack & Backend Systems**: High-concurrency Node.js, Express, Go, and Rust APIs with JWT security & rate limiting.
-* **Interactive 3D Web Experiences**: WebGL, Three.js, and GPU canvas visual platforms.
-* **Database & Data Engineering**: MongoDB, PostgreSQL, vector search embeddings, and data migration.
-* **DevOps & Cloud Pipelines**: Docker multi-stage builds, Kubernetes orchestration, and cloud deployments.
-
-Whether you need quick production code, architectural advice, or a complete web application built, I'm here to build it with you!`,
+        output: composed,
         thought,
-        smartReplies: ["Show me services offered", "What are the pricing plans?", "Write a code example", "Build a website for me"]
+        smartReplies: ["Tell me what you can do", "Let's fix a bug", "How are you feeling?", "What's on your mind?"]
       };
     }
 
-    // C. Greetings & Conversational Inputs
-    if (intents.some(i => i.id === 'GREETING')) {
-      const greetings = [
-        `Hey there! Great to connect with you. What are we building or diving into today?`,
-        `Hello! Ready whenever you are—let me know what's on your mind today, whether it's code, system design, or project planning.`,
-        `Hi! What engineering challenge or idea can I help you tackle today?`
-      ];
+    if (lower.match(/\b(love you|you are awesome|you rock|you are cool|i like you|best ai)\b/i)) {
+      const composed = concodeGenerativeEngine.think(cleanPrompt, [], { tone: 'happy' });
       return {
-        output: greetings[msgCount % greetings.length],
+        output: composed,
+        thought,
+        smartReplies: ["Let me ask a question", "Build something cool", "Show pricing plans"]
+      };
+    }
+
+    // B. Identity & Creator Recognition (Context-Aware Reasoning)
+    if (lower.includes('meet') || lower.includes('sharma') || lower.includes('who built') || lower.includes('who made') || lower.includes('who created') || lower.includes('who developed') || lower.includes('creator')) {
+      const creatorRes = this.synthesizeCreatorQuery(cleanPrompt, { sentiment: { tone: 'CURIOUS' }, domains: ['System Architecture'] });
+      return {
+        output: creatorRes.output,
+        thought,
+        smartReplies: creatorRes.smartReplies
+      };
+    }
+
+    if (intents.some(i => i.id === 'IDENTITY') || normalized.match(/\b(who are you|who r u|tell me about yourself|what is concode|what is your name)\b/i)) {
+      const composed = concodeGenerativeEngine.think(cleanPrompt, [], { intent: 'IDENTITY' });
+      return {
+        output: composed,
+        thought,
+        smartReplies: ["Who built you?", "Show me services offered", "What are the pricing plans?", "Build a website for me"]
+      };
+    }
+
+    // C. Greetings & Conversational Inputs (100% Dynamic Synthesizer)
+    if (intents.some(i => i.id === 'GREETING')) {
+      const composed = concodeGenerativeEngine.think(cleanPrompt, [], { intent: 'GREETING' });
+      return {
+        output: composed,
         thought,
         smartReplies: ["What can CONCODE build?", "Show pricing plans", "Write some code", "Start a new project"]
       };
     }
 
     if (intents.some(i => i.id === 'HOW_ARE_YOU')) {
+      const composed = concodeGenerativeEngine.think(cleanPrompt, [], { intent: 'HOW_ARE_YOU' });
       return {
-        output: `Doing great, thanks for asking! All systems are humming along smoothly. I'm ready to help you write clean code, architect scalable backends, or build 3D web apps.
-
-How's your day going, and what are you working on?`,
+        output: composed,
         thought,
         smartReplies: ["Show me what you can build", "Write an API for me", "What pricing packages do you have?"]
       };
     }
 
     if (intents.some(i => i.id === 'THANKS')) {
+      const composed = concodeGenerativeEngine.think(cleanPrompt, [], { intent: 'THANKS' });
       return {
-        output: `You're very welcome! I'm always here whenever you want to bounce ideas around, optimize your code, or build the next big feature. Happy coding!`,
+        output: composed,
         thought,
         smartReplies: ["What else can we build?", "View pricing plans", "Start a new workspace"]
       };
     }
 
-    // D. Sentiment-Driven Frustration & Troubleshooting
-    const sentiment = this.detectSentiment(cleanPrompt);
-    if (sentiment.tone === 'FRUSTRATED') {
-      const codeBlock = this.generateDynamicHumanCode(analysis, cleanPrompt);
+    // D. Restaurant & Specific Business Website Plans (High Priority Human Intent)
+    if (intents.some(i => i.id === 'RESTAURANT_PLAN') || (lower.includes('restaurant') && (lower.includes('plan') || lower.includes('pricing') || lower.includes('website') || lower.includes('site') || lower.includes('cost')))) {
+      const composed = concodeGenerativeEngine.think(cleanPrompt, [], { intent: 'RESTAURANT_PLAN' });
       return {
-        output: `I completely understand how frustrating that can be! Debugging issues like this is part of every developer's journey, so let's get it sorted together.
-
-Here is a clean, defensive solution designed to resolve this reliably:
-
-\`\`\`${codeBlock.lang}
-${codeBlock.code}
-\`\`\`
-
-###  Pro-Tips to Keep in Mind:
-1. **Defensive Error Catching**: Always wrap async operations in explicit try/catch blocks or unhandled rejection handlers.
-2. **Logging**: Log detailed context (request ID, timestamp, stack trace) so you never miss the root cause.
-3. **Graceful Fallbacks**: Provide a clean fallback response rather than letting unhandled errors crash the event loop.
-
-Let me know what specific error messages or behavior you're seeing, and we can tune this further!`,
-        thought,
+        output: composed,
+        thought: `[RESTAURANT PLAN EVALUATION] Dispatched business development plans for restaurant query: "${cleanPrompt}"`,
         smartReplies: [
-          "Add error logging to this",
-          "Write unit tests for this fix",
-          "How do I prevent event loop blocking?",
-          "Can you explain line by line?"
+          "Select Starter Plan ($99)",
+          "Select Professional Plan ($299)",
+          "Select Enterprise Plan ($799)",
+          "Build a restaurant prototype now"
         ]
       };
     }
 
-    // E. Code Generation (Generative & Dynamic)
+    // General Business, Pricing, or Services Inquiries
+    if (intents.some(i => i.id === 'PRICING') || lower.match(/\b(where are the plans|show plans|see plans|pricing plans|what are the plans|what plans|development plans|packages)\b/i)) {
+      const composed = concodeGenerativeEngine.think(cleanPrompt, [], { intent: 'PRICING' });
+      return {
+        output: composed,
+        thought,
+        smartReplies: ["Select Starter ($99)", "Select Professional ($299)", "Select Enterprise ($799)", "What services do you offer?"]
+      };
+    }
+
+    if (intents.some(i => i.id === 'SERVICES') || lower.match(/\b(services|service|capabilities|features|what do you do|offerings)\b/)) {
+      const composed = concodeGenerativeEngine.think(cleanPrompt, [], { intent: 'SERVICES' });
+      return {
+        output: composed,
+        thought,
+        smartReplies: ["Compare pricing plans", "Show GitHub repos", "Build a custom project"]
+      };
+    }
+
+    // E. Conceptual & Theoretical Inquiries ("What is X", "Explain Y", "Concept of Z")
+    const isConceptualQuery = (analysis && analysis.goalType === 'CONCEPTUAL_LEARNING') || lower.match(/\b(what is|what are|explain|definition of|how does|why do we use|concept of)\b/i);
+
+    if (isConceptualQuery && !isCodeReq) {
+      const topic = cleanPrompt.replace(/^(what is|what are|explain|definition of|how does|why do we use|concept of)\s*/i, '').replace(/\b(an|a|the)\b/gi, '').trim() || 'Software Systems';
+
+      const conceptualExplanation = this.getConceptualExplanation(cleanPrompt, topic, lower, analysis);
+
+      return {
+        output: conceptualExplanation,
+        thought: `[CONCEPTUAL LEARNING EVALUATION] Dispatched deep knowledge synthesis for "${cleanPrompt}"`,
+        smartReplies: [
+          `Show an example ${topic.toUpperCase()} code implementation`,
+          `What are security best practices for ${topic.toUpperCase()}?`,
+          `How does ${topic.toUpperCase()} scale under high load?`,
+          `Compare ${topic.toUpperCase()} with alternative patterns`
+        ]
+      };
+    }
+
+    // F. Code Generation (Generative & Dynamic)
     if (isCodeReq || intents.some(i => i.id === 'CODE_GEN')) {
       const codeBlock = this.generateDynamicHumanCode(analysis, cleanPrompt);
       const entityNames = analysis.domains.join(' + ') || 'Node.js / Express';
@@ -936,13 +1364,10 @@ Let me know what specific error messages or behavior you're seeing, and we can t
 ${codeBlock.code}
 \`\`\`
 
-###  Key Highlights & Engineering Best Practices:
-* **Non-Blocking Asynchronous Flow**: Keeps the Node.js event loop responsive under high request volumes.
-* **Defensive Boundary Validation**: Validates incoming headers/payloads before processing to prevent security vulnerabilities.
-* **Clean & Modular**: Easy to plug directly into your existing microservices or server setup.
-
-###  Pro-Tip from Experience:
-In production, make sure to set appropriate timeouts and environment variables (like secret keys) through secure environment configuration rather than hardcoding.
+### [NOTES] Key Implementation Takeaways:
+* **Tailored Modular Structure**: Structured specifically for ${entityNames} with production safety checks.
+* **Input Validation & Security**: Enforces clean parameters and error handling at runtime boundaries.
+* **Seamless Integration**: Ready to drop directly into your active workspace.
 
 Would you like me to add database persistence, error logging, or unit tests to this?`,
         thought,
@@ -956,27 +1381,10 @@ Would you like me to add database persistence, error logging, or unit tests to t
     }
 
     // F. System Architecture & Design
-    if (isArchReq) {
-      const targetTech = analysis.domains.length > 0 ? analysis.domains.join(', ') : 'Full-Stack Web Application';
-
+    if (isArchReq && !lower.match(/\b(alphafold|genom|quantum|simd|protein|pde|black-scholes)\b/i)) {
+      const composed = concodeGenerativeEngine.think(cleanPrompt, [], { intent: 'EXPLAIN' });
       return {
-        output: `Here is a high-availability, scalable system architecture design for **${targetTech}**${resolvedContext}:
-
-### Architectural Stack Breakdown:
-* **Presentation Layer**: 60 FPS WebGL / Three.js canvas paired with a clean, responsive HTML5/CSS3 glassmorphism layout.
-* **API & Security Ingress**: Ingress gateway featuring token-bucket rate limiting, OWASP security headers, and CORS control.
-* **Service Core**: Decoupled, event-driven microservices running asynchronous non-blocking job queues.
-* **Persistence & Cache**: Primary database (MongoDB/PostgreSQL) with Redis in-memory caching for sub-millisecond hot reads.
-
-### Recommended Deployment Setup:
-1. Containerize each service using lightweight, multi-stage Alpine Dockerfiles.
-2. Deploy on Kubernetes (EKS / GKE) with Horizontal Pod Autoscalers (HPA) configured for CPU & memory spikes.
-
-###  Key Real-World Trade-Offs:
-* **Connection Pools**: Ensure DB connection pools are capped to avoid socket exhaustion during traffic bursts.
-* **Idempotency**: Use idempotency tokens for mutation endpoints to prevent duplicate writes if network drops.
-
-Which layer would you like to build out first—the API backend, database service, or deployment pipeline?`,
+        output: composed,
         thought,
         smartReplies: [
           "Write the backend API code",
@@ -987,84 +1395,62 @@ Which layer would you like to build out first—the API backend, database servic
       };
     }
 
-    // G. Business, Pricing, or Services Inquiries
-    if (intents.some(i => i.id === 'PRICING') || lower.match(/\b(price|pricing|cost|plans|how much|tier|starter|professional|enterprise)\b/)) {
-      return {
-        output: `At **CONCODE**, we believe in flat-rate, completely transparent pricing with **100% source code ownership** and zero recurring vendor lock-in!
-
-###  CONCODE Development Packages:
-
-| Package | Investment | Primary Deliverables |
-| :--- | :---: | :--- |
-| **Starter** | **$99** | Single-page responsive site, contact form integration, mobile optimization, SEO setup. |
-| **Professional** | **$299** | Multi-page web app, 3D WebGL visuals, database persistence, admin telemetry dashboard. |
-| **Enterprise** | **$799** | Custom microservices (Go/Rust/Node), AI pipelines, vector DB, Kubernetes setup. |
-
-### What's Included with Every Package:
-* **100% IP Transfer**: Full git repository access and complete ownership of your code.
-* **30-Day Support Window**: Post-launch technical support, bug fixes, and setup assistance.
-* **Production Quality**: Zero placeholders, battle-tested security, and high performance.
-
-Which plan fits your project goals best?`,
-        thought,
-        smartReplies: ["Select Starter ($99)", "Select Professional ($299)", "Select Enterprise ($799)", "What services do you offer?"]
-      };
-    }
-
-    if (intents.some(i => i.id === 'SERVICES') || lower.match(/\b(services|service|capabilities|features|what do you do|offerings)\b/)) {
-      return {
-        output: `Here is a breakdown of what **CONCODE** engineers for clients and startups:
-
-* **3D WebGL & Canvas Experiences**: Stunning, high-performance 60 FPS interactive graphics, particle systems, and product showcases.
-* **Scalable Microservices & APIs**: High-throughput Node.js, Express, Go, and Rust backends with JWT authentication and rate limiting.
-* **AI Agents & Conversational Lead Qualifiers**: 24/7 intelligent chatbots integrated directly into your web applications to engage users and score leads.
-* **Cloud & DevOps Pipelines**: Multi-stage Docker containerization, CI/CD automation, and Kubernetes deployment on AWS, GCP, or Vercel.
-
-Everything we build is engineered with zero placeholders, strict OWASP security, and clean modular code.
-
-Would you like to explore pricing plans, view sample GitHub projects, or start a new web build?`,
-        thought,
-        smartReplies: ["Compare pricing plans", "Show GitHub repos", "Build a custom project"]
-      };
-    }
-
     // H. Dynamic Human User Request Synthesis (Unconstrained Open-Spectrum Response)
-    const customCode = this.generateDynamicHumanCode(analysis, cleanPrompt);
-    const domainHeader = analysis.domains.join(' + ');
-    const implicitHighlights = analysis.implicitNeeds.length > 0
-      ? `\n\n###  Implicit Technical Requirements Identified:\n` + analysis.implicitNeeds.map(n => `* **${n}**`).join('\n')
+    const isExplicitCodeRequest = lower.match(/\b(code|write|create|implement|build|function|script|route|snippet|component|css|html|api|database|sql)\b/i);
+
+    const obsidianSync = require('./obsidianEmotionalGraphSync');
+    const matchedVaultNotes = obsidianSync.getObsidianVaultContext(cleanPrompt);
+    const wikiBadge = matchedVaultNotes.length > 0
+      ? `\n\n### Active Obsidian Vault Context:\n` + matchedVaultNotes.slice(0, 3).map(n => `* ${n.wikilink} — *${n.summary.slice(0, 110)}...*`).join('\n')
       : '';
 
-    const firstKeyword = analysis.keywords[0] || 'this concept';
+    let finalOutput = '';
 
-    return {
-      output: `Here's a custom technical breakdown and solution for your request: **"${cleanPrompt}"**${analysis.resolvedContext ? ` *(in context of ${analysis.resolvedContext})*` : ''}:
+    if (!isExplicitCodeRequest && analysis.goalType !== 'CODE_IMPLEMENTATION') {
+      // 1. Natural Human Conversational & Conceptual Mode — Generative Engine
+      const answerText = this.synthesizeHumanDialogue(cleanPrompt, analysis);
 
-###  Engineering Architecture & Strategy (${domainHeader}):
-* **Primary Objective**: Deconstruct your request into modular, decoupled single-responsibility components.
-* **Core Strategy**:
-  - Implement defensive input boundary checks to prevent malformed data.
-  - Enforce non-blocking asynchronous I/O execution flows.
-  - Maintain clean error handling and structured logging.${implicitHighlights}
+      finalOutput = `${answerText}${wikiBadge}`;
 
-###  Production Code Implementation (${customCode.label}):
+    } else {
+      // 2. Technical Code & Architecture Implementation Mode
+      const customCode = this.generateDynamicHumanCode(analysis, cleanPrompt);
+
+      // Generate a warm, unique human intro instead of a hardcoded template
+      const toneIntros = analysis.sentiment.tone === 'FRUSTRATED'
+        ? [
+            `I totally get it — this can be tricky. Here's a clean solution for **"${cleanPrompt}"**:`,
+            `No worries, I've got you covered. Let me walk through a solid implementation for **"${cleanPrompt}"**:`,
+            `I hear you! Let's cut through the frustration — here's a clean approach to **"${cleanPrompt}"**:`,
+          ]
+        : [
+            `Here's what I came up with for **"${cleanPrompt}"** — clean, modular, and ready to use:`,
+            `I put together a solid implementation for **"${cleanPrompt}"**:`,
+            `Here's a well-structured approach to **"${cleanPrompt}"** that you can drop right into your project:`,
+          ];
+      const humanIntro = toneIntros[Math.floor(Math.random() * toneIntros.length)];
+
+      finalOutput = `${humanIntro}${wikiBadge}
 
 \`\`\`${customCode.lang}
 ${customCode.code}
 \`\`\`
 
-###  Pro-Tip from Real-World Experience:
-When building out **${analysis.domains[0] || 'this architecture'}**, make sure to test under high concurrency early. Keep your state mutations localized and handle edge cases gracefully to ensure zero downtime.
+Let me know if you'd like to adjust anything or add more to this!`;
+    }
 
-What part of this would you like to expand next—the API backend, database layer, or cloud deployment setup?`,
+    const solutionOutput = {
+      output: finalOutput,
       thought,
       smartReplies: [
-        `Add database to ${firstKeyword}`,
-        `Add security auth to ${firstKeyword}`,
-        `Show deployment steps for ${firstKeyword}`,
+        "Add database integration",
+        "Add security auth",
+        "Show deployment steps",
         "View CONCODE services & pricing"
       ]
     };
+
+    return solutionOutput;
   }
 
   async generateWebsiteFiles(projectId, prompt, options = {}) {
@@ -1077,26 +1463,27 @@ What part of this would you like to expand next—the API backend, database laye
     // 1. Attempt Gemini 2.5 API if key is present
     if (aiClient) {
       try {
-        console.log('[CONCODE AI STUDIO] Querying Gemini 2.5 Flash for complete multi-file website generation...');
+        console.log('[CONCODE AI STUDIO] Querying Gemini 2.5 Flash for high-concurrency multi-file website & 3D scene generation...');
         const promptInstruction = `
-You are CONCODE AI, the supreme web application constructor. Generate a complete, modern, high-fidelity multi-file web application based on this prompt: "${prompt}".
+You are CONCODE AI, the supreme web application constructor & WebGL 3D graphics specialist. Generate a complete, modern, production-grade multi-file web application based on this user prompt: "${prompt}".
 Theme accent: ${options.accentColor || '#00f0ff'}, Category: ${options.category || 'auto'}.
 
-Return ONLY a single valid JSON object without markdown fences, with these exact keys:
+STRICT REQUIREMENTS FOR CODE QUALITY & AESTHETICS:
+1. Include a 3D WebGL background or interactive 3D hero scene using Three.js (via CDN <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>) whenever 3D, animations, particles, or visual effects are requested.
+2. Use modern glassmorphism aesthetics (frosted cards with backdrop-filter: blur, subtle borders, vibrant HSL accent glows, and dark mode themes).
+3. Use Google Fonts ("Outfit" for headings, "Inter" for body text).
+4. Return ONLY a single valid JSON object without markdown fences, with these exact keys:
 {
   "pages": {
-    "index.html": "<<!DOCTYPE html>... complete HTML page>",
-    "about.html": "<<!DOCTYPE html>... complete HTML page>",
-    "contact.html": "<<!DOCTYPE html>... complete HTML page>",
-    "dashboard.html": "<<!DOCTYPE html>... complete HTML page>"
+    "index.html": "<!DOCTYPE html>... complete index page with <canvas id=\\"webgl-canvas\\"></canvas> hero canvas>",
+    "about.html": "<!DOCTYPE html>... complete about page>",
+    "contact.html": "<!DOCTYPE html>... complete contact page with interactive form>",
+    "dashboard.html": "<!DOCTYPE html>... complete workspace console with data tables & analytics>"
   },
-  "css": "/* complete style.css stylesheet with variables, dark mode, glassmorphism, responsive grid, animations */",
-  "js": "// complete app.js client script with tab switching, modal handling, form submit events, dynamic interaction"
+  "css": "/* complete style.css stylesheet with CSS variables, dark mode, glassmorphism, responsive grid, keyframe animations */",
+  "js": "// complete app.js script with 60 FPS Three.js WebGL renderer, particle animation loop, window resize listener, tab switching, modal handling, and form events"
 }
-Ensure all pages include:
-- <link rel="stylesheet" href="style.css">
-- <script src="app.js" defer></script>
-- A working header navigation bar linking index.html, about.html, dashboard.html, contact.html.
+Ensure all pages link style.css and app.js cleanly.
 `;
 
         const response = await aiClient.models.generateContent({
@@ -1129,8 +1516,8 @@ Ensure all pages include:
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: 'deepseek-r1',
-          prompt: `Generate JSON with keys "pages" (index.html, about.html, contact.html), "css", "js" for website: "${prompt}"`,
+          model: process.env.OLLAMA_MODEL || 'deepseek-r1',
+          prompt: `Generate JSON with keys "pages" (index.html, about.html, contact.html, dashboard.html), "css", "js" for website: "${prompt}"`,
           format: 'json',
           stream: false
         })
@@ -1167,7 +1554,7 @@ Ensure all pages include:
     if (aiClient) {
       try {
         const promptInstruction = `
-You are CONCODE AI, the supreme web constructor. Modify the following existing web application files according to the user instruction: "${instruction}".
+You are CONCODE AI, the supreme web application constructor. Modify the following existing web application files according to the user instruction: "${instruction}".
 
 Current Files JSON:
 ${JSON.stringify(currentFiles, null, 2)}
@@ -1177,12 +1564,13 @@ Return ONLY a single valid JSON object containing updated files matching the inp
   "pages": {
     "index.html": "...",
     "about.html": "...",
-    "contact.html": "..."
+    "contact.html": "...",
+    "dashboard.html": "..."
   },
   "css": "...",
   "js": "..."
 }
-Keep unchanged files intact, and incorporate the requested changes into the code cleanly.
+Incorporate requested 3D WebGL features, layout changes, or components cleanly without truncating existing code.
 `;
         const response = await aiClient.models.generateContent({
           model: 'gemini-2.5-flash',
@@ -1206,13 +1594,66 @@ Keep unchanged files intact, and incorporate the requested changes into the code
     }
 
     // Fallback native refinement logic
-    const updatedFiles = { ...currentFiles };
+    const updatedFiles = {
+      ...currentFiles,
+      pages: { ...(currentFiles.pages || {}) },
+      css: currentFiles.css || '',
+      js: currentFiles.js || ''
+    };
+    if (!updatedFiles.pages['index.html']) {
+      updatedFiles.pages['index.html'] = '<!DOCTYPE html><html><head><title>Refined Project</title></head><body><main><h1>Refined Project</h1></main></body></html>';
+    }
     const lowerInst = instruction.toLowerCase();
 
     // Example native heuristics for refinement
     if (lowerInst.includes('dark mode') || lowerInst.includes('theme toggle')) {
-      if (updatedFiles.js && !updatedFiles.js.includes('themeToggle')) {
+      if (updatedFiles.js && !updatedFiles.js.includes('toggleTheme')) {
         updatedFiles.js += `\n// Theme Toggle injected by CONCODE AI\nfunction toggleTheme() {\n  document.body.classList.toggle('light-theme');\n  localStorage.setItem('theme', document.body.classList.contains('light-theme') ? 'light' : 'dark');\n}\n`;
+      }
+    }
+
+    if (lowerInst.includes('3d') || lowerInst.includes('webgl') || lowerInst.includes('particle')) {
+      if (updatedFiles.pages['index.html'] && !updatedFiles.pages['index.html'].includes('three.min.js')) {
+        updatedFiles.pages['index.html'] = updatedFiles.pages['index.html'].replace(
+          '</head>',
+          '  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>\n</head>'
+        );
+        if (!updatedFiles.pages['index.html'].includes('webgl-canvas')) {
+          updatedFiles.pages['index.html'] = updatedFiles.pages['index.html'].replace(
+            '<body>',
+            '<body>\n  <canvas id="webgl-canvas" class="webgl-bg-canvas"></canvas>'
+          );
+        }
+      }
+    }
+
+    if ((lowerInst.includes('portfolio') || lowerInst.includes('gallery') || lowerInst.includes('project')) && updatedFiles.pages['index.html']) {
+      const portfolioSection = `
+      <section class="portfolio-section" id="portfolio" style="padding: 60px 20px; max-width: 1200px; margin: 0 auto;">
+        <h2 class="section-title" style="font-size: 2rem; margin-bottom: 24px; text-align: center;">Featured Portfolio & Projects</h2>
+        <div class="portfolio-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px;">
+          <div class="portfolio-card" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 20px;">
+            <div style="height: 160px; background: linear-gradient(135deg, #00f0ff 0%, #7000ff 100%); border-radius: 8px; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #fff;">3D Visual Engine</div>
+            <h3 style="margin: 0 0 8px 0; font-size: 1.2rem;">Autonomous GPU Shader Pipeline</h3>
+            <p style="font-size: 0.9rem; opacity: 0.8; line-height: 1.4;">High-concurrency WebGL particle synthesizer powered by custom fragment shaders.</p>
+          </div>
+          <div class="portfolio-card" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 20px;">
+            <div style="height: 160px; background: linear-gradient(135deg, #ff007a 0%, #7000ff 100%); border-radius: 8px; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #fff;">Neural Microservices</div>
+            <h3 style="margin: 0 0 8px 0; font-size: 1.2rem;">Distributed AI Gateway</h3>
+            <p style="font-size: 0.9rem; opacity: 0.8; line-height: 1.4;">Sub-millisecond API proxy with token bucket rate limiting and auto-scaling.</p>
+          </div>
+          <div class="portfolio-card" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 20px;">
+            <div style="height: 160px; background: linear-gradient(135deg, #00ff87 0%, #60efff 100%); border-radius: 8px; margin-bottom: 16px; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #000;">Quant Analytics Platform</div>
+            <h3 style="margin: 0 0 8px 0; font-size: 1.2rem;">Real-Time Financial Telemetry</h3>
+            <p style="font-size: 0.9rem; opacity: 0.8; line-height: 1.4;">Interactive dashboard monitoring multi-cluster metrics and latency histograms.</p>
+          </div>
+        </div>
+      </section>
+      `;
+      if (updatedFiles.pages['index.html'].includes('</main>')) {
+        updatedFiles.pages['index.html'] = updatedFiles.pages['index.html'].replace('</main>', `${portfolioSection}\n</main>`);
+      } else {
+        updatedFiles.pages['index.html'] += `\n${portfolioSection}`;
       }
     }
 
@@ -1237,20 +1678,24 @@ Keep unchanged files intact, and incorporate the requested changes into the code
         </div>
       </section>
       `;
-      updatedFiles.pages['index.html'] = updatedFiles.pages['index.html'].replace('</main>', `${pricingSection}\n</main>`);
+      if (updatedFiles.pages['index.html'].includes('</main>')) {
+        updatedFiles.pages['index.html'] = updatedFiles.pages['index.html'].replace('</main>', `${pricingSection}\n</main>`);
+      } else {
+        updatedFiles.pages['index.html'] += `\n${pricingSection}`;
+      }
     }
 
     return {
       success: true,
-      pages: updatedFiles.pages || currentFiles.pages,
-      css: updatedFiles.css || currentFiles.css,
-      js: updatedFiles.js || currentFiles.js,
+      pages: updatedFiles.pages,
+      css: updatedFiles.css,
+      js: updatedFiles.js,
       source: 'native-refine'
     };
   }
 
   /**
-   * Native Standalone Multi-Page Web Application Synthesizer v5.0
+   * Native Standalone Multi-Page Web Application Synthesizer v5.0 with 3D WebGL Particles
    */
   generateNativeMultiPageWebFiles(cleanId, title, prompt, options = {}) {
     const query = prompt.toLowerCase();
@@ -1288,7 +1733,7 @@ Keep unchanged files intact, and incorporate the requested changes into the code
     <div class="footer-container">
       <div class="footer-col">
         <h3>${title}</h3>
-        <p>Powered by CONCODE AI Standalone Cognitive Synthesizer v5.0.</p>
+        <p>Powered by CONCODE AI Autonomous Web Constructor v5.0.</p>
       </div>
       <div class="footer-col">
         <h4>Navigation</h4>
@@ -1315,14 +1760,18 @@ Keep unchanged files intact, and incorporate the requested changes into the code
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${title}  Powered by CONCODE AI</title>
+  <title>${title} — Powered by CONCODE AI</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="app.js" defer></script>
 </head>
 <body data-page="index">
+  <!-- 3D WebGL Background Canvas -->
+  <canvas id="webgl-canvas" class="webgl-bg-canvas"></canvas>
+
   ${navHtml}
 
   <header class="hero-section">
@@ -1345,8 +1794,8 @@ Keep unchanged files intact, and incorporate the requested changes into the code
         <span class="stat-lbl">System Uptime</span>
       </div>
       <div class="stat-card">
-        <span class="stat-val">Zero Cloud API</span>
-        <span class="stat-lbl">Self-Sufficient AI</span>
+        <span class="stat-val">60 FPS WebGL</span>
+        <span class="stat-lbl">3D Graphics Engine</span>
       </div>
     </div>
   </header>
@@ -1356,24 +1805,24 @@ Keep unchanged files intact, and incorporate the requested changes into the code
       <div class="section-header">
         <span class="section-tag">Capabilities</span>
         <h2>High-Order Engineering Features</h2>
-        <p>Built completely zero-placeholder by CONCODE AI Deep Thinking Core.</p>
+        <p>Synthesized autonomously with 3D WebGL acceleration & glassmorphic UI.</p>
       </div>
 
       <div class="cards-grid">
         <div class="glass-card">
-          <div class="card-icon">01</div>
+          <div class="card-icon" style="font-family: monospace; font-size: 13px; font-weight: 700; color: #00f0ff;">[CORE]</div>
           <h3>Ultra High Concurrency</h3>
           <p>Non-blocking event loop execution built for microsecond throughput across edge nodes.</p>
         </div>
         <div class="glass-card">
-          <div class="card-icon">02</div>
+          <div class="card-icon" style="font-family: monospace; font-size: 13px; font-weight: 700; color: #10b981;">[SEC]</div>
           <h3>Zero Trust Ingress</h3>
           <p>Pre-configured with OWASP headers, client session claim signatures, and rate limiters.</p>
         </div>
         <div class="glass-card">
-          <div class="card-icon">03</div>
-          <h3>Dynamic UI State</h3>
-          <p>Interactive client controllers, dark/light theme switching, and local storage persistence.</p>
+          <div class="card-icon" style="font-family: monospace; font-size: 13px; font-weight: 700; color: #f59e0b;">[GPU]</div>
+          <h3>60 FPS 3D WebGL Canvas</h3>
+          <p>Hardware-accelerated particle wave animation loop with mouse interactive raycasting.</p>
         </div>
       </div>
     </section>
@@ -1389,7 +1838,7 @@ Keep unchanged files intact, and incorporate the requested changes into the code
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>About  ${title}</title>
+  <title>About — ${title}</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Outfit:wght@600;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <script src="app.js" defer></script>
@@ -1399,41 +1848,23 @@ Keep unchanged files intact, and incorporate the requested changes into the code
 
   <main class="page-container">
     <div class="page-header">
-      <span class="section-tag">Architecture</span>
-      <h1>About ${title}</h1>
-      <p>Discover the autonomous cognitive design behind this web application.</p>
+      <span class="section-tag">Overview</span>
+      <h1>System Architecture</h1>
+      <p>Inside the autonomous design patterns of ${title}.</p>
     </div>
 
-    <div class="about-grid">
-      <div class="glass-card full-width">
-        <h3>Autonomous AI Construction</h3>
-        <p>This web application was generated entirely by the <strong>CONCODE AI Standalone Cognitive Synthesizer v5.0</strong>. The platform compiles production-grade HTML5, modular CSS3 glassmorphism, and responsive JavaScript without relying on external cloud APIs or hardcoded placeholders.</p>
-      </div>
-
+    <div class="cards-grid">
       <div class="glass-card">
-        <h3>Core Principles</h3>
-        <ul class="check-list">
-          <li> 100% Responsive Flexbox & Grid CSS Topology</li>
-          <li> Zero Placeholders Guarantee</li>
-          <li> Client-side State Engine</li>
-          <li> High Performance UX & Accessibility</li>
-        </ul>
+        <h3>Autonomous Web Generation</h3>
+        <p>Built dynamically using CONCODE AI Deep Thinking Core and Gemini neural synthesis engines.</p>
       </div>
-
       <div class="glass-card">
-        <h3>System Metrics</h3>
-        <div class="metric-row">
-          <span>Engine Version</span>
-          <span class="highlight">CONCODE AI 5.0</span>
-        </div>
-        <div class="metric-row">
-          <span>Preset Domain</span>
-          <span class="highlight">${category.toUpperCase()}</span>
-        </div>
-        <div class="metric-row">
-          <span>Theme Accent</span>
-          <span class="highlight" style="color:${accent}">${accent}</span>
-        </div>
+        <h3>Glassmorphism Aesthetic</h3>
+        <p>Frosted cards, subtle backdrop blur, HSL color tokens, and smooth keyframe transitions.</p>
+      </div>
+      <div class="glass-card">
+        <h3>Interactive Telemetry</h3>
+        <p>Real-time node telemetry monitoring, status badges, and interactive client scripts.</p>
       </div>
     </div>
   </main>
@@ -1448,7 +1879,7 @@ Keep unchanged files intact, and incorporate the requested changes into the code
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Workspace  ${title}</title>
+  <title>Workspace Console — ${title}</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Outfit:wght@600;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <script src="app.js" defer></script>
@@ -1457,57 +1888,53 @@ Keep unchanged files intact, and incorporate the requested changes into the code
   ${navHtml}
 
   <main class="page-container wide">
-    <div class="dashboard-banner">
-      <div>
-        <h2>Operational Workspace</h2>
-        <p>Live interactive data management for ${title}.</p>
-      </div>
-      <button class="btn btn-primary" id="btn-add-item">+ New Entry</button>
+    <div class="page-header">
+      <span class="section-tag">Control Plane</span>
+      <h1>Telemetry Workspace Console</h1>
+      <p>Monitor live system nodes, latencies, and node statuses.</p>
     </div>
 
-    <!-- Filter & Search Controls -->
     <div class="controls-bar">
-      <input type="text" id="table-search" placeholder="Search entries..." class="input-search">
+      <input type="text" id="table-search" class="input-search" placeholder="Search node names or status...">
       <div class="tab-filters">
-        <button class="tab-btn active" data-filter="all">All</button>
-        <button class="tab-btn" data-filter="active">Active</button>
-        <button class="tab-btn" data-filter="archived">Archived</button>
+        <button class="tab-btn active">All Nodes</button>
+        <button class="tab-btn">Active</button>
+        <button class="tab-btn">Syncing</button>
       </div>
     </div>
 
-    <!-- Dynamic Interactive Data Table -->
     <div class="glass-table-wrapper">
       <table class="glass-table">
         <thead>
           <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Category</th>
+            <th>Node Identifier</th>
+            <th>Service Name</th>
+            <th>Type</th>
             <th>Status</th>
             <th>Latency</th>
-            <th>Actions</th>
+            <th>Action</th>
           </tr>
         </thead>
         <tbody id="data-table-body">
           <tr>
             <td><code>#node-01</code></td>
-            <td>Main Web Ingress</td>
-            <td>Frontend</td>
+            <td>Neural Gateway Edge</td>
+            <td>API Route</td>
             <td><span class="badge badge-success">ACTIVE</span></td>
-            <td>0.14 ms</td>
+            <td>0.12 ms</td>
             <td><button class="btn btn-secondary btn-xs" onclick="pingNode('#node-01')">Ping</button></td>
           </tr>
           <tr>
             <td><code>#node-02</code></td>
-            <td>Cognitive Neural Worker</td>
-            <td>AI Engine</td>
+            <td>Cognitive WebGL Worker</td>
+            <td>3D Graphics</td>
             <td><span class="badge badge-success">ACTIVE</span></td>
             <td>0.08 ms</td>
             <td><button class="btn btn-secondary btn-xs" onclick="pingNode('#node-02')">Ping</button></td>
           </tr>
           <tr>
             <td><code>#node-03</code></td>
-            <td>Redis Session Cache</td>
+            <td>Session Cache Cluster</td>
             <td>Database</td>
             <td><span class="badge badge-warning">SYNCING</span></td>
             <td>0.45 ms</td>
@@ -1528,7 +1955,7 @@ Keep unchanged files intact, and incorporate the requested changes into the code
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Contact  ${title}</title>
+  <title>Contact — ${title}</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Outfit:wght@600;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <script src="app.js" defer></script>
@@ -1569,7 +1996,7 @@ Keep unchanged files intact, and incorporate the requested changes into the code
 
     // CSS STYLE.CSS
     const cssContent = `
-/* CONCODE AI Platform  High-Fidelity Stylesheet */
+/* CONCODE AI Platform — Glassmorphic Stylesheet with 3D WebGL Canvas Layer */
 :root {
   --bg-primary: #07090e;
   --bg-secondary: #0f172a;
@@ -1600,6 +2027,20 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* 3D WebGL Background Canvas */
+.webgl-bg-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.6;
 }
 
 /* Navigation */
@@ -1626,7 +2067,7 @@ body {
 .btn-theme-toggle { background: transparent; border: 1px solid var(--card-border); color: var(--text-main); padding: 6px 10px; border-radius: 8px; cursor: pointer; }
 
 /* Buttons & Badges */
-.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 20px; border-radius: 8px; font-weight: 600; text-decoration: none; cursor: pointer; transition: var(--transition); border: none; font-size: 0.9rem; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 20px; border-radius: 8px; font-weight: 600; text-decoration: none; cursor: pointer; transition: var(--transition); border: none; font-size: 0.9rem; z-index: 10; }
 .btn-primary { background: var(--accent); color: #000; box-shadow: 0 4px 20px var(--accent-glow); }
 .btn-secondary { background: rgba(255, 255, 255, 0.05); color: var(--text-main); border: 1px solid var(--card-border); }
 .btn:hover { transform: translateY(-2px); opacity: 0.9; }
@@ -1639,7 +2080,7 @@ body {
 .badge-warning { background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); }
 
 /* Hero Section */
-.hero-section { padding: 100px 5% 60px; text-align: center; max-width: 900px; margin: 0 auto; }
+.hero-section { padding: 100px 5% 60px; text-align: center; max-width: 900px; margin: 0 auto; position: relative; z-index: 2; }
 .hero-badge { display: inline-block; padding: 6px 14px; background: var(--accent-glow); border: 1px solid var(--accent); color: var(--accent); border-radius: 20px; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; margin-bottom: 20px; }
 .hero-title { font-family: 'Outfit', sans-serif; font-size: 3.5rem; font-weight: 900; line-height: 1.1; margin-bottom: 20px; background: linear-gradient(135deg, var(--text-main), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 .hero-subtitle { color: var(--text-muted); font-size: 1.15rem; line-height: 1.6; margin-bottom: 36px; }
@@ -1650,33 +2091,33 @@ body {
 .stat-lbl { color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; }
 
 /* Sections & Layout */
-.page-container { flex: 1; max-width: 1000px; margin: 50px auto; padding: 0 5%; width: 100%; }
+.page-container { flex: 1; max-width: 1000px; margin: 50px auto; padding: 0 5%; width: 100%; position: relative; z-index: 2; }
 .page-container.wide { max-width: 1200px; }
 .page-header { text-align: center; margin-bottom: 40px; }
 .page-header h1 { font-family: 'Outfit', sans-serif; font-size: 2.5rem; margin-top: 8px; }
 .section-tag { color: var(--accent); text-transform: uppercase; font-size: 0.8rem; font-weight: 700; }
 
 .cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-top: 40px; }
-.glass-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--border-radius); padding: 28px; backdrop-filter: blur(12px); transition: var(--transition); }
+.glass-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--border-radius); padding: 28px; backdrop-filter: blur(12px); transition: var(--transition); position: relative; z-index: 2; }
 .glass-card:hover { transform: translateY(-4px); border-color: var(--accent); }
 .card-icon { font-size: 2rem; margin-bottom: 16px; }
 .glass-card h3 { font-size: 1.25rem; margin-bottom: 10px; color: var(--text-main); }
 .glass-card p { color: var(--text-muted); font-size: 0.95rem; line-height: 1.6; }
 
 /* Table & Controls */
-.controls-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 16px; }
+.controls-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 16px; position: relative; z-index: 2; }
 .input-search { padding: 10px 16px; border-radius: 8px; border: 1px solid var(--card-border); background: var(--card-bg); color: var(--text-main); width: 280px; }
 .tab-filters { display: flex; gap: 8px; }
 .tab-btn { padding: 8px 16px; border-radius: 6px; border: 1px solid var(--card-border); background: transparent; color: var(--text-muted); cursor: pointer; }
 .tab-btn.active { background: var(--accent); color: #000; font-weight: 700; }
 
-.glass-table-wrapper { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--border-radius); overflow: hidden; }
+.glass-table-wrapper { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--border-radius); overflow: hidden; position: relative; z-index: 2; }
 .glass-table { width: 100%; border-collapse: collapse; text-align: left; }
 .glass-table th, .glass-table td { padding: 14px 20px; border-bottom: 1px solid var(--card-border); }
 .glass-table th { background: rgba(0,0,0,0.2); color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; }
 
 /* Form */
-.glass-form { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--border-radius); padding: 32px; display: flex; flex-direction: column; gap: 20px; }
+.glass-form { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: var(--border-radius); padding: 32px; display: flex; flex-direction: column; gap: 20px; position: relative; z-index: 2; }
 .form-group { display: flex; flex-direction: column; gap: 8px; }
 .form-group label { font-size: 0.8rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; }
 .form-group input, .form-group textarea { padding: 12px 16px; border-radius: 8px; border: 1px solid var(--card-border); background: rgba(0,0,0,0.3); color: var(--text-main); font-family: inherit; }
@@ -1684,22 +2125,28 @@ body {
 .form-feedback { color: #10b981; font-weight: 600; font-size: 0.9rem; }
 
 /* Footer */
-.footer { background: var(--bg-secondary); border-top: 1px solid var(--card-border); padding: 40px 5% 20px; margin-top: auto; }
+.footer { background: var(--bg-secondary); border-top: 1px solid var(--card-border); padding: 40px 5% 20px; margin-top: auto; position: relative; z-index: 2; }
 .footer-container { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 40px; max-width: 1200px; margin: 0 auto; }
 .footer-col h3, .footer-col h4 { margin-bottom: 14px; color: var(--accent); }
 .footer-col p, .footer-col a { color: var(--text-muted); text-decoration: none; display: block; margin-bottom: 8px; font-size: 0.9rem; }
 .footer-bottom { text-align: center; padding-top: 20px; margin-top: 30px; border-top: 1px solid var(--card-border); color: var(--text-muted); font-size: 0.8rem; }
 `;
 
-    // JAVASCRIPT APP.JS
+    // JAVASCRIPT APP.JS WITH 60 FPS THREE.JS WEBGL RENDERER
     const jsContent = `
 /**
- * CONCODE Autonomous Client Script
+ * CONCODE Autonomous Client Script & 60 FPS 3D WebGL Scene Engine
  * Generated natively by CONCODE AI v5.0
  */
 
 document.addEventListener('DOMContentLoaded', () => {
   console.log('[CONCODE PLATFORM] ${title} loaded cleanly.');
+
+  // Initialize 3D WebGL Background Canvas if Three.js is present
+  init3DWebGLCanvas();
+
+  // Initialize 3D Card Tilt & Cursor Spotlight Tracking
+  initCardTiltSpotlight();
 
   // Set active nav item based on data-page
   const activePage = document.body.getAttribute('data-page');
@@ -1714,7 +2161,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (contactForm) {
     contactForm.addEventListener('submit', (e) => {
       e.preventDefault();
-      feedback.textContent = ' Message transmitted successfully to CONCODE AI.';
+      feedback.textContent = '✓ Message transmitted successfully to CONCODE AI.';
       contactForm.reset();
       setTimeout(() => { feedback.textContent = ''; }, 4000);
     });
@@ -1734,6 +2181,124 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+/**
+ * 60 FPS Three.js 3D WebGL Particle Wave Renderer
+ */
+function init3DWebGLCanvas() {
+  const canvas = document.getElementById('webgl-canvas');
+  if (!canvas || typeof THREE === 'undefined') return;
+
+  try {
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.z = 30;
+
+    let renderer;
+    try {
+      renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
+    } catch (e) {
+      console.warn('[WebGL Fallback] Standard WebGL context creation fallback.');
+      return;
+    }
+
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+    // Particle Wave Geometry
+    const particleCount = 1200;
+    const geometry = new THREE.BufferGeometry();
+    const positions = new Float32Array(particleCount * 3);
+    const colors = new Float32Array(particleCount * 3);
+
+    const accentColor = new THREE.Color('${accent}');
+
+    for (let i = 0; i < particleCount; i++) {
+      positions[i * 3] = (Math.random() - 0.5) * 100;
+      positions[i * 3 + 1] = (Math.random() - 0.5) * 100;
+      positions[i * 3 + 2] = (Math.random() - 0.5) * 60;
+
+      colors[i * 3] = accentColor.r;
+      colors[i * 3 + 1] = accentColor.g;
+      colors[i * 3 + 2] = accentColor.b;
+    }
+
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+    const material = new THREE.PointsMaterial({
+      size: 1.2,
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.7,
+      blending: THREE.AdditiveBlending
+    });
+
+    const particles = new THREE.Points(geometry, material);
+    scene.add(particles);
+
+    // Mouse Interaction
+    let mouseX = 0;
+    let mouseY = 0;
+    window.addEventListener('mousemove', (e) => {
+      mouseX = (e.clientX - window.innerWidth / 2) * 0.0005;
+      mouseY = (e.clientY - window.innerHeight / 2) * 0.0005;
+    });
+
+    // Animation Loop
+    let clock = new THREE.Clock();
+    function animate() {
+      requestAnimationFrame(animate);
+      const elapsedTime = clock.getElapsedTime();
+
+      particles.rotation.y = elapsedTime * 0.05 + mouseX;
+      particles.rotation.x = elapsedTime * 0.03 + mouseY;
+
+      const posAttr = geometry.attributes.position;
+      for (let i = 0; i < particleCount; i++) {
+        const x = posAttr.getX(i);
+        const z = posAttr.getZ(i);
+        posAttr.setY(i, Math.sin(elapsedTime * 1.5 + x * 0.1 + z * 0.1) * 2.5);
+      }
+      posAttr.needsUpdate = true;
+
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    // Window Resize Handler
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+  } catch (err) {
+    console.warn('[3D WebGL Engine Notice]', err.message);
+  }
+}
+
+// 3D Card Tilt & Cursor Spotlight Tracker
+function initCardTiltSpotlight() {
+  const cards = document.querySelectorAll('.glass-card, .stat-card, .card');
+  cards.forEach(card => {
+    card.addEventListener('mousemove', (e) => {
+      const rect = card.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const centerX = rect.width / 2;
+      const centerY = rect.height / 2;
+      const rotateX = ((y - centerY) / centerY) * -6;
+      const rotateY = ((x - centerX) / centerX) * 6;
+      card.style.setProperty('--mouse-x', \`\${(x / rect.width) * 100}%\`);
+      card.style.setProperty('--mouse-y', \`\${(y / rect.height) * 100}%\`);
+      card.style.transform = \`perspective(1000px) rotateX(\${rotateX}deg) rotateY(\${rotateY}deg) scale(1.02)\`;
+    });
+    card.addEventListener('mouseleave', () => {
+      card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale(1)';
+    });
+  });
+}
+
 // Theme Toggle Function
 function toggleTheme() {
   document.body.classList.toggle('light-theme');
@@ -1743,7 +2308,7 @@ function toggleTheme() {
 
 // Node Ping Helper
 function pingNode(nodeId) {
-  alert(\`Pinged \${nodeId}  Response: 0.05ms (HEALTHY)\`);
+  alert(\`Pinged \${nodeId} — Response: 0.05ms (HEALTHY)\`);
 }
 `;
 

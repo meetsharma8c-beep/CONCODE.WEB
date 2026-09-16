@@ -9,6 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
   
+  <link rel="stylesheet" href="src/style.css">
   <link rel="stylesheet" href="src/login-style.css">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
 </head>
@@ -20,18 +21,24 @@
   <main class="login-card" id="login-card">
     
     <!-- stylized terminal logo header -->
-    <div class="logo-header">
-      <div class="logo-icon">
-        <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" style="width: 24px; height: 24px; display: block;">
-          <!-- 7 Eyelashes on top arc -->
-          <path d="M 20 39 L 13 28 M 29 31 L 23 18 M 39 26 L 35 12 M 50 24 L 50 10 M 61 26 L 65 12 M 71 31 L 77 18 M 80 39 L 87 28" stroke="#38bdf8" stroke-width="4.5" stroke-linecap="round"/>
-          <path d="M 15 50 C 30 20, 70 20, 85 50" stroke="#38bdf8" stroke-width="7" stroke-linecap="round"/>
-          <path d="M 15 50 C 30 80, 70 80, 85 50" stroke="#38bdf8" stroke-width="7" stroke-linecap="round"/>
-          <circle cx="50" cy="50" r="14" fill="#38bdf8"/>
-          <path d="M 45 44 L 39 50 L 45 56 M 55 44 L 61 50 L 55 56 M 52 42 L 48 58" stroke="#0f172a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <div class="logo-header" style="justify-content: center; margin-bottom: 1.2rem;">
+      <a href="index.html" class="nav-logo" title="Return to CONCODE" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">
+        <svg class="nav-logo-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" style="width: 28px; height: 28px; filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.6));">
+          <g class="liquid-eye-group">
+            <!-- Smooth Outer Aura Ring -->
+            <circle cx="50" cy="50" r="42" stroke="#38bdf8" stroke-width="2.5" class="liquid-outer-ring" stroke-dasharray="120, 10"/>
+            <!-- Smooth Top Arc -->
+            <path class="liquid-arc-top" d="M 16 50 C 30 20, 70 20, 84 50" stroke="#38bdf8" stroke-width="7" stroke-linecap="round"/>
+            <!-- Smooth Bottom Arc -->
+            <path class="liquid-arc-bot" d="M 16 50 C 30 80, 70 80, 84 50" stroke="#38bdf8" stroke-width="7" stroke-linecap="round"/>
+            <!-- Fluid Core Nucleus -->
+            <g class="eye-pupil-group">
+              <circle cx="50" cy="50" r="14" fill="#38bdf8" class="logo-nucleus-svg"/>
+              <path d="M 45 44 L 39 50 L 45 56 M 55 44 L 61 50 L 55 56 M 52 42 L 48 58" stroke="#0f172a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+            </g>
+          </g>
         </svg>
-      </div>
-      <h1 class="logo-text">CONCODE</h1>
+      </a>
     </div>
 
     <!-- Toggle switcher -->
@@ -79,33 +86,33 @@
       <!-- Dedicated Phone Number Input Group (Phone OTP Mode Only) -->
       <div class="form-group" id="group-phone" style="display: none;">
         <label for="phone-input" class="form-label">Mobile Number</label>
-        <div style="display: flex; gap: 8px; align-items: center;">
+        <div style="display: flex; gap: 6px; align-items: center;">
           
           <!-- Country Code Select Dropdown -->
-          <select id="country-code-select" style="height: 46px; width: 110px; background: rgba(15, 23, 42, 0.9); border: 1px solid var(--border); color: var(--cyan); font-family: var(--font-mono); font-size: 0.88rem; padding: 0 8px; border-radius: 8px; cursor: pointer; outline: none; flex-shrink: 0;">
-            <option value="+91"> +91</option>
-            <option value="+1"> +1</option>
-            <option value="+44"> +44</option>
-            <option value="+971"> +971</option>
-            <option value="+61"> +61</option>
-            <option value="+65"> +65</option>
-            <option value="+49"> +49</option>
-            <option value="+33"> +33</option>
-            <option value="+966"> +966</option>
+          <select id="country-code-select" style="height: 38px; width: 72px; background: rgba(15, 23, 42, 0.9); border: 1px solid var(--border-color); color: var(--cyan); font-family: var(--font-mono); font-size: 0.78rem; padding: 0 4px 0 6px; border-radius: 7px; cursor: pointer; outline: none; flex-shrink: 0;">
+            <option value="+91">+91</option>
+            <option value="+1">+1</option>
+            <option value="+44">+44</option>
+            <option value="+971">+971</option>
+            <option value="+61">+61</option>
+            <option value="+65">+65</option>
+            <option value="+49">+49</option>
+            <option value="+33">+33</option>
+            <option value="+966">+966</option>
           </select>
 
           <!-- Input Box with Phone Smartphone Icon -->
           <div class="input-wrapper" style="flex: 1;">
-            <input type="tel" id="phone-input" class="form-input" placeholder="e.g. 9904717666" style="height: 46px; width: 100%;">
+            <input type="tel" id="phone-input" class="form-input" placeholder="e.g. 9904717666" style="height: 38px; width: 100%;">
             <span class="input-icon">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 16px; height: 16px; color: var(--cyan); display: block;">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 15px; height: 15px; color: var(--cyan); display: block;">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 0 0 6 3.75v16.5a2.25 2.25 0 0 0 2.25 2.25h7.5A2.25 2.25 0 0 0 18 20.25V3.75a2.25 2.25 0 0 0-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
               </svg>
             </span>
           </div>
 
           <!-- Action Button: Send Code -->
-          <button type="button" id="btn-send-otp" style="height: 46px; padding: 0 16px; background: var(--cyan); color: #000; border: none; font-size: 0.82rem; font-weight: 700; border-radius: 8px; cursor: pointer; flex-shrink: 0; white-space: nowrap;">Send Code</button>
+          <button type="button" id="btn-send-otp" style="height: 38px; padding: 0 12px; background: var(--cyan); color: #000; border: none; font-size: 0.75rem; font-weight: 700; border-radius: 7px; cursor: pointer; flex-shrink: 0; white-space: nowrap;">Send Code</button>
 
         </div>
       </div>
@@ -324,6 +331,13 @@
             btnSendOtp.textContent = `Resend (${countdown}s)`;
             btnSendOtp.disabled = true;
 
+            // Display friendly test OTP guidance
+            errorMsg.style.color = '#38bdf8';
+            errorMsg.style.background = 'rgba(56, 189, 248, 0.1)';
+            errorMsg.style.borderColor = 'rgba(56, 189, 248, 0.25)';
+            errorMsg.textContent = 'OTP Code Generated! Use test code 123456 to sign in.';
+            errorMsg.style.display = 'block';
+
             if (otpTimerId) clearInterval(otpTimerId);
             otpTimerId = setInterval(() => {
               countdown--;
@@ -337,9 +351,13 @@
             }, 1000);
 
           } else {
-            throw new Error(data.error.message || 'Failed to dispatch OTP verification code');
+            const errMsg = (typeof data.error === 'object' && data.error !== null) ? (data.error.message || JSON.stringify(data.error)) : (data.error || 'Failed to dispatch OTP verification code');
+            throw new Error(errMsg);
           }
         } catch (err) {
+          errorMsg.style.color = '#f87171';
+          errorMsg.style.background = 'rgba(239, 68, 68, 0.1)';
+          errorMsg.style.borderColor = 'rgba(239, 68, 68, 0.25)';
           errorMsg.textContent = err.message || 'OTP dispatch failed';
           errorMsg.style.display = 'block';
           btnSendOtp.textContent = 'Send Code';
@@ -402,7 +420,8 @@
                 window.location.href = 'dashboard.html';
               }
             } else {
-              throw new Error(data.error.message || 'Registration failed');
+              const errMsg = (typeof data.error === 'object' && data.error !== null) ? (data.error.message || JSON.stringify(data.error)) : (data.error || 'Registration failed');
+              throw new Error(errMsg);
             }
           } catch (err) {
             errorMsg.textContent = err.message || 'Unable to contact registration gateway';
@@ -434,7 +453,8 @@
                 window.location.href = 'dashboard.html';
               }
             } else {
-              throw new Error(data.error.message || 'OTP verification failed');
+              const errMsg = (typeof data.error === 'object' && data.error !== null) ? (data.error.message || JSON.stringify(data.error)) : (data.error || 'OTP verification failed');
+              throw new Error(errMsg);
             }
           } catch (err) {
             errorMsg.textContent = err.message || 'Invalid or expired security OTP code';
@@ -465,7 +485,8 @@
                 window.location.href = 'dashboard.html';
               }
             } else {
-              throw new Error(data.error.message || 'Invalid credentials');
+              const errMsg = (typeof data.error === 'object' && data.error !== null) ? (data.error.message || JSON.stringify(data.error)) : (data.error || 'Invalid credentials');
+              throw new Error(errMsg);
             }
           } catch (err) {
             errorMsg.textContent = err.message || 'Unable to contact authentication gateway';
@@ -487,6 +508,82 @@
           }
         });
       });
+
+      // Scramble Logo & Eye Blink Engine for Auth Portal
+      class TextScrambler {
+        constructor(el) {
+          this.el = el;
+          this.chars = '!<>-_\\/[]{}—=+*^?#________';
+          this.update = this.update.bind(this);
+        }
+        setText(newText) {
+          const oldText = this.el.innerText;
+          const length = Math.max(oldText.length, newText.length);
+          const promise = new Promise((resolve) => this.resolve = resolve);
+          this.queue = [];
+          for (let i = 0; i < length; i++) {
+            const from = oldText[i] || '';
+            const to = newText[i] || '';
+            const start = Math.floor(Math.random() * 15);
+            const end = start + Math.floor(Math.random() * 15);
+            this.queue.push({ from, to, start, end });
+          }
+          cancelAnimationFrame(this.frameRequest);
+          this.frame = 0;
+          this.update();
+          return promise;
+        }
+        update() {
+          let output = '';
+          let complete = 0;
+          for (let i = 0; i < this.queue.length; i++) {
+            let { from, to, start, end, char } = this.queue[i];
+            if (this.frame >= end) {
+              complete++;
+              output += `<span class="logo-letter" data-letter="${to}">${to}</span>`;
+            } else if (this.frame >= start) {
+              if (!char || Math.random() < 0.28) {
+                char = this.chars[Math.floor(Math.random() * this.chars.length)];
+                this.queue[i].char = char;
+              }
+              output += `<span class="logo-letter" data-letter="${char}">${char}</span>`;
+            } else {
+              output += `<span class="logo-letter" data-letter="${from}">${from}</span>`;
+            }
+          }
+          this.el.innerHTML = output;
+          if (complete === this.queue.length) {
+            this.resolve();
+          } else {
+            this.frameRequest = requestAnimationFrame(this.update);
+            this.frame++;
+          }
+        }
+      }
+
+      document.querySelectorAll('.scramble-logo').forEach(logoText => {
+        const scrambler = new TextScrambler(logoText);
+        const originalText = logoText.getAttribute('data-scramble') || 'CONCODE';
+        let isScrambling = false;
+        const parent = logoText.closest('.nav-logo') || logoText.parentElement;
+        if (parent) {
+          parent.addEventListener('mouseenter', () => {
+            if (isScrambling) return;
+            isScrambling = true;
+            scrambler.setText(originalText).then(() => { isScrambling = false; });
+          });
+        }
+      });
+
+      setInterval(() => {
+        if (Math.random() > 0.35) {
+          document.querySelectorAll('.nav-logo-svg').forEach(svg => {
+            svg.style.transition = 'transform 0.12s ease-in-out';
+            svg.style.transform = 'scaleY(0.08)';
+            setTimeout(() => { svg.style.transform = 'scaleY(1)'; }, 140);
+          });
+        }
+      }, 5000);
     });
   </script>
 

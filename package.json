@@ -4,12 +4,21 @@
   "description": "3D Scroll-Triggered Agency Ecosystem",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "test": "jest --forceExit --detectOpenHandles",
+    "test:watch": "jest --watch --forceExit --detectOpenHandles",
+    "audit": "node tests/audit_virtual_user.js",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:build": "docker compose build",
+    "docker:logs": "docker compose logs -f"
   },
   "dependencies": {
     "@google/genai": "^2.11.0",
+    "acorn": "^8.18.0",
     "bcryptjs": "^3.0.3",
     "compression": "^1.8.1",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^4.18.2",
@@ -21,5 +30,9 @@
     "mongodb": "^7.5.0",
     "morgan": "^1.10.0",
     "nodemailer": "^9.0.3"
+  },
+  "devDependencies": {
+    "jest": "^30.5.0",
+    "supertest": "^7.2.2"
   }
 }

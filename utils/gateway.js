@@ -106,6 +106,25 @@ async function initializeRouteAnalytics(projectId) {
 }
 
 /**
+ * Logs a real-time HTTP hit to a project gateway route.
+ */
+async function logRouteHit(projectId, requestPath = '/', statusCode = 200, latencyMs = 5) {
+  try {
+    const item = {
+      projectId: projectId.toLowerCase(),
+      timestamp: new Date().toISOString(),
+      latencyMs: Math.max(1, parseInt(latencyMs) || 5),
+      statusCode: parseInt(statusCode) || 200,
+      path: requestPath || '/'
+    };
+    await db.insert('analytics', item);
+    return item;
+  } catch (err) {
+    console.warn('[Gateway Analytics] Failed to log route hit:', err.message);
+  }
+}
+
+/**
  * Gathers analytics telemetry stats for a project route.
  * @param {string} projectId 
  * @returns {Promise<Object>}
@@ -196,6 +215,7 @@ module.exports = {
   registerRoute,
   getRoutes,
   resolveRoute,
+  logRouteHit,
   getGatewayTelemetry,
   getRouteAnalytics: fnGetRouteAnalytics,
   isValidRoutePath,

@@ -20,8 +20,28 @@
     <!-- Header -->
     <header class="dash-header">
       <div class="logo-area">
-        <div class="logo-icon">C</div>
-        <h1 class="logo-text">CONCODE / WORKSPACE</h1>
+        <a href="index.html" class="nav-logo" style="text-decoration: none; display: inline-flex; align-items: center; gap: 12px;">
+          <svg class="nav-logo-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <filter id="liquid-eye-filter-dash" x="-20%" y="-20%" width="140%" height="140%">
+                <feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="3" result="noise" id="liquid-turbulence-dash"/>
+                <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G" id="liquid-displacement-dash"/>
+                <feGaussianBlur stdDeviation="0.4" result="blur"/>
+              </filter>
+            </defs>
+            <g filter="url(#liquid-eye-filter-dash)" class="liquid-eye-group">
+              <circle cx="50" cy="50" r="42" stroke="#38bdf8" stroke-width="2" class="liquid-outer-ring" stroke-dasharray="120, 10"/>
+              <path class="liquid-arc-top" d="M 16 50 C 30 20, 70 20, 84 50" stroke="#38bdf8" stroke-width="7" stroke-linecap="round"/>
+              <path class="liquid-arc-bot" d="M 16 50 C 30 80, 70 80, 84 50" stroke="#38bdf8" stroke-width="7" stroke-linecap="round"/>
+              <g class="eye-pupil-group">
+                <circle cx="50" cy="50" r="14" fill="#38bdf8" class="logo-nucleus-svg"/>
+                <path d="M 45 44 L 39 50 L 45 56 M 55 44 L 61 50 L 55 56 M 52 42 L 48 58" stroke="#0f172a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+              </g>
+            </g>
+          </svg>
+          <span class="nav-logo-text scramble-logo" id="dash-logo-text" data-scramble="CONCODE"><span class="logo-letter" data-letter="C">C</span><span class="logo-letter" data-letter="O">O</span><span class="logo-letter" data-letter="N">N</span><span class="logo-letter" data-letter="C">C</span><span class="logo-letter" data-letter="O">O</span><span class="logo-letter" data-letter="D">D</span><span class="logo-letter" data-letter="E">E</span></span>
+        </a>
+        <h1 class="logo-text" style="margin-left: 8px; font-size: 1.1rem; opacity: 0.7;">/ WORKSPACE</h1>
       </div>
       
       <div class="user-badge">
@@ -82,7 +102,7 @@
           <h3 class="card-title">Interactive Design</h3>
           <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1.5rem;">Would you like to build another product prototype or expand your existing digital platform specification?</p>
         </div>
-        <a href="/index.html#chatbot" class="btn-cta">Start New Project Spec</a>
+        <a href="/index.html#workspace" class="btn-cta">Start New Project Spec</a>
       </div>
 
     </main>
@@ -102,16 +122,13 @@
       const container = document.getElementById('dashboard-container');
       const logoutBtn = document.getElementById('btn-logout');
 
-      if (!token) {
-        window.location.href = 'login.html';
-        return;
-      }
+      // Fetch user profile from backend (using token header or cookie session)
+      const headers = {};
+      if (token) headers['x-admin-token'] = token;
 
-      // Fetch user profile from backend
       fetch('/api/user/profile', {
-        headers: {
-          'x-admin-token': token
-        }
+        credentials: 'same-origin',
+        headers
       })
       .then(res => res.json())
       .then(data => {
@@ -134,10 +151,13 @@
         window.location.href = 'login.html';
       });
 
-      logoutBtn.addEventListener('click', () => {
-        localStorage.removeItem('concode_admin_token');
-        window.location.href = 'index.html';
-      });
+      if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
+          localStorage.removeItem('concode_admin_token');
+          document.cookie = 'concode_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+          window.location.href = 'index.html';
+        });
+      }
     });
   </script>
 

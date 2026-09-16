@@ -136,10 +136,14 @@ class ConCodeOrchestrator:
                 "mode": "voice",
                 "workspace_files": {}
             }).encode("utf-8")
+            headers = {"Content-Type": "application/json"}
+            api_key = os.environ.get("CONCODE_API_KEY")
+            if api_key:
+                headers["X-API-Key"] = api_key
             req = urllib.request.Request(
                 self.brain_api_url,
                 data=req_data,
-                headers={"Content-Type": "application/json"},
+                headers=headers,
                 method="POST"
             )
             with urllib.request.urlopen(req, timeout=10) as response:

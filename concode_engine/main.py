@@ -88,11 +88,32 @@ def main():
             amp = float(np.abs(arr).mean() / 4000.0) if len(arr) > 0 else 0.1
             hud_manager.update_audio_amplitude(amp)
 
+    def on_speech_complete_captured(audio_pcm: bytes):
+        if not audio_pcm:
+            return
+        logger.info(f"[Main Event Loop] User speech utterance concluded ({len(audio_pcm)} bytes). Routing to voice pipeline...")
+        try:
+            loop = asyncio.get_event_loop()
+            coro = orchestrator.process_user_speech(
+                audio_pcm=audio_pcm,
+                stt_func=stt_runner.transcribe,
+                llm_func=llm_runner.generate_code_completion,
+                tts_func=tts_engine.speak,
+                editor_buffer_func=editor_code_writer
+            )
+            if loop.is_running():
+                asyncio.run_coroutine_threadsafe(coro, loop)
+            else:
+                asyncio.run(coro)
+        except Exception as e:
+            logger.error(f"Speech processing dispatch error: {e}")
+
     listener = AudioListener(
         sample_rate=DEFAULT_CONFIG.audio.sample_rate,
         chunk_size=DEFAULT_CONFIG.audio.chunk_size,
         on_speech_frame=on_speech_frame_captured,
-        on_wake_word=on_wake_word_triggered
+        on_wake_word=on_wake_word_triggered,
+        on_speech_complete=on_speech_complete_captured
     )
     listener.start_listening()
 

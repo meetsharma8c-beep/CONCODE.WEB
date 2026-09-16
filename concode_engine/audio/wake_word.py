@@ -35,17 +35,24 @@ class WakeWordDetector:
         self._init_engine()
 
     def _init_engine(self):
-        """Attempts loading OpenWakeWord ONNX model session or initializes fuzzy phonetic fallback."""
+        """Attempts loading OpenWakeWord ONNX model session from standard paths or initializes fuzzy phonetic fallback."""
         try:
             import openwakeword
             from openwakeword.model import Model
             
-            model_path = os.path.expanduser("~/.concode/models/openwakeword/hey_concode.onnx")
-            if os.path.exists(model_path):
+            candidate_paths = [
+                os.path.expanduser("~/.concode/models/openwakeword/hey_concode.onnx"),
+                os.path.join(os.path.dirname(__file__), "../models/openwakeword/hey_concode.onnx"),
+                os.path.join(os.getcwd(), "models/hey_concode.onnx"),
+                os.path.join(os.getcwd(), "concode_engine/models/hey_concode.onnx")
+            ]
+            
+            model_path = next((p for p in candidate_paths if os.path.exists(p)), None)
+            if model_path:
                 self.oww_model = Model(wakeword_models=[model_path], inference_framework="onnxruntime")
-                logger.info("OpenWakeWord ONNX Neural Engine loaded successfully.")
+                logger.info(f"OpenWakeWord ONNX Neural Engine loaded successfully from: {model_path}")
             else:
-                logger.info("OpenWakeWord custom ONNX file not found. Fuzzy Phonetic Audio Engine active.")
+                logger.info("OpenWakeWord custom ONNX file not found in candidate paths. Dynamic Acoustic & Phonetic Audio Engine active.")
         except Exception as e:
             logger.info(f"OpenWakeWord neural engine init fallback: {e}")
 

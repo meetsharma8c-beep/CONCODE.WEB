@@ -15,6 +15,9 @@ document.addEventListener('DOMContentLoaded', () => {
     terminalInput.focus();
   });
 
+  // Initialize 3D Monolith HUD
+  initTerminal3D();
+
   // CLI Command History Tracker
   let commandHistory = [];
   let historyIndex = -1;
@@ -66,6 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
     skills: "View categorized developer technical skills and progress.",
     projects: "Inspect the collection of recent project rollouts.",
     github: "Fetch and list my public GitHub repositories in real-time.",
+    "3d": "Toggle or inspect the 3D Holographic Monolith HUD.",
     contact: "Display contact email, channels, or submit a message to the developer.",
     color: "Switch theme colors. Usage: color [matrix|amber|cyan|classic]",
     clear: "Clear the terminal console history.",
@@ -119,6 +123,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Write echo of command
     appendOutputLine(`visitor@concode:~$ ${cmdString}`, 'prompt');
 
+    // CRT screen flicker and 3D monolith excitation micro-animation
+    terminalScreen.classList.remove('crt-flicker-pulse');
+    void terminalScreen.offsetWidth;
+    terminalScreen.classList.add('crt-flicker-pulse');
+    if (window.pulseTerminalMonolith) window.pulseTerminalMonolith(1.2);
+
     // Parse command parameters
     const parts = cmdString.split(' ');
     const cmd = parts[0].toLowerCase();
@@ -135,6 +145,18 @@ document.addEventListener('DOMContentLoaded', () => {
         Object.keys(COMMANDS).forEach(key => {
           outputHtml += `<p><span class="text-warning">${key.padEnd(10)}</span> — ${COMMANDS[key]}</p>`;
         });
+        break;
+
+      case '3d':
+        if (window.toggle3DHUD) window.toggle3DHUD(true);
+        if (window.pulseTerminalMonolith) window.pulseTerminalMonolith(2.8);
+        outputHtml = `
+          <p class="text-cyan">>> 3D QUANTUM DATA MONOLITH // HUD ACTIVATED</p>
+          <br>
+          <p>Rendering interactive 3D WebGL Monolith &amp; Quantum Cube in real-time.</p>
+          <p><span class="text-warning">Telemetry:</span> 3-axis gimbal ring rotation, phosphor particle cloud, high-contrast CRT shader aesthetics.</p>
+          <p class="text-muted">Interactive: Drag viewport with mouse/touch to inspect geometry. Click [PULSE] in HUD for tensor excitation.</p>
+        `;
         break;
 
       case 'about':
@@ -205,6 +227,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const theme = args[0] ? args[0].toLowerCase() : '';
         if (['matrix', 'amber', 'cyan', 'classic'].includes(theme)) {
           document.body.className = `theme-${theme}`;
+          if (window.updateMonolithThemeColor) window.updateMonolithThemeColor(theme);
+          if (window.pulseTerminalMonolith) window.pulseTerminalMonolith(1.8);
           outputHtml = `<p class="text-success">Theme configuration changed successfully to: ${theme.toUpperCase()}</p>`;
         } else {
           outputHtml = '<p class="text-danger">Invalid color scheme. Options: color [matrix|amber|cyan|classic]</p>';
@@ -406,3 +430,261 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 });
+
+// ============================================================================
+// 3D QUANTUM DATA MONOLITH & CYBER CUBE (THREE.JS ENGINE)
+// ============================================================================
+let monolithScene, monolithCamera, monolithRenderer;
+let monolithGroup, monolithCore, monolithOcta, ringYaw, ringPitch, ringRoll, monolithDust;
+let monolithLightPrimary, monolithLightSecondary;
+let monolithMatFrame, monolithMatOcta, monolithMatCore;
+let isMonolithDragging = false;
+let monolithPrevMouse = { x: 0, y: 0 };
+let monolithRotVel = { x: 0, y: 0.005 };
+let monolithPulseBoost = 0;
+let isHUDOpen = true;
+
+window.toggle3DHUD = function(forceOpen) {
+  const hud = document.getElementById('terminal-3d-hud');
+  const btn = document.getElementById('btn-toggle-3d');
+  if (!hud) return;
+
+  if (forceOpen === true) {
+    isHUDOpen = true;
+  } else if (forceOpen === false) {
+    isHUDOpen = false;
+  } else {
+    isHUDOpen = !isHUDOpen;
+  }
+
+  if (isHUDOpen) {
+    hud.classList.remove('closed');
+    if (btn) btn.innerText = '[3D HUD: ON]';
+  } else {
+    hud.classList.add('closed');
+    if (btn) btn.innerText = '[3D HUD: OFF]';
+  }
+};
+
+window.pulseTerminalMonolith = function(multiplier = 1.0) {
+  monolithPulseBoost = Math.max(monolithPulseBoost, multiplier);
+  monolithRotVel.y += 0.025 * multiplier;
+  monolithRotVel.x += (Math.random() - 0.5) * 0.02 * multiplier;
+  if (monolithCore) {
+    monolithCore.scale.set(1.6 * multiplier, 1.6 * multiplier, 1.6 * multiplier);
+  }
+};
+
+window.updateMonolithThemeColor = function(themeName) {
+  let hexColor = 0x39ff14;
+  let secColor = 0x00f0ff;
+  if (themeName === 'amber') {
+    hexColor = 0xffb000;
+    secColor = 0xff5500;
+  } else if (themeName === 'cyan') {
+    hexColor = 0x00f0ff;
+    secColor = 0x7000ff;
+  } else if (themeName === 'classic') {
+    hexColor = 0xffffff;
+    secColor = 0x8c96a3;
+  }
+
+  if (monolithMatFrame) monolithMatFrame.color.setHex(hexColor);
+  if (monolithMatCore) {
+    monolithMatCore.color.setHex(hexColor);
+    monolithMatCore.emissive.setHex(hexColor);
+  }
+  if (monolithMatOcta) monolithMatOcta.color.setHex(secColor);
+  if (monolithLightPrimary) monolithLightPrimary.color.setHex(hexColor);
+  if (monolithLightSecondary) monolithLightSecondary.color.setHex(secColor);
+};
+
+window.initTerminal3D = function() {
+  const canvas = document.getElementById('terminal-3d-canvas');
+  if (!canvas) return;
+
+  if (typeof THREE === 'undefined') {
+    setTimeout(initTerminal3D, 80);
+    return;
+  }
+
+  const container = canvas.parentElement;
+  const width = container.clientWidth || 270;
+  const height = container.clientHeight || 200;
+
+  // Scene & Camera
+  monolithScene = new THREE.Scene();
+  monolithCamera = new THREE.PerspectiveCamera(46, width / height, 0.1, 1000);
+  monolithCamera.position.set(0, 0, 15);
+
+  // WebGL Renderer
+  monolithRenderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+  monolithRenderer.setSize(width, height);
+  monolithRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+  // Monolith Group
+  monolithGroup = new THREE.Group();
+  monolithScene.add(monolithGroup);
+
+  // Lights
+  const ambient = new THREE.AmbientLight(0xffffff, 0.6);
+  monolithScene.add(ambient);
+
+  monolithLightPrimary = new THREE.PointLight(0x39ff14, 2.5, 30);
+  monolithLightPrimary.position.set(0, 5, 8);
+  monolithScene.add(monolithLightPrimary);
+
+  monolithLightSecondary = new THREE.PointLight(0x00f0ff, 2.0, 30);
+  monolithLightSecondary.position.set(0, -5, -8);
+  monolithScene.add(monolithLightSecondary);
+
+  // Outer Box Frame
+  const boxGeo = new THREE.BoxGeometry(4.2, 5.2, 4.2);
+  const edgesGeo = new THREE.EdgesGeometry(boxGeo);
+  monolithMatFrame = new THREE.LineBasicMaterial({ color: 0x39ff14, linewidth: 2 });
+  const boxWireframe = new THREE.LineSegments(edgesGeo, monolithMatFrame);
+  monolithGroup.add(boxWireframe);
+
+  // Corner Bracket Markers
+  const cornerMat = new THREE.MeshBasicMaterial({ color: 0x39ff14, wireframe: true });
+  const cornerGeo = new THREE.BoxGeometry(0.45, 0.45, 0.45);
+  const cornerOffsets = [
+    [-2.1, -2.6, -2.1], [2.1, -2.6, -2.1], [-2.1, 2.6, -2.1], [2.1, 2.6, -2.1],
+    [-2.1, -2.6, 2.1], [2.1, -2.6, 2.1], [-2.1, 2.6, 2.1], [2.1, 2.6, 2.1]
+  ];
+  cornerOffsets.forEach(pos => {
+    const cMesh = new THREE.Mesh(cornerGeo, cornerMat);
+    cMesh.position.set(pos[0], pos[1], pos[2]);
+    monolithGroup.add(cMesh);
+  });
+
+  // Inner Nested Octahedron
+  const octaGeo = new THREE.OctahedronGeometry(2.0, 0);
+  monolithMatOcta = new THREE.MeshBasicMaterial({ color: 0x00f0ff, wireframe: true, transparent: true, opacity: 0.75 });
+  monolithOcta = new THREE.Mesh(octaGeo, monolithMatOcta);
+  monolithGroup.add(monolithOcta);
+
+  // Core Glowing Quantum Sphere
+  const coreGeo = new THREE.SphereGeometry(0.9, 16, 16);
+  monolithMatCore = new THREE.MeshStandardMaterial({
+    color: 0x39ff14,
+    emissive: 0x39ff14,
+    emissiveIntensity: 0.8,
+    roughness: 0.2,
+    metalness: 0.8
+  });
+  monolithCore = new THREE.Mesh(coreGeo, monolithMatCore);
+  monolithGroup.add(monolithCore);
+
+  // 3 Orthogonal Gimbal Rings
+  const ringMat = new THREE.MeshBasicMaterial({ color: 0x39ff14, wireframe: true, transparent: true, opacity: 0.5 });
+  ringYaw = new THREE.Mesh(new THREE.TorusGeometry(2.9, 0.04, 6, 36), ringMat);
+  ringPitch = new THREE.Mesh(new THREE.TorusGeometry(2.5, 0.04, 6, 36), ringMat);
+  ringRoll = new THREE.Mesh(new THREE.TorusGeometry(2.1, 0.04, 6, 36), ringMat);
+  ringPitch.rotation.x = Math.PI / 2;
+  ringRoll.rotation.y = Math.PI / 2;
+  monolithGroup.add(ringYaw);
+  monolithGroup.add(ringPitch);
+  monolithGroup.add(ringRoll);
+
+  // Phosphor Matrix Particles
+  const particleCount = 140;
+  const partGeo = new THREE.BufferGeometry();
+  const partPos = new Float32Array(particleCount * 3);
+  for (let i = 0; i < particleCount; i++) {
+    partPos[i * 3] = (Math.random() - 0.5) * 8;
+    partPos[i * 3 + 1] = (Math.random() - 0.5) * 10;
+    partPos[i * 3 + 2] = (Math.random() - 0.5) * 8;
+  }
+  partGeo.setAttribute('position', new THREE.BufferAttribute(partPos, 3));
+  const partMat = new THREE.PointsMaterial({ size: 0.16, color: 0x39ff14, transparent: true, opacity: 0.65 });
+  monolithDust = new THREE.Points(partGeo, partMat);
+  monolithGroup.add(monolithDust);
+
+  // Mouse & Touch Drag Controls
+  function onStart(x, y) {
+    isMonolithDragging = true;
+    monolithPrevMouse = { x, y };
+  }
+  function onMove(x, y) {
+    if (!isMonolithDragging) return;
+    const dx = x - monolithPrevMouse.x;
+    const dy = y - monolithPrevMouse.y;
+    monolithRotVel.y += dx * 0.001;
+    monolithRotVel.x += dy * 0.001;
+    monolithPrevMouse = { x, y };
+  }
+  function onEnd() {
+    isMonolithDragging = false;
+  }
+
+  container.addEventListener('mousedown', (e) => onStart(e.clientX, e.clientY));
+  window.addEventListener('mousemove', (e) => onMove(e.clientX, e.clientY));
+  window.addEventListener('mouseup', onEnd);
+
+  container.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 1) onStart(e.touches[0].clientX, e.touches[0].clientY);
+  }, { passive: true });
+  window.addEventListener('touchmove', (e) => {
+    if (e.touches.length === 1) onMove(e.touches[0].clientX, e.touches[0].clientY);
+  }, { passive: true });
+  window.addEventListener('touchend', onEnd);
+
+  // Resize Observer
+  const resizeObs = new ResizeObserver(() => {
+    const w = container.clientWidth || 270;
+    const h = container.clientHeight || 200;
+    monolithCamera.aspect = w / h;
+    monolithCamera.updateProjectionMatrix();
+    monolithRenderer.setSize(w, h);
+  });
+  resizeObs.observe(container);
+
+  // Render Loop
+  function animateMonolith() {
+    requestAnimationFrame(animateMonolith);
+
+    // Damping & Inertia
+    monolithGroup.rotation.y += monolithRotVel.y;
+    monolithGroup.rotation.x += monolithRotVel.x;
+    monolithRotVel.y *= 0.94;
+    monolithRotVel.x *= 0.94;
+
+    // Base idle rotation
+    if (!isMonolithDragging) {
+      monolithGroup.rotation.y += 0.006 + monolithPulseBoost * 0.03;
+      monolithGroup.rotation.x += 0.003;
+    }
+
+    // Gimbal Ring Rotations
+    ringYaw.rotation.z += 0.012 + monolithPulseBoost * 0.04;
+    ringPitch.rotation.y += 0.015 + monolithPulseBoost * 0.04;
+    ringRoll.rotation.x += 0.018 + monolithPulseBoost * 0.04;
+
+    // Octahedron Counter-spin
+    if (monolithOcta) {
+      monolithOcta.rotation.y -= 0.01;
+      monolithOcta.rotation.z += 0.008;
+    }
+
+    // Core Breath & Relaxation
+    if (monolithCore) {
+      const breath = 1.0 + Math.sin(Date.now() * 0.004) * 0.08 + monolithPulseBoost * 0.4;
+      monolithCore.scale.lerp(new THREE.Vector3(breath, breath, breath), 0.1);
+    }
+
+    // Pulse decay
+    if (monolithPulseBoost > 0) {
+      monolithPulseBoost *= 0.93;
+      if (monolithPulseBoost < 0.005) monolithPulseBoost = 0;
+    }
+
+    // Particle drift
+    if (monolithDust) {
+      monolithDust.rotation.y += 0.002;
+    }
+
+    monolithRenderer.render(monolithScene, monolithCamera);
+  }
+  animateMonolith();
+};

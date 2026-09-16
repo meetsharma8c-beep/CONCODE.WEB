@@ -1,0 +1,47 @@
+# ═══════════════════════════════════════════════
+# CONCODE Neural Brain — Python Dependencies
+# ═══════════════════════════════════════════════
+# Install with: pip install -r requirements.txt
+# For Apple Silicon Metal: pip install llama-cpp-python --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/metal
+# ═══════════════════════════════════════════════
+
+# ─── Core Server ───
+fastapi>=0.115.0
+uvicorn[standard]>=0.32.0
+pydantic>=2.10.0
+
+# ─── Hardware Detection ───
+psutil>=6.1.0
+
+# ─── LLM Inference (GGUF / llama.cpp) ───
+# Metal GPU: pip install llama-cpp-python --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/metal
+# CUDA GPU: CMAKE_ARGS="-DGGML_CUDA=on" pip install llama-cpp-python
+llama-cpp-python>=0.3.0
+
+# ─── Speech-To-Text (Whisper.cpp) ───
+pywhispercpp>=1.3.0
+
+# ─── Voice Activity Detection ───
+onnxruntime>=1.20.0
+
+# ─── Wake Word Detection ───
+openwakeword>=0.6.0
+
+# ─── Audio Capture ───
+sounddevice>=0.5.0
+numpy>=1.26.0
+
+# ─── Text-To-Speech ───
+# kokoro-onnx is optional — uses macOS `say` as fallback
+# kokoro-onnx>=0.4.0
+
+# ─── Vector Database (In-Process) ───
+lancedb>=0.17.0
+
+# ─── Desktop UI (PyQt6 Floating HUD) ───
+# Only needed for standalone desktop mode, not the API server
+# PyQt6>=6.7.0
+
+# ─── Development & Testing ───
+pytest>=8.3.0
+httpx>=0.28.0

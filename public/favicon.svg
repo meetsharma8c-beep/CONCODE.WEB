@@ -1,17 +1,18 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
-  <!-- Premium dark background wrapper for visibility in both light and dark browser tabs -->
+  <!-- Dark background wrapper for tab visibility -->
   <rect width="100" height="100" rx="22" fill="#060b16"/>
   
-  <!-- Eyelashes (7 lashes) -->
-  <path d="M 20 39 L 13 28 M 29 31 L 23 18 M 39 26 L 35 12 M 50 24 L 50 10 M 61 26 L 65 12 M 71 31 L 77 18 M 80 39 L 87 28" stroke="#00f0ff" stroke-width="5" stroke-linecap="round"/>
+  <!-- Outer aura ring -->
+  <circle cx="50" cy="50" r="42" stroke="#38bdf8" stroke-width="2.5" stroke-dasharray="120, 10"/>
   
-  <!-- Outer eye paths -->
-  <path d="M 15 50 C 30 20, 70 20, 85 50" stroke="#00f0ff" stroke-width="8" stroke-linecap="round"/>
-  <path d="M 15 50 C 30 80, 70 80, 85 50" stroke="#00f0ff" stroke-width="8" stroke-linecap="round"/>
+  <!-- Fluid Top Arc -->
+  <path d="M 16 50 C 30 20, 70 20, 84 50" stroke="#38bdf8" stroke-width="7" stroke-linecap="round"/>
+  <!-- Fluid Bottom Arc -->
+  <path d="M 16 50 C 30 80, 70 80, 84 50" stroke="#38bdf8" stroke-width="7" stroke-linecap="round"/>
   
   <!-- Glowing central core nucleus -->
-  <circle cx="50" cy="50" r="14" fill="#00f0ff"/>
+  <circle cx="50" cy="50" r="14" fill="#38bdf8"/>
   
-  <!-- Code brackets symbol </> -->
+  <!-- Internal Code brackets symbol </> -->
   <path d="M 45 44 L 39 50 L 45 56 M 55 44 L 61 50 L 55 56 M 52 42 L 48 58" stroke="#060b16" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

@@ -16,7 +16,7 @@ class VoiceCommandDispatcher {
 
     this.commandRecognition = null;
     this.dispatchSilenceTimer = null;
-    this.silenceDurationMs = 2500; // 2.5s silence after speaking triggers dispatch
+    this.silenceDurationMs = 2800; // 2.8s silence after speaking auto-submits sentence
     this.accumulatedText = '';
     this.audioCtx = null;
     
@@ -27,60 +27,11 @@ class VoiceCommandDispatcher {
   }
 
   /**
-   * Initializes high-precision Speech Recognition for Command Mode
+   * Initializes Command Dispatcher helper
    */
   initCommandRecognition() {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-
-    if (!SpeechRecognition) return;
-
-    this.commandRecognition = new SpeechRecognition();
-    this.commandRecognition.continuous = true;
-    this.commandRecognition.interimResults = true;
-    this.commandRecognition.maxAlternatives = 3;
-    this.commandRecognition.lang = 'en-US';
-
-    this.commandRecognition.onstart = () => {
-      this.resetSilenceDispatchTimer();
-    };
-
-    this.commandRecognition.onresult = (event) => {
-      let interimText = '';
-      let newFinalText = '';
-
-      for (let i = event.resultIndex; i < event.results.length; ++i) {
-        const text = event.results[i][0] ? event.results[i][0].transcript : '';
-        if (event.results[i].isFinal) {
-          newFinalText += text + ' ';
-        } else {
-          interimText += text;
-        }
-      }
-
-      if (newFinalText.trim()) {
-        this.accumulatedText = (this.accumulatedText + ' ' + newFinalText.trim()).trim();
-      }
-
-      const activeText = (this.accumulatedText + ' ' + interimText).trim();
-
-      if (activeText) {
-        this.onCommandTranscribed({
-          text: activeText,
-          isFinal: false
-        });
-      }
-
-      this.resetSilenceDispatchTimer();
-    };
-
-    this.commandRecognition.onerror = (event) => {
-      if (event.error === 'no-speech') return;
-      console.warn('[VoiceCommandDispatcher] Speech recognition warning:', event.error);
-    };
-
-    this.commandRecognition.onend = () => {
-      // Auto restart if active
-    };
+    // Single unified SpeechRecognition is provided by WakeWordListener
+    this.commandRecognition = null;
   }
 
   /**
@@ -90,15 +41,6 @@ class VoiceCommandDispatcher {
     this.accumulatedText = '';
     this.playActivationChime();
     this.onStateChange('ACTIVATED');
-
-    if (this.commandRecognition) {
-      try {
-        this.commandRecognition.start();
-      } catch (e) {
-        // Recognition may already be running
-      }
-    }
-
     this.resetSilenceDispatchTimer();
   }
 
@@ -107,11 +49,6 @@ class VoiceCommandDispatcher {
    */
   stopCapture() {
     this.clearSilenceDispatchTimer();
-    if (this.commandRecognition) {
-      try {
-        this.commandRecognition.stop();
-      } catch (e) {}
-    }
   }
 
   /**
@@ -152,15 +89,40 @@ class VoiceCommandDispatcher {
   async dispatchToConCodeAi(commandText) {
     if (!commandText) return;
     
-    // Intelligibility gate: only dispatch if the transcript has meaningful content
-    const words = commandText.trim().split(/\s+/).filter(w => w.length > 1);
-    if (words.length < 1) {
-      console.log(`[VoiceCommandDispatcher] Skipped low-quality command: "${commandText}"`);
+    // Clean wake phrase prefix if present in commandText
+    let cleanText = commandText.trim();
+    const wakePhrases = ['hey concode', 'concode', 'hey brain', 'jarvis', 'computer', 'listen concode', 'hey assistant', 'ok concode'];
+    const lower = cleanText.toLowerCase();
+    for (const phrase of wakePhrases) {
+      if (lower.startsWith(phrase)) {
+        cleanText = cleanText.slice(phrase.length).replace(/^[\s,.:;!?]+/, '').trim();
+        break;
+      }
+    }
+    if (!cleanText) {
+      cleanText = commandText.trim();
+    }
+
+    const cleanLower = cleanText.toLowerCase().trim();
+    const controlCommands = ['stop speaking', 'be quiet', 'pause speech', 'mute audio', 'cancel voice', 'stop audio', 'shut up', 'pause audio', 'stop', 'mute'];
+    
+    // Direct Control Command Exemption: Allow immediate dispatch for control commands
+    if (controlCommands.includes(cleanLower)) {
+      console.log(`[VoiceCommandDispatcher] Immediate Control Command Executed: "${cleanText}"`);
+      if (window.speechSynthesis) window.speechSynthesis.cancel();
+      if (window.concodeVoiceAgent && typeof window.concodeVoiceAgent.dismissVoiceAssistant === 'function') {
+        window.concodeVoiceAgent.dismissVoiceAssistant();
+      }
+      this.onStateChange('PASSIVE');
+      return;
+    }
+
+    if (!cleanText) {
       this.onStateChange('PASSIVE');
       return;
     }
     
-    console.log(`[VoiceCommandDispatcher] Querying Computerized Brain: "${commandText}"`);
+    console.log(`[VoiceCommandDispatcher] Querying Computerized Brain: "${cleanText}"`);
     this.onStateChange('PROCESSING');
 
     try {
@@ -168,7 +130,7 @@ class VoiceCommandDispatcher {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          input: commandText,
+          input: cleanText,
           sessionId: this.voiceSessionId
         })
       });
@@ -179,14 +141,22 @@ class VoiceCommandDispatcher {
         console.log('[VoiceCommandDispatcher] Computerized Brain Reply Received:', result.data.voiceSummary || result.data.reply);
         
         // Pass response directly to Voice Agent HUD & Verbal Speech Synthesizer
-        if (window.concodeVoiceAgent && typeof window.concodeVoiceAgent.handleVoiceBrainReply === 'function') {
-          window.concodeVoiceAgent.handleVoiceBrainReply({
-            query: commandText,
-            reply: result.data.reply,
-            voiceSummary: result.data.voiceSummary || result.data.reply,
-            agentBadge: result.data.agentBadge || '📐 Architect Agent',
-            smartReplies: result.data.smartReplies || []
-          });
+        try {
+          if (window.concodeVoiceAgent && typeof window.concodeVoiceAgent.handleVoiceBrainReply === 'function') {
+            window.concodeVoiceAgent.handleVoiceBrainReply({
+              query: commandText,
+              reply: result.data.reply,
+              voiceSummary: result.data.voiceSummary || result.data.reply,
+              agentBadge: result.data.agentBadge || 'ARCHITECT CORE',
+              smartReplies: result.data.smartReplies || [],
+              emotionalResonance: result.data.emotionalResonance || null
+            });
+          }
+        } catch (uiErr) {
+          console.error('[VoiceCommandDispatcher] UI Render Error:', uiErr.message);
+          if (window.concodeVoiceAgent && typeof window.concodeVoiceAgent.speak === 'function') {
+            window.concodeVoiceAgent.speak(result.data.voiceSummary || result.data.reply);
+          }
         }
       } else {
         throw new Error(result.error ? result.error.message : 'Brain response error');

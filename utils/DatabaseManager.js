@@ -34,26 +34,39 @@ try {
 
 class DatabaseManager {
   constructor() {
+    this.baseDir = path.join(__dirname, '../data');
+    this.initLocalFallback();
     this.useMongo = !!process.env.MONGO_URI && !!MongoClient;
     this.useFirestore = !this.useMongo && (process.env.USE_FIRESTORE === 'true') && admin && admin.apps.length > 0;
+    this._mongoReadyPromise = null;
 
     if (this.useMongo) {
       this.client = new MongoClient(process.env.MONGO_URI);
-      this.client.connect()
+      this._mongoReadyPromise = this.client.connect()
         .then(() => {
           this.mongoDb = this.client.db();
           console.log('DatabaseManager: Connected to self-hosted MongoDB.');
+          return true;
         })
         .catch(err => {
           console.error('DatabaseManager: MongoDB connection failed, falling back to local JSON database:', err.message);
           this.useMongo = false;
-          this.initLocalFallback();
+          return false;
         });
     } else if (this.useFirestore) {
       this.db = admin.firestore();
       console.log('DatabaseManager: Connected to Cloud Firestore.');
-    } else {
-      this.initLocalFallback();
+    }
+  }
+
+  async _ensureMongoReady() {
+    if (this.useMongo && !this.mongoDb && this._mongoReadyPromise) {
+      try {
+        await Promise.race([
+          this._mongoReadyPromise,
+          new Promise(resolve => setTimeout(resolve, 2000))
+        ]);
+      } catch (e) {}
     }
   }
 
@@ -91,6 +104,7 @@ class DatabaseManager {
    * @returns {Promise<Array>} A list of documents.
    */
   async read(collection) {
+    await this._ensureMongoReady();
     if (this.useMongo && this.mongoDb) {
       try {
         const items = await this.mongoDb.collection(collection).find({}).toArray();
@@ -143,6 +157,7 @@ class DatabaseManager {
    * @returns {Promise<Object>} The inserted document with id and createdAt populated.
    */
   async insert(collection, document) {
+    await this._ensureMongoReady();
     document.id = crypto.randomUUID();
     document.createdAt = new Date().toISOString();
 
@@ -189,6 +204,7 @@ class DatabaseManager {
    * @returns {Promise<boolean>} True if successful.
    */
   async delete(collection, docId) {
+    await this._ensureMongoReady();
     if (this.useMongo && this.mongoDb) {
       try {
         await this.mongoDb.collection(collection).deleteOne({ _id: docId });

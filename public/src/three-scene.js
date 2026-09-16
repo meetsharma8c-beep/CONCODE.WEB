@@ -88,9 +88,8 @@ let activeSection = 'hero';
 let currentLookAt = new THREE.Vector3(0, -1, 0);
 
 function setActiveSection(sectionId) {
-  if (SECTION_VIEWPORTS[sectionId]) {
-    activeSection = sectionId;
-  }
+  // Locked to hero perspective for steady background rendering
+  activeSection = 'hero';
 }
 
 // Platform positions (isometric layout matching the reference)
@@ -168,32 +167,62 @@ function getHologramMaterial(colorHex, baseOpacity = 0.25, wireframe = false) {
   return material;
 }
 
+let animFrameId = null;
+
 function init3DScene() {
+  if (typeof THREE === 'undefined') {
+    console.warn('[ThreeScene] THREE is not loaded; 3D canvas disabled.');
+    return;
+  }
   const canvas = document.getElementById('webgl-canvas');
   if (!canvas) return;
 
+  // WebGL Context Loss & Restoration Guards
+  if (!canvas._hasContextGuard) {
+    canvas._hasContextGuard = true;
+    canvas.addEventListener('webglcontextlost', (e) => {
+      e.preventDefault();
+      console.warn('[ThreeScene] WebGL context lost.');
+      if (animFrameId) cancelAnimationFrame(animFrameId);
+    }, false);
+
+    canvas.addEventListener('webglcontextrestored', () => {
+      console.log('[ThreeScene] WebGL context restored. Re-mounting scene.');
+      init3DScene();
+    }, false);
+  }
+
   clock = new THREE.Clock();
   scene = new THREE.Scene();
-  scene.fog = new THREE.FogExp2(0x020810, 0.025);
+  scene.fog = new THREE.FogExp2(0x020810, 0.009);
 
   // Camera — elevated isometric-like perspective
   camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.5, 200);
   camera.position.set(0, 22, 30);
   camera.lookAt(0, -1, 0);
 
-  renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer = new THREE.WebGLRenderer({ 
+    canvas, 
+    antialias: true, 
+    alpha: true,
+    powerPreference: 'high-performance',
+    precision: 'highp',
+    depth: true,
+    stencil: false
+  });
   renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2.0));
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.2;
+  renderer.toneMappingExposure = 1.25;
 
   // === LIGHTING ===
   setupLighting();
 
   // === BUILD SCENE ===
   buildGridFloor();
+  buildCursorFabricMesh();
   buildStarfield();
   buildCentralPlinth();
   buildDesignStudio();
@@ -252,17 +281,18 @@ function setupLighting() {
 
 function createRadialFadeTexture() {
   const canvas = document.createElement('canvas');
-  canvas.width = 256;
-  canvas.height = 256;
+  canvas.width = 512;
+  canvas.height = 512;
   const ctx = canvas.getContext('2d');
   
-  const grad = ctx.createRadialGradient(128, 128, 0, 128, 128, 128);
+  const grad = ctx.createRadialGradient(256, 256, 0, 256, 256, 256);
   grad.addColorStop(0, 'rgba(255, 255, 255, 1)');
-  grad.addColorStop(0.5, 'rgba(255, 255, 255, 0.7)');
+  grad.addColorStop(0.65, 'rgba(255, 255, 255, 0.9)');
+  grad.addColorStop(0.85, 'rgba(255, 255, 255, 0.45)');
   grad.addColorStop(1, 'rgba(255, 255, 255, 0)');
   
   ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, 256, 256);
+  ctx.fillRect(0, 0, 512, 512);
   
   const texture = new THREE.CanvasTexture(canvas);
   return texture;
@@ -273,7 +303,7 @@ function createRadialFadeTexture() {
 // ==========================================
 function buildGridFloor() {
   // Circular ground plane expanded significantly to spread the base color
-  const groundGeom = new THREE.CircleGeometry(120, 64);
+  const groundGeom = new THREE.CircleGeometry(160, 64);
   const groundMat = new THREE.MeshStandardMaterial({
     color: 0x030712,
     roughness: 0.95,
@@ -287,8 +317,8 @@ function buildGridFloor() {
   ground.receiveShadow = true;
   scene.add(ground);
 
-  // Expanded fading grid lines helper (size 240 with 240 grid lines)
-  const gridHelper = new THREE.GridHelper(240, 240, 0x0a2040, 0x061020);
+  // Expanded fading grid lines helper (size 280 with 280 grid lines)
+  const gridHelper = new THREE.GridHelper(280, 280, 0x0a2040, 0x061020);
   gridHelper.position.y = -1.49;
   
   // Custom shader for grid lines to fade out smoothly at the boundaries
@@ -308,8 +338,8 @@ function buildGridFloor() {
       uniform vec3 uColor;
       void main() {
         float dist = length(vWorldPosition.xz);
-        // Start fading at radius 50 and completely disappear at 115
-        float fade = 1.0 - smoothstep(50.0, 115.0, dist);
+        // Start fading at radius 70 and completely disappear at 135
+        float fade = 1.0 - smoothstep(70.0, 135.0, dist);
         gl_FragColor = vec4(uColor, fade * 0.45);
       }
     `,
@@ -319,6 +349,105 @@ function buildGridFloor() {
   });
   
   scene.add(gridHelper);
+}
+
+// ==========================================
+// INTERACTIVE CURSOR-SENSITIVE FABRIC MESH
+// ==========================================
+let fabricMesh = null;
+let fabricGeometry = null;
+let fabricOriginalPositions = null;
+let fabricRaycaster = new THREE.Raycaster();
+let fabricMouse2D = new THREE.Vector2(-999, -999);
+let fabricWorldMouse = new THREE.Vector3(0, -1.45, 0);
+
+function buildCursorFabricMesh() {
+  // Expanded 260x260 mesh with proportional subdivisions (120x120) to cover the full viewport
+  fabricGeometry = new THREE.PlaneGeometry(260, 260, 120, 120);
+  fabricGeometry.rotateX(-Math.PI / 2);
+  fabricGeometry.translate(0, -1.45, 0);
+
+  const posAttr = fabricGeometry.attributes.position;
+  fabricOriginalPositions = new Float32Array(posAttr.array.length);
+  fabricOriginalPositions.set(posAttr.array);
+
+  const fabricMaterial = new THREE.MeshStandardMaterial({
+    color: 0x22d3ee,
+    wireframe: true,
+    transparent: true,
+    opacity: 0.32,
+    roughness: 0.2,
+    metalness: 0.8,
+    emissive: 0x030d22,
+    emissiveIntensity: 0.5,
+    alphaMap: createRadialFadeTexture(),
+    blending: THREE.AdditiveBlending
+  });
+
+  fabricMesh = new THREE.Mesh(fabricGeometry, fabricMaterial);
+  scene.add(fabricMesh);
+
+  window.addEventListener('mousemove', (e) => {
+    fabricMouse2D.x = (e.clientX / window.innerWidth) * 2 - 1;
+    fabricMouse2D.y = -(e.clientY / window.innerHeight) * 2 + 1;
+  });
+
+  document.addEventListener('mouseleave', () => {
+    fabricMouse2D.set(-999, -999);
+  });
+}
+
+function updateCursorFabricPhysics(elapsed) {
+  if (!fabricMesh || !fabricGeometry || !camera) return;
+
+  // Only perform vertex updates when mouse is actively inside window
+  if (fabricMouse2D.x <= -900) return;
+
+  fabricRaycaster.setFromCamera(fabricMouse2D, camera);
+  const intersects = fabricRaycaster.intersectObject(fabricMesh);
+  if (intersects.length > 0) {
+    fabricWorldMouse.lerp(intersects[0].point, 0.1);
+  }
+
+  const posAttr = fabricGeometry.attributes.position;
+  const positions = posAttr.array;
+  const orig = fabricOriginalPositions;
+  const count = posAttr.count;
+  const mouseX = fabricWorldMouse.x;
+  const mouseZ = fabricWorldMouse.z;
+  const radius = 18;
+  const radiusSq = radius * radius;
+
+  let hasChanges = false;
+  for (let i = 0; i < count; i++) {
+    const idx = i * 3;
+    const origX = orig[idx];
+    const origY = orig[idx + 1];
+    const origZ = orig[idx + 2];
+
+    const dx = origX - mouseX;
+    const dz = origZ - mouseZ;
+    const distSq = dx * dx + dz * dz;
+
+    let targetY = origY;
+
+    if (distSq < radiusSq) {
+      const dist = Math.sqrt(distSq);
+      const force = 1.0 - dist / radius;
+      // Gentle, dampened tactile wave interaction on mouse hover
+      targetY += Math.sin(dist * 0.45 - elapsed * 2.8) * (force * force) * 0.75;
+    }
+
+    const currentY = positions[idx + 1];
+    if (Math.abs(targetY - currentY) > 0.001) {
+      positions[idx + 1] = currentY + (targetY - currentY) * 0.07;
+      hasChanges = true;
+    }
+  }
+
+  if (hasChanges) {
+    posAttr.needsUpdate = true;
+  }
 }
 
 // ==========================================
@@ -1117,7 +1246,8 @@ function buildDevOpsPlatform() {
   radarDish.position.set(0, 1.6, 1.2);
   radarDish.rotation.x = Math.PI / 4;
   
-  // Glowing satellite transmission cone
+  // Glowing satellite transmission cone (disabled to prevent distracting straight light beam)
+  /*
   const beamConeGeom = new THREE.ConeGeometry(0.35, 3.0, 16, 1, true);
   beamConeGeom.translate(0, 1.5, 0); // Offset so the base is at the dish center
   const beamConeMat = new THREE.MeshBasicMaterial({
@@ -1130,6 +1260,7 @@ function buildDevOpsPlatform() {
   });
   devopsBeam = new THREE.Mesh(beamConeGeom, beamConeMat);
   radarDish.add(devopsBeam);
+  */
 
   group.add(radarDish);
 
@@ -1774,38 +1905,56 @@ function setupInteraction(canvas) {
   const canvasFade = document.getElementById('canvas-fade');
   window.addEventListener('scroll', () => {
     const scrollY = window.scrollY;
-    const fadeStart = 0;
-    const fadeEnd = window.innerHeight * 0.8;
+    const fadeStart = 40;
+    const fadeEnd = window.innerHeight * 0.9;
     const progress = Math.max(0, Math.min(1, (scrollY - fadeStart) / (fadeEnd - fadeStart)));
     
     if (canvasFade) {
-      canvasFade.style.opacity = progress * 0.7; // Cap at 0.7 to keep 3D models visible in background of all tabs
+      canvasFade.style.opacity = progress * 0.65; // Keeps 3D models visible in background of all tabs
     }
   }, { passive: true });
 }
 
-// Pause rendering when tab is hidden to save GPU/CPU energy and prevent overheating
+// Pause rendering ONLY when tab is truly hidden to save GPU/CPU energy
 let isTabVisible = !document.hidden;
 document.addEventListener('visibilitychange', () => {
   isTabVisible = !document.hidden;
+  if (isTabVisible && clock) {
+    clock.getDelta(); // Reset delta to prevent leaps
+  }
 });
 
+// User activity tracker for zero-lag idle power saving
+let lastUserActivityTime = performance.now();
+function recordUserActivity() {
+  lastUserActivityTime = performance.now();
+}
+window.addEventListener('scroll', recordUserActivity, { passive: true });
+window.addEventListener('mousemove', recordUserActivity, { passive: true });
+window.addEventListener('keydown', recordUserActivity, { passive: true });
+window.addEventListener('touchstart', recordUserActivity, { passive: true });
+
 // ==========================================
-// ANIMATION LOOP
+// ANIMATION LOOP (Full GPU Hardware-Accelerated 60/120 FPS Rendering)
 // ==========================================
 function animate() {
-  requestAnimationFrame(animate);
+  animFrameId = requestAnimationFrame(animate);
+  // Sleep GPU pipeline when tab is backgrounded
   if (!isTabVisible) return;
-  
+
   const delta = clock.getDelta();
   const elapsed = clock.getElapsedTime();
 
-  // Update uTime for all holographic materials to scroll scanlines
-  holographicMaterials.forEach(mat => {
+  // GPU Shader Time Uniform Updates
+  for (let i = 0; i < holographicMaterials.length; i++) {
+    const mat = holographicMaterials[i];
     if (mat.uniforms && mat.uniforms.uTime) {
       mat.uniforms.uTime.value = elapsed;
     }
-  });
+  }
+
+  // Interactive Cursor-Sensitive Fabric Mesh Physics
+  updateCursorFabricPhysics(elapsed);
 
   const viewport = SECTION_VIEWPORTS[activeSection] || SECTION_VIEWPORTS.hero;
 
@@ -1827,11 +1976,11 @@ function animate() {
   const finalAngle = isDragging ? cameraAngle : cameraAngle + viewport.angleOffset;
   const finalElevation = isDragging ? cameraElevation : cameraElevation;
 
-  // Camera organic hover sway
+  // Camera organic hover sway (calibrated subtle mouse parallax)
   const swayTime = elapsed * 0.4;
-  const targetX = currentLookAt.x + Math.sin(finalAngle) * cameraRadius + mouseX * 3 + Math.sin(swayTime) * 0.5;
-  const targetZ = currentLookAt.z + Math.cos(finalAngle) * cameraRadius + mouseX * 3 + Math.cos(swayTime * 1.3) * 0.5;
-  const targetY = currentLookAt.y + finalElevation - mouseY * 3 + Math.sin(swayTime * 0.7) * 0.4;
+  const targetX = currentLookAt.x + Math.sin(finalAngle) * cameraRadius + mouseX * 0.8 + Math.sin(swayTime) * 0.5;
+  const targetZ = currentLookAt.z + Math.cos(finalAngle) * cameraRadius + mouseX * 0.8 + Math.cos(swayTime * 1.3) * 0.5;
+  const targetY = currentLookAt.y + finalElevation - mouseY * 0.8 + Math.sin(swayTime * 0.7) * 0.4;
 
   camera.position.x += (targetX - camera.position.x) * 0.05;
   camera.position.z += (targetZ - camera.position.z) * 0.05;
@@ -2086,6 +2235,13 @@ function onWindowResize() {
 }
 
 // ==========================================
-// INIT ON LOAD
+// INIT ON LOAD (Immediate + Event fallback)
 // ==========================================
-window.onload = init3DScene;
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+  init3DScene();
+} else {
+  document.addEventListener('DOMContentLoaded', init3DScene);
+}
+window.addEventListener('load', () => {
+  if (!scene) init3DScene();
+});

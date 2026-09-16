@@ -19,6 +19,7 @@ from .wake_word import WakeWordDetector
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("concode_engine.listener")
 
+
 class AudioListener:
     def __init__(
         self,
@@ -26,18 +27,23 @@ class AudioListener:
         chunk_size: int = 512,
         ring_buffer_size: int = 50,
         on_speech_frame: Callable[[bytes], None] = None,
-        on_wake_word: Callable[[str], None] = None
+        on_wake_word: Callable[[str], None] = None,
+        on_speech_complete: Callable[[bytes], None] = None
     ):
         self.sample_rate = sample_rate
         self.chunk_size = chunk_size
         self.ring_buffer = collections.deque(maxlen=ring_buffer_size)
         self.on_speech_frame = on_speech_frame
+        self.on_speech_complete = on_speech_complete
         
         self.vad = SileroVAD(sample_rate=sample_rate)
         self.wake_word_detector = WakeWordDetector(on_wake_word=on_wake_word)
         
         self._is_listening = False
         self._thread: Optional[threading.Thread] = None
+        self._active_speech_chunks = []
+        self._silent_chunks_count = 0
+        self._silence_chunks_threshold = int(1.0 * sample_rate / chunk_size)  # ~1.0s silence marks speech end
 
     def start_listening(self):
         if self._is_listening:
@@ -53,6 +59,28 @@ class AudioListener:
             self._thread.join(timeout=1.0)
         logger.info("Audio Listener loop stopped.")
 
+    def _handle_pcm_chunk(self, pcm_bytes: bytes, pcm_array: np.ndarray):
+        self.ring_buffer.append(pcm_bytes)
+        is_speech = self.vad.is_speech(pcm_array)
+
+        if is_speech:
+            self._silent_chunks_count = 0
+            self._active_speech_chunks.append(pcm_bytes)
+            if self.on_speech_frame:
+                self.on_speech_frame(pcm_bytes)
+            self.wake_word_detector.process_pcm_frame(pcm_array)
+        else:
+            if self._active_speech_chunks:
+                self._silent_chunks_count += 1
+                if self._silent_chunks_count >= self._silence_chunks_threshold:
+                    # Speech segment complete after ~1.0s silence
+                    full_speech_pcm = b"".join(self._active_speech_chunks)
+                    self._active_speech_chunks = []
+                    self._silent_chunks_count = 0
+                    if self.on_speech_complete and len(full_speech_pcm) > self.chunk_size * 4:
+                        logger.info(f"[AudioListener] Speech segment completed ({len(full_speech_pcm)} bytes). Dispatching speech complete callback...")
+                        self.on_speech_complete(full_speech_pcm)
+
     def _audio_capture_loop(self):
         """Native audio stream capture using sounddevice -> pyaudio -> synthetic fallback."""
         # 1. Attempt sounddevice capture (No C header / portaudio.h compilation required)
@@ -65,13 +93,7 @@ class AudioListener:
                     return
                 # Convert float32 array to int16 PCM bytes
                 pcm_array = (indata[:, 0] * 32767).astype(np.int16)
-                pcm_bytes = pcm_array.tobytes()
-                self.ring_buffer.append(pcm_bytes)
-
-                if self.vad.is_speech(pcm_array):
-                    if self.on_speech_frame:
-                        self.on_speech_frame(pcm_bytes)
-                    self.wake_word_detector.process_pcm_frame(pcm_array)
+                self._handle_pcm_chunk(pcm_array.tobytes(), pcm_array)
 
             with sd.InputStream(
                 samplerate=self.sample_rate,
@@ -102,12 +124,7 @@ class AudioListener:
             while self._is_listening:
                 data = stream.read(self.chunk_size, exception_on_overflow=False)
                 pcm_array = np.frombuffer(data, dtype=np.int16)
-                self.ring_buffer.append(data)
-
-                if self.vad.is_speech(pcm_array):
-                    if self.on_speech_frame:
-                        self.on_speech_frame(data)
-                    self.wake_word_detector.process_pcm_frame(pcm_array)
+                self._handle_pcm_chunk(data, pcm_array)
 
             stream.stop_stream()
             stream.close()

@@ -1,0 +1,30 @@
+{
+  "nodes": [
+    {"id": "ui_index", "x": -400, "y": -200, "width": 280, "height": 110, "type": "text", "text": "### Index Web Portal\n`public/index.html`\n- Monaco Code Editor\n- Cognitive Canvas\n- Dynamic Widgets"},
+    {"id": "sdk_brain", "x": -80, "y": -200, "width": 260, "height": 110, "type": "text", "text": "### Client Brain SDK\n`concode_brain_client.js`\n- Client-side Brain Gateway\n- Monaco Editor Bridge"},
+    {"id": "voice_agent", "x": -400, "y": -40, "width": 280, "height": 110, "type": "text", "text": "### Voice Assistant Agent\n`concode-voice-agent.js`\n- Audio Ripple Visualizer\n- Web Speech TTS Engine"},
+    {"id": "voice_dispatch", "x": -80, "y": -40, "width": 260, "height": 110, "type": "text", "text": "### Voice Dispatcher\n`voice-command-dispatcher.js`\n- Silero VAD / STT Router\n- Intent Classifier"},
+    {"id": "server_express", "x": 260, "y": -200, "width": 300, "height": 140, "type": "text", "text": "### Express Server Core\n`server.js` (:3000)\n- `POST /api/chat` Route\n- Helmet & CORS Middleware\n- Compression & Rate Limiting"},
+    {"id": "proxy_neural", "x": 640, "y": -200, "width": 280, "height": 110, "type": "text", "text": "### Neural Brain Proxy\n`utils/neuralBrainProxy.js`\n- Express -> FastAPI Bridge\n- Graceful Failover to JS Engine"},
+    {"id": "fastapi_core", "x": 1000, "y": -200, "width": 300, "height": 140, "type": "text", "text": "### Python Neural Brain\n`concode_engine/main.py` (:8000)\n- Bare-Metal Orchestrator\n- Metal GPU Hardware Gating\n- PyQT6 Floating HUD"},
+    {"id": "gemini_cloud", "x": 640, "y": 0, "width": 280, "height": 110, "type": "text", "text": "### Google Gemini Pro API\n`utils/gemini.js`\n- Cloud Neural Inference\n- Multi-File Code Synthesis"},
+    {"id": "ollama_local", "x": 640, "y": 150, "width": 280, "height": 110, "type": "text", "text": "### Ollama Local LLM\n`http://localhost:11434`\n- Llama 3 / DeepSeek Offline\n- Private Local Inference"},
+    {"id": "lancedb_vector", "x": 1000, "y": 0, "width": 300, "height": 110, "type": "text", "text": "### LanceDB Vector Store\n`vector_store.py`\n- AST Syntax Tree Indexer\n- Low-Latency RAG Search"},
+    {"id": "storage_db", "x": 260, "y": 50, "width": 300, "height": 110, "type": "text", "text": "### Database Manager\n`DatabaseManager.js`\n- `data/chats.json` Memory\n- `data/analytics.json` Metrics"},
+    {"id": "idea_planner", "x": 260, "y": 200, "width": 300, "height": 130, "type": "text", "text": "### AI Idea Planner Engine\n`utils/ideaPlannerEngine.js`\n- `POST /api/v1/idea-planner`\n- 4D Neural Viability Index\n- 6-Section Venture Dossier"}
+  ],
+  "edges": [
+    {"id": "e1", "fromNode": "ui_index", "fromSide": "right", "toNode": "sdk_brain", "toSide": "left", "label": "User Prompt"},
+    {"id": "e2", "fromNode": "sdk_brain", "fromSide": "right", "toNode": "server_express", "toSide": "left", "label": "POST /api/chat"},
+    {"id": "e3", "fromNode": "voice_agent", "fromSide": "right", "toNode": "voice_dispatch", "toSide": "left", "label": "PCM Stream"},
+    {"id": "e4", "fromNode": "voice_dispatch", "fromSide": "right", "toNode": "server_express", "toSide": "left", "label": "Voice STT Text"},
+    {"id": "e5", "fromNode": "server_express", "fromSide": "right", "toNode": "proxy_neural", "toSide": "left", "label": "Primary Route"},
+    {"id": "e6", "fromNode": "proxy_neural", "fromSide": "right", "toNode": "fastapi_core", "toSide": "left", "label": "HTTP :8000"},
+    {"id": "e7", "fromNode": "proxy_neural", "fromSide": "bottom", "toNode": "gemini_cloud", "toSide": "top", "label": "Fallback 1"},
+    {"id": "e8", "fromNode": "gemini_cloud", "fromSide": "bottom", "toNode": "ollama_local", "toSide": "top", "label": "Fallback 2"},
+    {"id": "e9", "fromNode": "fastapi_core", "fromSide": "bottom", "toNode": "lancedb_vector", "toSide": "top", "label": "AST RAG"},
+    {"id": "e10", "fromNode": "server_express", "fromSide": "bottom", "toNode": "storage_db", "toSide": "top", "label": "Persist"},
+    {"id": "e11", "fromNode": "server_express", "fromSide": "bottom", "toNode": "idea_planner", "toSide": "top", "label": "Venture Route"},
+    {"id": "e12", "fromNode": "idea_planner", "fromSide": "right", "toNode": "gemini_cloud", "toSide": "left", "label": "Inference"}
+  ]
+}

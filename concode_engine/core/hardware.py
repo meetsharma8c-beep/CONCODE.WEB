@@ -58,7 +58,8 @@ class HardwareManager:
         machine = platform.machine()
         total_ram_gb = round(psutil.virtual_memory().total / (1024 ** 3), 2)
         logical_cores = os.cpu_count() or 4
-        optimal_threads = max(1, int(logical_cores * 0.75))
+        is_eco = os.environ.get("THERMAL_ECO_MODE", "true").lower() != "false"
+        optimal_threads = min(4, max(1, int(logical_cores * 0.5))) if is_eco else max(1, int(logical_cores * 0.75))
 
         # 1. Check Apple Silicon Metal Unified Memory Architecture
         if system == "Darwin" and machine in ["arm64", "aarch64"]:

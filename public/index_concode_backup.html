@@ -1,0 +1,1615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CONCODE — We Code. You Grow.</title>
+  <meta name="description" content="CONCODE is a premium web development agency specializing in immersive 3D experiences, AI integration, scalable cloud architecture, and high-performance digital platforms.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="src/style.css?v=2.5">
+  <link rel="stylesheet" href="src/voice/voice-style.css?v=1.0">
+  <script src="src/cyber-audio.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <!-- Fullscreen WebGL Canvas — Interactive 3D Animation -->
+  <canvas id="webgl-canvas"></canvas>
+  <div class="canvas-fade" id="canvas-fade"></div>
+  <div class="hologram-overlay"></div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- NAVIGATION -->
+  <!-- ═══════════════════════════════════════════ -->
+  <nav class="nav" id="main-nav">
+    <div class="nav-inner">
+      <a href="#" class="nav-logo" id="nav-logo">
+        <svg class="nav-logo-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <filter id="liquid-eye-filter" x="-20%" y="-20%" width="140%" height="140%">
+              <feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="3" result="noise" id="liquid-turbulence"/>
+              <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G" id="liquid-displacement"/>
+              <feGaussianBlur stdDeviation="0.4" result="blur"/>
+            </filter>
+          </defs>
+          <g filter="url(#liquid-eye-filter)" class="liquid-eye-group">
+            <!-- Fluid Outer Aura Ring -->
+            <circle cx="50" cy="50" r="42" stroke="#38bdf8" stroke-width="2" class="liquid-outer-ring" stroke-dasharray="120, 10"/>
+            <!-- Fluid Top Arc -->
+            <path class="liquid-arc-top" d="M 16 50 C 30 20, 70 20, 84 50" stroke="#38bdf8" stroke-width="7" stroke-linecap="round"/>
+            <!-- Fluid Bottom Arc -->
+            <path class="liquid-arc-bot" d="M 16 50 C 30 80, 70 80, 84 50" stroke="#38bdf8" stroke-width="7" stroke-linecap="round"/>
+            <!-- Fluid Core Nucleus -->
+            <g class="eye-pupil-group">
+              <circle cx="50" cy="50" r="14" fill="#38bdf8" class="logo-nucleus-svg"/>
+              <path d="M 45 44 L 39 50 L 45 56 M 55 44 L 61 50 L 55 56 M 52 42 L 48 58" stroke="#0f172a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+            </g>
+          </g>
+        </svg>
+        <span class="nav-logo-text scramble-logo" id="nav-logo-text" data-scramble="CONCODE"><span class="logo-letter" data-letter="C">C</span><span class="logo-letter" data-letter="O">O</span><span class="logo-letter" data-letter="N">N</span><span class="logo-letter" data-letter="C">C</span><span class="logo-letter" data-letter="O">O</span><span class="logo-letter" data-letter="D">D</span><span class="logo-letter" data-letter="E">E</span></span>
+      </a>
+      <ul class="nav-menu" id="nav-menu">
+        <li><a href="#services">Services</a></li>
+        <li><a href="#ai-engine">AI Brain</a></li>
+        <li><a href="#portfolio">Portfolio</a></li>
+        <li><a href="#work">Work</a></li>
+        <li><a href="#process">Process</a></li>
+        <li><a href="#pricing">Pricing</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+
+      <!-- Small CONCODE AI Circular Button -->
+      <button class="concode-ai-circle-btn" id="btn-concode-ai" title="Launch CONCODE AI Assistant" aria-label="CONCODE AI Assistant">
+        <div class="ai-circle-glow"></div>
+        <svg class="ai-circle-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="50" cy="50" r="42" stroke="url(#aiGlowGrad)" stroke-width="5" stroke-dasharray="200 40" class="ai-circle-ring"/>
+          <circle cx="50" cy="50" r="14" fill="#38bdf8" class="ai-circle-core"/>
+          <path d="M 45 44 L 39 50 L 45 56 M 55 44 L 61 50 L 55 56" stroke="#0f172a" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+          <defs>
+            <linearGradient id="aiGlowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#38bdf8"/>
+              <stop offset="100%" stop-color="#6366f1"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <span class="ai-circle-text">AI</span>
+      </button>
+
+      <a href="login.html" class="nav-secondary-btn nav-auth-btn" id="nav-btn-auth">Auth</a>
+      <button class="nav-cta" id="btn-onboard">Start a Project</button>
+      <button class="nav-hamburger" id="nav-toggle" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- HUD NAVIGATION WAYFINDER (Zero-Lag Dock)   -->
+  <!-- ═══════════════════════════════════════════ -->
+  <nav id="hud-wayfinder" class="hud-wayfinder" aria-label="Section Wayfinder">
+    <div class="hud-telemetry-chip">
+      <div class="hud-ping-dot"></div>
+      <span class="hud-ping-text" id="hud-ping-text">2ms</span>
+      <button class="hud-sfx-toggle" id="hud-sfx-toggle" title="Toggle Sound FX (Web Audio)" aria-label="Toggle Sound Effects">
+        <svg class="sfx-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+        </svg>
+      </button>
+    </div>
+    <a href="#hero" class="hud-waypoint active" data-target="hero" aria-label="Hero Section">
+      <span class="hud-waypoint-label">01 // HERO</span>
+      <span class="hud-waypoint-indicator"></span>
+    </a>
+    <a href="#problem-shift" class="hud-waypoint" data-target="problem-shift" aria-label="The Shift">
+      <span class="hud-waypoint-label">02 // SHIFT</span>
+      <span class="hud-waypoint-indicator"></span>
+    </a>
+    <a href="#services" class="hud-waypoint" data-target="services" aria-label="Core Solutions">
+      <span class="hud-waypoint-label">03 // SOLUTIONS</span>
+      <span class="hud-waypoint-indicator"></span>
+    </a>
+    <a href="#ai-engine" class="hud-waypoint" data-target="ai-engine" aria-label="AI Engine">
+      <span class="hud-waypoint-label">04 // AI BRAIN</span>
+      <span class="hud-waypoint-indicator"></span>
+    </a>
+    <a href="#portfolio" class="hud-waypoint" data-target="portfolio" aria-label="Developer Terminal">
+      <span class="hud-waypoint-label">05 // TERMINAL</span>
+      <span class="hud-waypoint-indicator"></span>
+    </a>
+    <a href="#work" class="hud-waypoint" data-target="work" aria-label="Selected Work">
+      <span class="hud-waypoint-label">06 // WORK</span>
+      <span class="hud-waypoint-indicator"></span>
+    </a>
+    <a href="#workspace" class="hud-waypoint" data-target="workspace" aria-label="Developer Studio">
+      <span class="hud-waypoint-label">07 // STUDIO</span>
+      <span class="hud-waypoint-indicator"></span>
+    </a>
+    <a href="#process" class="hud-waypoint" data-target="process" aria-label="Engineering Process">
+      <span class="hud-waypoint-label">08 // PROCESS</span>
+      <span class="hud-waypoint-indicator"></span>
+    </a>
+    <a href="#pricing" class="hud-waypoint" data-target="pricing" aria-label="Pricing & Architecture">
+      <span class="hud-waypoint-label">09 // PRICING</span>
+      <span class="hud-waypoint-indicator"></span>
+    </a>
+    <a href="#contact" class="hud-waypoint" data-target="contact" aria-label="Book a Session">
+      <span class="hud-waypoint-label">10 // CONTACT</span>
+      <span class="hud-waypoint-indicator"></span>
+    </a>
+  </nav>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- HERO -->
+  <!-- ═══════════════════════════════════════════ -->
+  <section class="hero" id="hero">
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <div class="hero-badge">Automated Client-Acquisition Systems & AI Websites</div>
+      <h1 class="hero-title">
+        <span id="typewriter-line-1" class="hero-title-line"></span><span id="typewriter-cursor" class="terminal-cursor"></span><br>
+        <span id="typewriter-line-2" class="hero-title-accent"></span>
+      </h1>
+      <p class="hero-subtitle">
+        CONCODE transforms traditional business websites into high-speed, AI-driven sales engines that capture, qualify, and convert leads 24/7. We help ambitious companies scale revenue and eliminate manual follow-up without adding headcount.
+      </p>
+      <div class="hero-actions">
+        <button class="btn btn-primary" id="btn-hero-onboard">Build Your Growth System &rarr;</button>
+        <a href="#pricing" class="btn btn-ghost">Calculate Estimated ROI</a>
+      </div>
+    </div>
+    <div class="hero-scroll-indicator">
+      <span>Scroll to explore</span>
+      <div class="scroll-arrow"></div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- PROBLEM / SHIFT SECTION -->
+  <!-- ═══════════════════════════════════════════ -->
+  <section class="section section-dark" id="problem-shift">
+    <div class="container">
+      <div class="section-header" style="max-width: 840px; margin: 0 auto 40px; text-align: center;">
+        <span class="section-label">The Paradigm Shift</span>
+        <h2 class="section-title scramble-text">The Age of the Passive<br>Website Is Dead.</h2>
+        <p class="section-desc" style="font-size: 1.15rem; line-height: 1.7; color: var(--text-secondary); margin-top: 16px;">
+          Most business websites are nothing more than expensive digital brochures—pretty to look at, but completely useless at generating predictable revenue. While your site sits idle, potential clients bounce in under 3 seconds, leads slip through the cracks, and your team wastes hours manually chasing unqualified prospects.
+        </p>
+        <p class="section-desc" style="font-size: 1.15rem; line-height: 1.7; color: var(--cyan); margin-top: 16px; font-weight: 400;">
+          Modern growth requires an automated, high-speed ecosystem. When you replace static templates with instant AI response workflows and conversion-focused architecture, your website stops being a business expense and becomes your company's highest-performing salesperson.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- SERVICES / CORE SOLUTIONS GRID -->
+  <!-- ═══════════════════════════════════════════ -->
+  <section class="section" id="services">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-label">Core Solutions</span>
+        <h2 class="section-title scramble-text">Five Subsystems Built for<br>Predictable Revenue.</h2>
+        <p class="section-desc scroll-highlight">We don't build passive templates. We architect high-concurrency client acquisition engines engineered for tangible business outcomes.</p>
+      </div>
+
+      <div class="services-grid">
+        <!-- Service 1 -->
+        <div class="service-card reveal-item">
+          <div class="service-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><path d="M12 2a10 10 0 0110 10 10 10 0 01-10 10A10 10 0 012 12 10 10 0 0112 2z"/><path d="M2 12h4m12 0h4M12 2v4m0 12v4"/></svg>
+          </div>
+          <h3>AI Chatbots & Nurturing <span class="expand-icon">+</span></h3>
+          <p>24/7 Autonomous Lead Capture & Instant Follow-Up. Convert cold traffic into booked appointments in under 60 seconds.</p>
+          <div class="service-details">
+            <div class="detail-item">
+              <span class="detail-label">Function</span>
+              <span class="detail-text">Instant multi-channel SMS and email follow-ups with 24/7 automated calendar booking.</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Business Result</span>
+              <span class="detail-text">Never lose another qualified prospect to slow response times or after-hours inquiries.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Service 2 -->
+        <div class="service-card reveal-item">
+          <div class="service-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/><path d="M7 12l3-3 2 2 5-5"/></svg>
+          </div>
+          <h3>CRO & Sales Funnels <span class="expand-icon">+</span></h3>
+          <p>High-Converting Sales Funnels Engineered for Maximum ROI. Turn existing traffic into a reliable revenue stream.</p>
+          <div class="service-details">
+            <div class="detail-item">
+              <span class="detail-label">Function</span>
+              <span class="detail-text">Eliminate user friction, optimize scroll depth, and implement scientific A/B test funnels.</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Business Result</span>
+              <span class="detail-text">Maximize conversion rates and increase customer lifetime value from every visit.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Service 3 -->
+        <div class="service-card reveal-item">
+          <div class="service-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          </div>
+          <h3>Technical SEO & Speed <span class="expand-icon">+</span></h3>
+          <p>Sub-Millisecond Load Speeds & Local Search Dominance. Outrank competitors on Google with hardware acceleration.</p>
+          <div class="service-details">
+            <div class="detail-item">
+              <span class="detail-label">Function</span>
+              <span class="detail-text">Hardware-accelerated rendering, instant page loads, and structured schema markup.</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Business Result</span>
+              <span class="detail-text">Drive consistent organic traffic and rank #1 with top-tier search engine visibility.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Service 4 -->
+        <div class="service-card reveal-item">
+          <div class="service-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+          </div>
+          <h3>Brand Copywriting <span class="expand-icon">+</span></h3>
+          <p>Copywriting That Captivates, Persuades, and Sells. Position your brand as the undisputed authority in your market.</p>
+          <div class="service-details">
+            <div class="detail-item">
+              <span class="detail-label">Function</span>
+              <span class="detail-text">Sharp, outcome-driven messaging targeting your ideal client's specific pain points.</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Business Result</span>
+              <span class="detail-text">Turn casual browsers into high-value, long-term buyers with persuasive messaging.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Service 5 -->
+        <div class="service-card reveal-item">
+          <div class="service-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/><circle cx="12" cy="16" r="1"/></svg>
+          </div>
+          <h3>Care & Growth Retainers <span class="expand-icon">+</span></h3>
+          <p>Continuous System Optimization & Security Management. Keep your platform fast, secure, and constantly converting.</p>
+          <div class="service-details">
+            <div class="detail-item">
+              <span class="detail-label">Function</span>
+              <span class="detail-text">Proactive performance tweaks, monthly CRO audits, and 24/7 server monitoring.</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Business Result</span>
+              <span class="detail-text">Hands-off technical management so you can focus exclusively on scaling your business.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Service 6 -->
+        <div class="service-card reveal-item">
+          <div class="service-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><path d="M3.27 6.96L12 12.01l8.73-5.05M12 22.08V12"/></svg>
+          </div>
+          <h3>High-Concurrency Backend <span class="expand-icon">+</span></h3>
+          <p>Microservice Cloud Cluster Architecture. Deploy self-healing containers built for enterprise scale.</p>
+          <div class="service-details">
+            <div class="detail-item">
+              <span class="detail-label">Function</span>
+              <span class="detail-text">Express/Node REST APIs, Redis caching layers, and Kubernetes auto-scaling orchestration.</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Business Result</span>
+              <span class="detail-text">Zero downtime under high traffic bursts and up to 40% reduced infrastructure hosting costs.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- CONCODE AI COMPUTERIZED BRAIN & VOICE ENGINE -->
+  <!-- ═══════════════════════════════════════════ -->
+  <section class="section" id="ai-engine">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-label">Cognitive Core</span>
+        <h2 class="section-title scramble-text">In-Process AI Brain &amp;<br>Autonomous Voice Agent</h2>
+        <p class="section-desc scroll-highlight">Zero external cloud dependencies. Bare-metal GGUF neural models, in-process LanceDB vector indexer, real-time voice stream listener, and self-healing multi-agent AST synthesis.</p>
+      </div>
+
+      <!-- Live Hardware Telemetry Banner -->
+      <div class="ai-telemetry-banner" id="ai-telemetry-banner">
+        <div class="ai-telemetry-card">
+          <span class="ai-telemetry-tag">GPU</span>
+          <div class="ai-telemetry-info">
+            <span class="ai-telemetry-label">Hardware Acceleration</span>
+            <span class="ai-telemetry-value" id="tel-backend">METAL / CUDA Auto-Gated</span>
+          </div>
+        </div>
+        <div class="ai-telemetry-card">
+          <span class="ai-telemetry-tag purple">VRAM</span>
+          <div class="ai-telemetry-info">
+            <span class="ai-telemetry-label">Memory Architecture</span>
+            <span class="ai-telemetry-value" id="tel-memory">100% Unified VRAM Offload</span>
+          </div>
+        </div>
+        <div class="ai-telemetry-card">
+          <span class="ai-telemetry-tag green">AST</span>
+          <div class="ai-telemetry-info">
+            <span class="ai-telemetry-label">Knowledge Matrix</span>
+            <span class="ai-telemetry-value" id="tel-ast">114 Workspace Nodes</span>
+          </div>
+        </div>
+        <div class="ai-telemetry-card">
+          <span class="ai-telemetry-tag amber">VAD</span>
+          <div class="ai-telemetry-info">
+            <span class="ai-telemetry-label">Voice Activation</span>
+            <span class="ai-telemetry-value" id="tel-wake">Always Active ("Hey ConCode")</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Interactive Voice Engine & State Machine Showcase Grid -->
+      <div class="ai-showcase-grid">
+        
+        <!-- Left: Interactive Voice Loop Controller Card -->
+        <div class="ai-voice-panel">
+          <div>
+            <div class="ai-panel-header">
+              <div class="ai-panel-title-wrap">
+                <span class="ai-status-indicator-dot"></span>
+                <h3 class="ai-panel-title">Voice Agent Stream</h3>
+              </div>
+              <span class="ai-state-badge" id="ai-current-state-badge">[STATE: LISTENING]</span>
+            </div>
+
+            <!-- Interactive Visualizer Controls -->
+            <div class="ai-voice-action-box">
+              <button class="ai-voice-btn" id="btn-trigger-voice-section">
+                <span class="pulse-inner-dot"></span>
+                <span>Voice Assistant Active (Listening)</span>
+              </button>
+              <p class="ai-voice-hint">Hands-free trigger: speak "Hey ConCode" or issue code instructions into your microphone.</p>
+            </div>
+
+            <!-- Live State Transition Selector Test Bar -->
+            <div class="ai-states-control-wrap">
+              <span class="ai-states-label">Simulate Reactive HUD States</span>
+              <div class="ai-states-btn-group" id="hud-state-btn-group">
+                <button class="hud-state-btn" data-state="IDLE">01 // IDLE</button>
+                <button class="hud-state-btn" data-state="WAKE_DETECTED">02 // WAKE</button>
+                <button class="hud-state-btn active" data-state="LISTENING">03 // LISTENING</button>
+                <button class="hud-state-btn" data-state="PROCESSING">04 // PROCESSING</button>
+                <button class="hud-state-btn" data-state="SPEAKING">05 // SPEAKING</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Real-Time Voice Log Output -->
+          <div class="ai-voice-terminal-log" id="voice-live-log">
+            <div>// ConCode AI Voice Engine v10.0 stream active. Microphone stream listening...</div>
+          </div>
+        </div>
+
+        <!-- Right: 4-Pillar Subsystems Architecture Cards -->
+        <div class="ai-subsystems-grid">
+          <!-- Pillar 1 -->
+          <div class="ai-subsystem-card">
+            <div class="ai-subsystem-code">// 01 &bull; LLM</div>
+            <h4>Bare-Metal LLM Core</h4>
+            <p>Direct GGUF model execution in RAM/VRAM via <code>llama-cpp-python</code> (Qwen 2.5 Coder / Llama 3).</p>
+          </div>
+
+          <!-- Pillar 2 -->
+          <div class="ai-subsystem-card">
+            <div class="ai-subsystem-code">// 02 &bull; RAG</div>
+            <h4>Embedded LanceDB RAG</h4>
+            <p>Offline vector search engine indexing active codebase AST symbol graphs and scopes.</p>
+          </div>
+
+          <!-- Pillar 3 -->
+          <div class="ai-subsystem-card">
+            <div class="ai-subsystem-code">// 03 &bull; VAD</div>
+            <h4>OpenWakeWord Stream</h4>
+            <p>Low-latency audio ring buffer + Silero VAD filtering out keyboard typing and background noise.</p>
+          </div>
+
+          <!-- Pillar 4 -->
+          <div class="ai-subsystem-card">
+            <div class="ai-subsystem-code">// 04 &bull; HUD</div>
+            <h4>Floating Reactive HUD</h4>
+            <p>Always-on-top frameless 5-state visualizer pulsing to real-time speech pitch and model states.</p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Live Interactive Brain Code & Skill Synthesizer Playground Card -->
+      <div class="ai-studio-card">
+        <div class="ai-studio-header">
+          <div>
+            <h3 class="ai-studio-title">Neural Code &amp; Skill Generator Studio</h3>
+            <p class="ai-studio-desc">Test multi-file code synthesis, self-healing syntax validation, and dynamic skill creation powered by the Neural Brain Engine.</p>
+          </div>
+          <span class="ai-audit-pill">[QA AUDIT: 10/10 READY]</span>
+        </div>
+
+        <div class="ai-studio-input-bar">
+          <input type="text" id="hp-brain-prompt-input" class="ai-studio-input" placeholder="e.g. Synthesize express rate limiter middleware or Build dark mode UI card...">
+          <button id="hp-btn-generate-code" class="ai-studio-btn-action">Synthesize Code</button>
+          <button id="hp-btn-create-skill" class="ai-studio-btn-secondary">Create Skill</button>
+        </div>
+
+        <!-- Output Code Box -->
+        <div id="hp-brain-output-container" class="ai-code-output-terminal" style="display: none;">
+          <div class="ai-terminal-header-meta">
+            <span id="hp-brain-guild-badge" style="color: #c084fc; font-weight: 600;">[Guild: UI/UX Craftsman]</span>
+            <span id="hp-brain-qa-score" style="color: #34d399; font-weight: 600;">[QA Score: 100/100]</span>
+          </div>
+          <pre id="hp-brain-code-display" style="margin: 0; white-space: pre-wrap; word-break: break-all; max-height: 250px; overflow-y: auto; color: #f1f5f9; font-family: var(--font-mono);"></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+  <section class="section section-dark" id="why-choose-us">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-label">Proven Impact</span>
+        <h2 class="section-title scramble-text">Proven Metrics.<br>Zero Guesswork.</h2>
+        <p class="section-desc scroll-highlight">We don't measure success in subjective aesthetics. We measure success in revenue, leads, and operational efficiency.</p>
+      </div>
+
+      <div class="pricing-grid">
+        <div class="pricing-card reveal-item">
+          <div class="pricing-header">
+            <div style="font-size: 2.2rem; font-weight: 500; color: var(--cyan); margin-bottom: 8px;">&lt; 60 Seconds</div>
+            <h3>Instant Lead Response</h3>
+            <p class="pricing-desc">Engage and qualify inbound leads automatically before your competitors even see the notification.</p>
+          </div>
+          <ul class="pricing-features">
+            <li>Up to <strong>391% higher conversion probability</strong></li>
+            <li>Instant multi-channel SMS & email follow-ups</li>
+            <li>24/7 calendar booking integration</li>
+          </ul>
+        </div>
+
+        <div class="pricing-card featured reveal-item">
+          <div class="pricing-badge">Core Business Outcome</div>
+          <div class="pricing-header">
+            <div style="font-size: 2.2rem; font-weight: 500; color: #a855f7; margin-bottom: 8px;">3.2x Average Lift</div>
+            <h3>Conversion Rate Surge</h3>
+            <p class="pricing-desc">Replace passive static templates with high-converting sales funnels designed for maximum ROI.</p>
+          </div>
+          <ul class="pricing-features">
+            <li>Direct increase in booked strategy calls</li>
+            <li>Zero-friction user experience design</li>
+            <li>Scientific A/B testing & CRO audits</li>
+          </ul>
+        </div>
+
+        <div class="pricing-card reveal-item">
+          <div class="pricing-header">
+            <div style="font-size: 2.2rem; font-weight: 500; color: #10b981; margin-bottom: 8px;">100% Automated</div>
+            <h3>Zero Administrative Friction</h3>
+            <p class="pricing-desc">Eliminate manual follow-up overhead and sync leads directly into your database or CRM.</p>
+          </div>
+          <ul class="pricing-features">
+            <li>Self-updating database pipelines</li>
+            <li>Automated customer onboarding workflows</li>
+            <li>Zero manual data entry required</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- DEVELOPER CLI PORTFOLIO -->
+  <!-- ═══════════════════════════════════════════ -->
+  <section class="section" id="portfolio">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-label">Meet the Developer</span>
+        <h2 class="section-title scramble-text">Interactive CLI<br>Developer Terminal</h2>
+        <p class="section-desc">Interact with my live developer console directly. Type <code>help</code> to list capabilities, skills, and projects, or change themes in real-time.</p>
+      </div>
+      
+      <!-- Interactive Terminal Emulator Iframe -->
+      <div class="terminal-iframe-container">
+        <iframe src="/project/terminal-portfolio/" title="Developer CLI Terminal"></iframe>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- PORTFOLIO / WORK -->
+  <!-- ═══════════════════════════════════════════ -->
+  <section class="section section-dark" id="work">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-label">Selected Work</span>
+        <h2 class="section-title scramble-text">Projects that<br>move the needle.</h2>
+        <p class="section-desc scroll-highlight">Real systems generating value for real businesses. Not mockups — production engines.</p>
+      </div>
+      <div class="project-gallery-controls">
+        <div class="project-category-tabs" id="project-category-tabs">
+          <button class="project-cat-tab active" data-category="all">All Projects</button>
+          <button class="project-cat-tab" data-category="software">Desktop Software</button>
+          <button class="project-cat-tab" data-category="mobile">Mobile Apps</button>
+          <button class="project-cat-tab" data-category="web">Web Apps & Portals</button>
+          <button class="project-cat-tab" data-category="ai">AI & Neural Gateways</button>
+          <button class="project-cat-tab" data-category="microservices">Microservices & Systems</button>
+          <button class="project-cat-tab" data-category="github">GitHub Repositories</button>
+        </div>
+        <div class="project-search-box">
+          <input type="text" id="project-search-input" placeholder="Search projects by title, tech, or tags..." spellcheck="false" />
+        </div>
+      </div>
+
+      <!-- Selected Production Core Projects Grid -->
+      <div class="portfolio-grid" id="main-portfolio-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 20px; margin-bottom: 32px;">
+        <!-- Project 1: Antigravity Dashboard -->
+        <div class="portfolio-card reveal-item btn-inspect-project" style="--accent: #00f0ff; cursor: pointer; border-radius: 6px;" data-project="antigravity" data-category="software ai microservices" data-keywords="antigravity desktop software ai assistant win32 com python gemini pyside6 hooks word excel caret windows macos">
+          <div class="portfolio-visual">
+            <div class="portfolio-gradient"></div>
+            <div class="portfolio-number">01</div>
+            <div class="visual-device-badge software-badge">
+              <span class="device-icon">💻</span>
+              <span>DESKTOP SOFTWARE</span>
+            </div>
+          </div>
+          <div class="portfolio-info">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+              <h3 style="margin: 0; font-size: 1.15rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.02em;">Antigravity Dashboard</h3>
+              <span class="github-topic-badge" style="background: rgba(0, 240, 255, 0.12); border: 1px solid rgba(0, 240, 255, 0.35); color: #00f0ff; font-size: 10px; font-weight: 500; padding: 2px 8px; border-radius: 4px; font-family: var(--font-mono); letter-spacing: 0.04em; text-transform: uppercase;">Desktop Software &bull; Win32 / macOS</span>
+            </div>
+            <p style="color: var(--text-secondary); font-size: 0.85rem; line-height: 1.6; margin-bottom: 14px;">Next-generation stealth desktop software that hooks directly into Microsoft Word, Excel, and IDEs via Win32 COM APIs and local low-latency kernel hooks.</p>
+            <div class="portfolio-tags" style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px;">
+              <span style="font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); font-family: var(--font-mono);">Desktop App</span>
+              <span style="font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); font-family: var(--font-mono);">Win32 COM</span>
+              <span style="font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); font-family: var(--font-mono);">Python / PySide6</span>
+              <span style="font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); font-family: var(--font-mono);">Gemini 2.5 Flash</span>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center; justify-content: space-between; margin-top: 14px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px;">
+              <a href="/project/antigravity-dashboard/" target="_blank" rel="noopener noreferrer" class="btn-launch-demo" onclick="event.stopPropagation();" style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 4px; background: rgba(0, 240, 255, 0.12); border: 1px solid #00f0ff; color: #00f0ff; text-decoration: none; font-size: 0.78rem; font-weight: 500; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.04em;">Launch Software &nearr;</a>
+              <div class="portfolio-inspect-cta" style="font-size: 0.75rem; font-weight: 500; font-family: var(--font-mono); color: #00f0ff; display: inline-flex; align-items: center; gap: 4px; text-transform: uppercase; letter-spacing: 0.04em;">
+                <span>Specs</span> &rarr;
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Project 2: AI Sigma (AI Σ) Gateway -->
+        <div class="portfolio-card reveal-item btn-inspect-project" style="--accent: #a855f7; cursor: pointer; border-radius: 6px;" data-project="aisigma" data-category="mobile web ai" data-keywords="ai sigma gateway expo router react native express proxy rate limit firebase firestore mobile app ios android">
+          <div class="portfolio-visual">
+            <div class="portfolio-gradient"></div>
+            <div class="portfolio-number">02</div>
+            <div class="visual-device-badge app-badge">
+              <span class="device-icon">📱</span>
+              <span>MOBILE APP</span>
+            </div>
+          </div>
+          <div class="portfolio-info">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+              <h3 style="margin: 0; font-size: 1.15rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.02em;">AI Sigma (AI Σ) Gateway</h3>
+              <span class="github-topic-badge" style="background: rgba(168, 85, 247, 0.12); border: 1px solid rgba(168, 85, 247, 0.35); color: #c084fc; font-size: 10px; font-weight: 500; padding: 2px 8px; border-radius: 4px; font-family: var(--font-mono); letter-spacing: 0.04em; text-transform: uppercase;">Mobile App &bull; Expo / iOS / Android</span>
+            </div>
+            <p style="color: var(--text-secondary); font-size: 0.85rem; line-height: 1.6; margin-bottom: 14px;">Cross-platform mobile smartphone app (React Native / Expo Router) backed by an Express token-bucket proxy and Firebase automated intelligence feeds.</p>
+            <div class="portfolio-tags" style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px;">
+              <span style="font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); font-family: var(--font-mono);">Mobile App</span>
+              <span style="font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); font-family: var(--font-mono);">Expo Router</span>
+              <span style="font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); font-family: var(--font-mono);">Express Proxy</span>
+              <span style="font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); font-family: var(--font-mono);">Firebase Cloud</span>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center; justify-content: space-between; margin-top: 14px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px;">
+              <a href="/project/ai-sigma-gateway/" target="_blank" rel="noopener noreferrer" class="btn-launch-demo" onclick="event.stopPropagation();" style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 4px; background: rgba(168, 85, 247, 0.12); border: 1px solid #a855f7; color: #c084fc; text-decoration: none; font-size: 0.78rem; font-weight: 500; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.04em;">Launch Mobile App &nearr;</a>
+              <div class="portfolio-inspect-cta" style="font-size: 0.75rem; font-weight: 500; font-family: var(--font-mono); color: #a855f7; display: inline-flex; align-items: center; gap: 4px; text-transform: uppercase; letter-spacing: 0.04em;">
+                <span>Specs</span> &rarr;
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Project 3: Virtual Audit SaaS -->
+        <div class="portfolio-card reveal-item btn-inspect-project" style="--accent: #00f0ff; cursor: pointer; border-radius: 6px;" data-project="virtualaudit" data-category="web" data-keywords="saas audit security telemetry latency nodes compliance">
+          <div class="portfolio-visual">
+            <div class="portfolio-gradient"></div>
+            <div class="portfolio-number">03</div>
+            <div class="visual-device-badge web-badge">
+              <span class="device-icon">🌐</span>
+              <span>SAAS WEB APP</span>
+            </div>
+          </div>
+          <div class="portfolio-info">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+              <h3 style="margin: 0; font-size: 1.15rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.02em;">Virtual Audit SaaS</h3>
+              <span class="github-topic-badge" style="background: rgba(0, 240, 255, 0.12); border: 1px solid rgba(0, 240, 255, 0.35); color: #00f0ff; font-size: 10px; font-weight: 500; padding: 2px 8px; border-radius: 4px; font-family: var(--font-mono); letter-spacing: 0.04em; text-transform: uppercase;">Security &amp; Audit</span>
+            </div>
+            <p style="color: var(--text-secondary); font-size: 0.85rem; line-height: 1.6; margin-bottom: 14px;">Autonomous security posture scanner, 60 FPS live edge latency sparklines, zero-trust access audits, and dynamic node provisioning console.</p>
+            <div class="portfolio-tags" style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px;">
+              <span style="font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); font-family: var(--font-mono);">Live Sparkline</span>
+              <span style="font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); font-family: var(--font-mono);">SOC2 / HIPAA</span>
+              <span style="font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); font-family: var(--font-mono);">Node Control</span>
+              <span style="font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); font-family: var(--font-mono);">JSON Export</span>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center; justify-content: space-between; margin-top: 14px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px;">
+              <a href="/project/virtual-audit-saas/dashboard.html" target="_blank" rel="noopener noreferrer" class="btn-launch-demo" onclick="event.stopPropagation();" style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 4px; background: rgba(0, 240, 255, 0.12); border: 1px solid #00f0ff; color: #00f0ff; text-decoration: none; font-size: 0.78rem; font-weight: 500; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.04em;">Launch Dashboard &nearr;</a>
+              <div class="portfolio-inspect-cta" style="font-size: 0.75rem; font-weight: 500; font-family: var(--font-mono); color: #00f0ff; display: inline-flex; align-items: center; gap: 4px; text-transform: uppercase; letter-spacing: 0.04em;">
+                <span>Specs</span> &rarr;
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Project 4: FitPulse AI Fitness -->
+        <div class="portfolio-card reveal-item btn-inspect-project" style="--accent: #ff007f; cursor: pointer; border-radius: 6px;" data-project="fitpulse" data-category="web" data-keywords="fitness health workout calorie bpm telemetry tracker gym">
+          <div class="portfolio-visual">
+            <div class="portfolio-gradient"></div>
+            <div class="portfolio-number">04</div>
+            <div class="visual-device-badge web-badge" style="background: rgba(255, 0, 127, 0.12); border-color: rgba(255, 0, 127, 0.35); color: #ff007f;">
+              <span class="device-icon">⚡</span>
+              <span>HEALTH PORTAL</span>
+            </div>
+          </div>
+          <div class="portfolio-info">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+              <h3 style="margin: 0; font-size: 1.15rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.02em;">FitPulse AI Fitness</h3>
+              <span class="github-topic-badge" style="background: rgba(255, 0, 127, 0.12); border: 1px solid rgba(255, 0, 127, 0.35); color: #ff007f; font-size: 10px; font-weight: 500; padding: 2px 8px; border-radius: 4px; font-family: var(--font-mono); letter-spacing: 0.04em; text-transform: uppercase;">Health Telemetry</span>
+            </div>
+            <p style="color: var(--text-secondary); font-size: 0.85rem; line-height: 1.6; margin-bottom: 14px;">Real-time bio-telemetry cockpit featuring SVG calorie target rings, live BPM heart rate zones, hydration tracker, and 1-on-1 trainer booking.</p>
+            <div class="portfolio-tags" style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px;">
+              <span style="font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); font-family: var(--font-mono);">Calorie Ring</span>
+              <span style="font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); font-family: var(--font-mono);">Live BPM</span>
+              <span style="font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); font-family: var(--font-mono);">Hydration</span>
+              <span style="font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); font-family: var(--font-mono);">Workout Logger</span>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center; justify-content: space-between; margin-top: 14px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px;">
+              <a href="/project/fitpulse-app/" target="_blank" rel="noopener noreferrer" class="btn-launch-demo" onclick="event.stopPropagation();" style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 4px; background: rgba(255, 0, 127, 0.12); border: 1px solid #ff007f; color: #ff007f; text-decoration: none; font-size: 0.78rem; font-weight: 500; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.04em;">Launch FitPulse &nearr;</a>
+              <div class="portfolio-inspect-cta" style="font-size: 0.75rem; font-weight: 500; font-family: var(--font-mono); color: #ff007f; display: inline-flex; align-items: center; gap: 4px; text-transform: uppercase; letter-spacing: 0.04em;">
+                <span>Specs</span> &rarr;
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Project 5: Hyperion DEX -->
+        <div class="portfolio-card reveal-item btn-inspect-project" style="--accent: #a855f7; cursor: pointer; border-radius: 6px;" data-project="hyperion" data-category="web" data-keywords="web3 crypto dex defi liquidity ethereum solana swap">
+          <div class="portfolio-visual">
+            <div class="portfolio-gradient"></div>
+            <div class="portfolio-number">05</div>
+            <div class="visual-device-badge web-badge" style="background: rgba(168, 85, 247, 0.12); border-color: rgba(168, 85, 247, 0.35); color: #c084fc;">
+              <span class="device-icon">⚡</span>
+              <span>WEB3 DEX</span>
+            </div>
+          </div>
+          <div class="portfolio-info">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+              <h3 style="margin: 0; font-size: 1.15rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.02em;">Hyperion Web3 DEX</h3>
+              <span class="github-topic-badge" style="background: rgba(168, 85, 247, 0.12); border: 1px solid rgba(168, 85, 247, 0.35); color: #c084fc; font-size: 10px; font-weight: 500; padding: 2px 8px; border-radius: 4px; font-family: var(--font-mono); letter-spacing: 0.04em; text-transform: uppercase;">DeFi &amp; Web3</span>
+            </div>
+            <p style="color: var(--text-secondary); font-size: 0.85rem; line-height: 1.6; margin-bottom: 14px;">Next-generation decentralized exchange protocol with live ticker streams, slippage routing, liquidity pools, and Web3 wallet integration.</p>
+            <div class="portfolio-tags" style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px;">
+              <span style="font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); font-family: var(--font-mono);">JavaScript</span>
+              <span style="font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); font-family: var(--font-mono);">Web3 API</span>
+              <span style="font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); font-family: var(--font-mono);">DeFi Pools</span>
+              <span style="font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); font-family: var(--font-mono);">Canvas Chart</span>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center; justify-content: space-between; margin-top: 14px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px;">
+              <a href="/project/hyperion-web3-dex/" target="_blank" rel="noopener noreferrer" class="btn-launch-demo" onclick="event.stopPropagation();" style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 4px; background: rgba(168, 85, 247, 0.12); border: 1px solid #a855f7; color: #c084fc; text-decoration: none; font-size: 0.78rem; font-weight: 500; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.04em;">Launch Live DEX &nearr;</a>
+              <div class="portfolio-inspect-cta" style="font-size: 0.75rem; font-weight: 500; font-family: var(--font-mono); color: #a855f7; display: inline-flex; align-items: center; gap: 4px; text-transform: uppercase; letter-spacing: 0.04em;">
+                <span>Specs</span> &rarr;
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Project 6: Neural Network Studio -->
+        <div class="portfolio-card reveal-item btn-inspect-project" style="--accent: #00f0ff; cursor: pointer; border-radius: 6px;" data-project="neuralstudio" data-category="ai web" data-keywords="ai neural studio machine learning tensor nodes cluster matrix edge autonomous">
+          <div class="portfolio-visual">
+            <div class="portfolio-gradient"></div>
+            <div class="portfolio-number">06</div>
+            <div class="visual-device-badge web-badge" style="background: rgba(0, 240, 255, 0.12); border-color: rgba(0, 240, 255, 0.35); color: #00f0ff;">
+              <span class="device-icon">🤖</span>
+              <span>NEURAL STUDIO</span>
+            </div>
+          </div>
+          <div class="portfolio-info">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+              <h3 style="margin: 0; font-size: 1.15rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.02em;">Neural Network Studio</h3>
+              <span class="github-topic-badge" style="background: rgba(0, 240, 255, 0.12); border: 1px solid rgba(0, 240, 255, 0.35); color: #00f0ff; font-size: 10px; font-weight: 500; padding: 2px 8px; border-radius: 4px; font-family: var(--font-mono); letter-spacing: 0.04em; text-transform: uppercase;">AI &amp; Neural Gateway</span>
+            </div>
+            <p style="color: var(--text-secondary); font-size: 0.85rem; line-height: 1.6; margin-bottom: 14px;">Distributed autonomous tensor constructor with multi-region cluster node provisioning, live eBPF latency telemetry, and neural mesh routing.</p>
+            <div class="portfolio-tags" style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px;">
+              <span style="font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); font-family: var(--font-mono);">Tensor Mesh</span>
+              <span style="font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); font-family: var(--font-mono);">Edge Latency</span>
+              <span style="font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); font-family: var(--font-mono);">Zero-Trust</span>
+              <span style="font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); font-family: var(--font-mono);">Node Provision</span>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center; justify-content: space-between; margin-top: 14px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px;">
+              <a href="/project/neural-network-studio/dashboard.html" target="_blank" rel="noopener noreferrer" class="btn-launch-demo" onclick="event.stopPropagation();" style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 4px; background: rgba(0, 240, 255, 0.12); border: 1px solid #00f0ff; color: #00f0ff; text-decoration: none; font-size: 0.78rem; font-weight: 500; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.04em;">Launch Studio &nearr;</a>
+              <div class="portfolio-inspect-cta" style="font-size: 0.75rem; font-weight: 500; font-family: var(--font-mono); color: #00f0ff; display: inline-flex; align-items: center; gap: 4px; text-transform: uppercase; letter-spacing: 0.04em;">
+                <span>Specs</span> &rarr;
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Project 7: Interactive Shell Terminal -->
+        <div class="portfolio-card reveal-item btn-inspect-project" style="--accent: #39ff14; cursor: pointer; border-radius: 6px;" data-project="terminalcli" data-category="microservices web" data-keywords="terminal cli console bash shell system microservices matrix crt devops zero-trust">
+          <div class="portfolio-visual">
+            <div class="portfolio-gradient"></div>
+            <div class="portfolio-number">07</div>
+            <div class="visual-device-badge web-badge" style="background: rgba(57, 255, 20, 0.12); border-color: rgba(57, 255, 20, 0.35); color: #39ff14;">
+              <span class="device-icon">📟</span>
+              <span>CLI TERMINAL</span>
+            </div>
+          </div>
+          <div class="portfolio-info">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+              <h3 style="margin: 0; font-size: 1.15rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.02em;">Interactive Shell Terminal</h3>
+              <span class="github-topic-badge" style="background: rgba(57, 255, 20, 0.12); border: 1px solid rgba(57, 255, 20, 0.35); color: #39ff14; font-size: 10px; font-weight: 500; padding: 2px 8px; border-radius: 4px; font-family: var(--font-mono); letter-spacing: 0.04em; text-transform: uppercase;">CLI &amp; Microservices</span>
+            </div>
+            <p style="color: var(--text-secondary); font-size: 0.85rem; line-height: 1.6; margin-bottom: 14px;">Authentic CRT Matrix command line interface with hardware scanline shaders, command execution, live system diagnostics, and zero-trust shell.</p>
+            <div class="portfolio-tags" style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px;">
+              <span style="font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); font-family: var(--font-mono);">CLI Shell</span>
+              <span style="font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); font-family: var(--font-mono);">CRT Shaders</span>
+              <span style="font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); font-family: var(--font-mono);">Matrix Mode</span>
+              <span style="font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); font-family: var(--font-mono);">Command Parser</span>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center; justify-content: space-between; margin-top: 14px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px;">
+              <a href="/project/terminal-portfolio/" target="_blank" rel="noopener noreferrer" class="btn-launch-demo" onclick="event.stopPropagation();" style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 4px; background: rgba(57, 255, 20, 0.12); border: 1px solid #39ff14; color: #39ff14; text-decoration: none; font-size: 0.78rem; font-weight: 500; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.04em;">Launch Terminal &nearr;</a>
+              <div class="portfolio-inspect-cta" style="font-size: 0.75rem; font-weight: 500; font-family: var(--font-mono); color: #39ff14; display: inline-flex; align-items: center; gap: 4px; text-transform: uppercase; letter-spacing: 0.04em;">
+                <span>Specs</span> &rarr;
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dynamic Live Generated Projects Container -->
+      <div id="dynamic-generated-projects-container" style="display: flex; flex-direction: column; gap: 24px;"></div>
+
+      <!-- ═══════════════════════════════════════════ -->
+      <!-- GITHUB REPOSITORIES SHOWCASE SECTION -->
+      <!-- ═══════════════════════════════════════════ -->
+      <div id="github-repos-section" class="github-repos-section">
+        <div class="github-section-header">
+          <div class="github-header-left">
+            <svg class="github-octocat-icon" viewBox="0 0 24 24" width="28" height="28" fill="currentColor">
+              <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+            </svg>
+            <div>
+              <h3 class="github-section-title">Open Source GitHub Codebases</h3>
+              <p class="github-section-sub">Public repositories, production core engines & open-source infrastructure modules.</p>
+            </div>
+          </div>
+          <div class="github-header-actions">
+            <span class="github-org-badge">
+              <span class="github-live-dot"></span> @meetsharma8c-beep
+            </span>
+            <button id="btn-sync-github-repos" class="github-sync-btn" title="Refresh Live GitHub Repositories">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+              Sync Repos
+            </button>
+          </div>
+        </div>
+
+        <div id="github-repos-container" class="github-repos-grid">
+          <!-- Dynamic Repo Cards Rendered Here by main.js -->
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- DYNAMIC DEVELOPER WORKSPACE -->
+  <!-- ═══════════════════════════════════════════ -->
+  <section class="section" id="workspace">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-label">Developer Console</span>
+        <h2 class="section-title scramble-text">Build & Deploy<br>Your Nodes Live.</h2>
+        <p class="section-desc scroll-highlight">Experiment with our engineering backend. Generate prototypes, simulate cloud cluster deployments, or run database ETL pipelines in real-time.</p>
+      </div>
+
+      <div class="workspace-wrapper">
+        <!-- Control Panel (Left Pane) -->
+        <div class="workspace-control-panel">
+          <div class="workspace-tabs">
+            <button class="workspace-tab active" data-tab="studio">Studio</button>
+            <button class="workspace-tab" data-tab="devops">DevOps</button>
+            <button class="workspace-tab" data-tab="etl">ETL Migration</button>
+          </div>
+
+          <div class="workspace-tab-contents">
+            <!-- AI STUDIO BUILDER -->
+            <div class="workspace-content active" id="content-studio">
+              <div class="form-group">
+                <label for="studio-project-id">Project ID</label>
+                <input type="text" id="studio-project-id" placeholder="e.g. saas-app" value="neural-saas-core">
+              </div>
+              <div class="form-group">
+                <label for="studio-category">Industry Category</label>
+                <select id="studio-category">
+                  <option value="saas">SaaS AI Platform</option>
+                  <option value="crypto">Crypto & Web3 Analytics</option>
+                  <option value="shop">E-Commerce Storefront</option>
+                  <option value="portfolio">Creative Portfolio Studio</option>
+                  <option value="cafe">Cafe & Artisan Bistro</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="studio-prompt">Design & Feature Prompt</label>
+                <textarea id="studio-prompt" rows="3" placeholder="Describe the layout, colors, state handlers, and features..."></textarea>
+              </div>
+              <div class="form-group">
+                <label for="studio-accent">Accent Theme</label>
+                <select id="studio-accent">
+                  <option value="#00f0ff">Neon Cyan (#00f0ff)</option>
+                  <option value="#a855f7">Vibrant Purple (#a855f7)</option>
+                  <option value="#f97316">Sunburst Orange (#f97316)</option>
+                  <option value="#10b981">Emerald Matrix (#10b981)</option>
+                  <option value="#d4af37">Luxury Gold (#d4af37)</option>
+                </select>
+              </div>
+              <div class="studio-btn-group" style="display: flex; gap: 10px; margin-top: 10px;">
+                <button class="btn btn-primary" id="btn-studio-build" style="flex: 2;">Build Web Application &rarr;</button>
+                <button class="btn btn-secondary" id="btn-studio-clear" style="flex: 1;">Clear Workspace</button>
+              </div>
+            </div>
+
+            <!-- DEVOPS PIPELINES -->
+            <div class="workspace-content" id="content-devops">
+              <div class="form-group">
+                <label for="devops-project-select">Active Project Node</label>
+                <select id="devops-project-select">
+                  <option value="">-- No Active Projects --</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="devops-cloud-target">Cloud Orchestrator</label>
+                <select id="devops-cloud-target">
+                  <option value="aws">AWS (EKS Kubernetes Cluster)</option>
+                  <option value="gcp">Google Cloud (GKE Cluster)</option>
+                  <option value="vercel">Vercel (Edge Serverless)</option>
+                </select>
+              </div>
+              <button class="btn btn-primary" id="btn-devops-deploy" style="width: 100%;">Execute Release &rarr;</button>
+            </div>
+
+            <!-- DATA ETL MIGRATION -->
+            <div class="workspace-content" id="content-etl">
+              <div class="form-group">
+                <label for="etl-collection-target">Target Collection</label>
+                <select id="etl-collection-target">
+                  <option value="inquiries">inquiries (Client proposals / Leads)</option>
+                  <option value="contacts">contacts (General inquiries)</option>
+                  <option value="chats">chats (Conversation logs)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="etl-format">Data Format</label>
+                <select id="etl-format">
+                  <option value="json">JSON format</option>
+                  <option value="csv">CSV format</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="etl-raw-data">Raw Data Input</label>
+                <textarea id="etl-raw-data" rows="6" placeholder="Paste JSON or CSV content here..."></textarea>
+              </div>
+              <button class="btn btn-primary" id="btn-etl-migrate" style="width: 100%;">Run Integrity Audit &rarr;</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Viewport & Code Monitor (Right Pane) -->
+        <div class="workspace-monitor-panel">
+          <div class="monitor-header">
+            <div class="monitor-status">
+              <span class="status-indicator live"></span>
+              <span class="status-label" id="monitor-status-text">CONSOLE LIVE</span>
+            </div>
+
+            <!-- View Switcher -->
+            <div class="monitor-view-tabs">
+              <button class="monitor-view-tab active" id="tab-view-preview" data-view="preview">Viewport</button>
+              <button class="monitor-view-tab" id="tab-view-code" data-view="code">Code Inspector</button>
+              <button class="monitor-view-tab" id="tab-view-terminal" data-view="terminal">Console Logs</button>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div class="monitor-project-info" id="monitor-project-label">Project: Idle</div>
+              <button class="btn btn-secondary btn-xs" id="btn-clear-project" title="Reset Viewport & Workspace">Clear Project</button>
+            </div>
+          </div>
+          
+          <div class="monitor-body">
+            <!-- HTML preview iframe -->
+            <div class="monitor-view-iframe" id="monitor-iframe-wrapper">
+              <iframe id="workspace-preview-iframe" src="about:blank" title="Prototype Viewport"></iframe>
+            </div>
+
+            <!-- Code Inspector Window -->
+            <div class="monitor-view-code" id="monitor-code-wrapper" style="display: none;">
+              <div class="code-inspector-bar">
+                <div class="code-file-tabs" id="code-file-tabs">
+                  <button class="code-file-tab active" data-file="index.html">index.html</button>
+                  <button class="code-file-tab" data-file="about.html">about.html</button>
+                  <button class="code-file-tab" data-file="dashboard.html">dashboard.html</button>
+                  <button class="code-file-tab" data-file="contact.html">contact.html</button>
+                  <button class="code-file-tab" data-file="style.css">style.css</button>
+                  <button class="code-file-tab" data-file="app.js">app.js</button>
+                </div>
+              </div>
+              <textarea id="studio-code-editor" class="code-editor-textarea" spellcheck="false"></textarea>
+              
+              <!-- Action & AI Refine Bar -->
+              <div class="ai-refine-bar">
+                <input type="text" id="studio-refine-input" placeholder="Ask CONCODE AI to refine this project... (e.g. 'Add dark mode toggle button')" />
+                <button class="btn btn-secondary btn-sm" id="btn-save-code">Save Edits</button>
+                <button class="btn btn-primary btn-sm" id="btn-refine-build">Refine with AI &rarr;</button>
+              </div>
+            </div>
+
+            <!-- Terminal output window -->
+            <div class="monitor-view-terminal" id="monitor-terminal-wrapper" style="display: none;">
+              <div class="terminal-shell" id="workspace-terminal-logs">
+                <div class="terminal-line system">ConCode AI Control Workspace initialized.</div>
+                <div class="terminal-line system">All endpoints active. Awaiting operator input...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- PROCESS -->
+  <!-- ═══════════════════════════════════════════ -->
+  <section class="section" id="process">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-label">How We Work</span>
+        <h2 class="section-title scramble-text">From idea to<br>production in weeks.</h2>
+        <p class="section-desc scroll-highlight">A battle-tested process refined over 50+ builds. No surprises, no scope creep — just clear milestones and shipping.</p>
+      </div>
+
+      <div class="process-timeline">
+        <div class="process-step reveal-item">
+          <div class="step-number">01</div>
+          <div class="step-content">
+            <h3>Discovery</h3>
+            <p>Deep-dive into your business, users, and technical requirements. We map the entire system before writing a single line.</p>
+          </div>
+        </div>
+        <div class="process-connector"></div>
+        <div class="process-step reveal-item">
+          <div class="step-number">02</div>
+          <div class="step-content">
+            <h3>Design</h3>
+            <p>High-fidelity prototypes with motion design. You see and feel the product before development begins.</p>
+          </div>
+        </div>
+        <div class="process-connector"></div>
+        <div class="process-step reveal-item">
+          <div class="step-number">03</div>
+          <div class="step-content">
+            <h3>Develop</h3>
+            <p>Agile sprints with weekly demos. Full-stack engineering with CI/CD, automated testing, and code reviews.</p>
+          </div>
+        </div>
+        <div class="process-connector"></div>
+        <div class="process-step reveal-item">
+          <div class="step-number">04</div>
+          <div class="step-content">
+            <h3>Deploy & Scale</h3>
+            <p>Zero-downtime launches with monitoring, alerting, and performance optimization. We stay on after launch.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- PRICING -->
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- PRICING -->
+  <!-- ═══════════════════════════════════════════ -->
+  <section class="section section-dark" id="pricing">
+    <div class="container">
+      <div class="section-header">
+        <span class="section-label">Tailored Development Plans</span>
+        <h2 class="section-title scramble-text">Build exactly what<br>your business needs.</h2>
+        <p class="section-desc scroll-highlight">Get personalized feature development, custom AI agent tuning, and dedicated full-stack engineering tailored specifically to your project requirements.</p>
+      </div>
+
+      <!-- Pricing View Switcher -->
+      <div class="pricing-toggle-container">
+        <button class="pricing-toggle-btn active" id="btn-show-tiers">Standard Plans</button>
+        <button class="pricing-toggle-btn" id="btn-show-planner">Interactive Architecture Planner</button>
+      </div>
+
+      <!-- Pane 1: Standard Plans -->
+      <div class="pricing-pane active" id="pricing-pane-tiers">
+        <div class="pricing-grid">
+          <div class="pricing-card reveal-item">
+            <div class="pricing-header">
+              <h3>Starter</h3>
+              <p class="pricing-desc">Perfect for developers & startups needing personal custom-tailored web applications.</p>
+            </div>
+            <div class="pricing-amount">
+              <span class="price-currency">$</span>
+              <span class="price-value">99</span>
+              <span class="price-period">flat</span>
+            </div>
+            <ul class="pricing-features">
+              <li><strong>Personal Custom Feature Development</strong></li>
+              <li>Full Custom Layout & Component Specs</li>
+              <li>100% Full Source Code Ownership & Export</li>
+              <li>CONCODE AI Native Assistant Access</li>
+              <li>Dedicated Local Review Host (`localhost:3001`)</li>
+            </ul>
+            <button class="btn btn-outline btn-select-tier" data-tier="Starter">Get Started &rarr;</button>
+          </div>
+
+          <div class="pricing-card featured reveal-item">
+            <div class="pricing-badge">Recommended for Developers</div>
+            <div class="pricing-header">
+              <h3>Professional</h3>
+              <p class="pricing-desc">Complete custom development with dedicated AI agent fine-tuning and 1-on-1 engineer pairing.</p>
+            </div>
+            <div class="pricing-amount">
+              <span class="price-currency">$</span>
+              <span class="price-value">299</span>
+              <span class="price-period">flat</span>
+            </div>
+            <ul class="pricing-features">
+              <li><strong>Everything in Starter</strong></li>
+              <li><strong>Personalized Feature Engineering</strong> (Built to your exact specs)</li>
+              <li><strong>Custom-Trained CONCODE AI Agent</strong> (Tuned on your brand & logic)</li>
+              <li><strong>1-on-1 Senior Developer Pairing & Review</strong></li>
+              <li>Cinematic WebGL 3D Scenes & Interactive Dashboards</li>
+              <li>Isolated Zero-Latency Host & Gateway Route</li>
+            </ul>
+            <button class="btn btn-primary btn-select-tier" data-tier="Professional">Unlock Personal Build &rarr;</button>
+          </div>
+
+          <div class="pricing-card reveal-item">
+            <div class="pricing-header">
+              <h3>Enterprise</h3>
+              <p class="pricing-desc">Full-scale bespoke platform engineering with an autonomous AI fleet and lead architect access.</p>
+            </div>
+            <div class="pricing-amount">
+              <span class="price-currency">$</span>
+              <span class="price-value">799</span>
+              <span class="price-period">flat</span>
+            </div>
+            <ul class="pricing-features">
+              <li><strong>Everything in Professional</strong></li>
+              <li><strong>Unlimited Personal Bespoke Requests</strong></li>
+              <li>High-Concurrency Microservices & Custom APIs</li>
+              <li>Private Autonomous AI Agent Fleet</li>
+              <li>Cloud Kubernetes & Vercel Edge Release Pipelines</li>
+              <li>24/7 Dedicated Lead Architect Direct Support</li>
+            </ul>
+            <button class="btn btn-outline btn-select-tier" data-tier="Enterprise">Contact Architect &rarr;</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pane 2: Custom Architect Planner -->
+      <div class="pricing-pane" id="pricing-pane-planner">
+        <div class="planner-layout">
+          <!-- Left Controls Column -->
+          <div class="planner-controls">
+            <h3 class="planner-section-title">Configure Core Subsystems</h3>
+            
+            <!-- Control 1: Core API -->
+            <div class="planner-control-group">
+              <label for="plan-api">Core Gateway Infrastructure</label>
+              <select id="plan-api" class="planner-select">
+                <option value="starter" data-price="0" data-time="0">Single-Instance Gateway (Standard HTTP)</option>
+                <option value="professional" data-price="20" data-time="1" selected>Cluster Load-Balanced Gateway (+$20)</option>
+                <option value="enterprise" data-price="90" data-time="2">Multi-Region Edge Network (+$90)</option>
+              </select>
+              <div class="control-help">Determines request routing capacity and network latency thresholds.</div>
+            </div>
+
+            <!-- Control 2: DB -->
+            <div class="planner-control-group">
+              <label for="plan-db">Database & Storage Engine</label>
+              <select id="plan-db" class="planner-select">
+                <option value="starter" data-price="0" data-time="0">Standard SQL Instance (Postgres/MySQL)</option>
+                <option value="professional" data-price="30" data-time="1" selected>High-Availability DB + Redis Caching (+$30)</option>
+                <option value="enterprise" data-price="110" data-time="2">Distributed Vector DB Cluster (+$110)</option>
+              </select>
+              <div class="control-help">Configures data access latency, caching patterns, and vectors for AI models.</div>
+            </div>
+
+            <!-- Control 3: WebGL -->
+            <div class="planner-control-group">
+              <label for="plan-webgl">Visual Experience & Frontend</label>
+              <select id="plan-webgl" class="planner-select">
+                <option value="starter" data-price="0" data-time="0">Standard Web Responsive Layout</option>
+                <option value="professional" data-price="50" data-time="2" selected>Cinematic 3D WebGL Canvas Scene (+$50)</option>
+                <option value="enterprise" data-price="150" data-time="3">Custom WebGPU Simulation Engine (+$150)</option>
+              </select>
+              <div class="control-help">Defines hardware-accelerated presentation capabilities and client-side graphics quality.</div>
+            </div>
+
+            <!-- Control 4: AI -->
+            <div class="planner-control-group">
+              <label for="plan-ai">AI Integration & Cognitive Engine</label>
+              <select id="plan-ai" class="planner-select">
+                <option value="starter" data-price="0" data-time="0">None (Pure Deterministic logic)</option>
+                <option value="professional" data-price="30" data-time="2" selected>Structured Assistant API Gateway (+$30)</option>
+                <option value="enterprise" data-price="110" data-time="3">Multi-Agent Autonomous RAG Orchestrator (+$110)</option>
+              </select>
+              <div class="control-help">Selects neural routing structures and agentic workflow complexities.</div>
+            </div>
+
+            <!-- Control 5: DevOps -->
+            <div class="planner-control-group">
+              <label for="plan-devops">Cloud Deployment & DevOps</label>
+              <select id="plan-devops" class="planner-select">
+                <option value="starter" data-price="0" data-time="0">Standard Containerized Deployment (Docker Compose)</option>
+                <option value="professional" data-price="50" data-time="2" selected>Scalable Kubernetes Cloud Orchestration (+$50)</option>
+                <option value="enterprise" data-price="150" data-time="3">Multi-Cloud IaC (Terraform Setup) (+$150)</option>
+              </select>
+              <div class="control-help">Infrastructure configuration for scaling, monitoring, and automated rollouts.</div>
+            </div>
+
+            <!-- Control 6: SLA Support -->
+            <div class="planner-control-group">
+              <label for="plan-sla">SLA & Support Tier</label>
+              <select id="plan-sla" class="planner-select">
+                <option value="starter" data-price="0" data-time="0">Standard Developer Support (Next Business Day)</option>
+                <option value="professional" data-price="20" data-time="0" selected>Priority Email & Slack SLA (+$20)</option>
+                <option value="enterprise" data-price="90" data-time="1">24/7 Dedicated On-Call Engineering Hotline (+$90)</option>
+              </select>
+              <div class="control-help">Response timing commitments for server issues and code hotfixes.</div>
+            </div>
+          </div>
+
+          <!-- Right Topology Map & Quote Box Column -->
+          <div class="planner-display">
+            <div class="diagram-container">
+              <div class="diagram-header">
+                <span>Ecosystem Architecture Map</span>
+                <span class="pulse-indicator">Active Connection Streams</span>
+              </div>
+              <div class="diagram-svg-wrapper">
+                <svg id="architecture-diagram" viewBox="0 0 300 350" width="100%" height="100%">
+                  <defs>
+                    <filter id="glow-cyan" x="-30%" y="-30%" width="160%" height="160%">
+                      <feGaussianBlur stdDeviation="3" result="blur" />
+                      <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+                    <filter id="glow-purple" x="-30%" y="-30%" width="160%" height="160%">
+                      <feGaussianBlur stdDeviation="3" result="blur" />
+                      <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+                    <filter id="glow-orange" x="-30%" y="-30%" width="160%" height="160%">
+                      <feGaussianBlur stdDeviation="3" result="blur" />
+                      <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+                    <filter id="glow-green" x="-30%" y="-30%" width="160%" height="160%">
+                      <feGaussianBlur stdDeviation="3" result="blur" />
+                      <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+                    <filter id="glow-indigo" x="-30%" y="-30%" width="160%" height="160%">
+                      <feGaussianBlur stdDeviation="3" result="blur" />
+                      <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+                  </defs>
+
+                  <!-- Connections -->
+                  <path id="path-client-gateway" d="M150 65 L150 115" stroke="#1e293b" stroke-width="2.5" fill="none" stroke-dasharray="6,4" />
+                  <path id="path-gateway-webgl" d="M140 135 L80 195" stroke="#1e293b" stroke-width="2" fill="none" stroke-dasharray="6,4" />
+                  <path id="path-gateway-ai" d="M160 135 L220 195" stroke="#1e293b" stroke-width="2" fill="none" stroke-dasharray="6,4" />
+                  <path id="path-gateway-db" d="M135 145 L85 275" stroke="#1e293b" stroke-width="2" fill="none" stroke-dasharray="6,4" />
+                  <path id="path-webgl-db" d="M70 225 L70 275" stroke="#1e293b" stroke-width="2.5" fill="none" stroke-dasharray="6,4" />
+                  <path id="path-ai-devops" d="M230 225 L230 275" stroke="#1e293b" stroke-width="2.5" fill="none" stroke-dasharray="6,4" />
+                  <path id="path-db-devops" d="M88 290 L212 290" stroke="#1e293b" stroke-width="2" fill="none" stroke-dasharray="6,4" />
+
+                  <!-- Nodes -->
+                  <!-- Client Node (Always glowing indigo) -->
+                  <g id="node-client" class="node-group active">
+                    <circle cx="150" cy="50" r="17" fill="#0b0e14" stroke="#6366f1" stroke-width="2" filter="url(#glow-indigo)" />
+                    <text x="150" y="53" fill="#f0f4f8" font-size="7" font-family="Outfit" font-weight="800" text-anchor="middle">CLIENT</text>
+                  </g>
+
+                  <!-- API Node -->
+                  <g id="node-gateway" class="node-group">
+                    <circle cx="150" cy="130" r="17" fill="#0b0e14" stroke="#1e293b" stroke-width="2" />
+                    <text x="150" y="133" fill="#64748b" font-size="7" font-family="Outfit" font-weight="800" text-anchor="middle">GATEWAY</text>
+                  </g>
+
+                  <!-- WebGL Node -->
+                  <g id="node-webgl" class="node-group">
+                    <circle cx="70" cy="210" r="17" fill="#0b0e14" stroke="#1e293b" stroke-width="2" />
+                    <text x="70" y="213" fill="#64748b" font-size="7" font-family="Outfit" font-weight="800" text-anchor="middle">RENDER</text>
+                  </g>
+
+                  <!-- AI Node -->
+                  <g id="node-ai" class="node-group">
+                    <circle cx="230" cy="210" r="17" fill="#0b0e14" stroke="#1e293b" stroke-width="2" />
+                    <text x="230" y="213" fill="#64748b" font-size="7" font-family="Outfit" font-weight="800" text-anchor="middle">NEURAL</text>
+                  </g>
+
+                  <!-- DB Node -->
+                  <g id="node-db" class="node-group">
+                    <circle cx="70" cy="290" r="17" fill="#0b0e14" stroke="#1e293b" stroke-width="2" />
+                    <text x="70" y="293" fill="#64748b" font-size="7" font-family="Outfit" font-weight="800" text-anchor="middle">STORAGE</text>
+                  </g>
+
+                  <!-- DevOps Node -->
+                  <g id="node-devops" class="node-group">
+                    <circle cx="230" cy="290" r="17" fill="#0b0e14" stroke="#1e293b" stroke-width="2" />
+                    <text x="230" y="293" fill="#64748b" font-size="7" font-family="Outfit" font-weight="800" text-anchor="middle">DEVOPS</text>
+                  </g>
+                </svg>
+              </div>
+            </div>
+
+            <!-- Quote/Estimation Dashboard -->
+            <div class="planner-quote-box">
+              <div class="quote-header">Custom Configuration Estimate</div>
+              <div class="quote-price-container">
+                <span class="price-currency">$</span>
+                <span class="price-value" id="planner-cost">299</span>
+                <span class="price-period">total</span>
+              </div>
+              <div class="quote-stats">
+                <div class="quote-stat">
+                  <span class="quote-stat-label">Estimated Delivery</span>
+                  <span class="quote-stat-value" id="planner-delivery">6 weeks</span>
+                </div>
+                <div class="quote-stat">
+                  <span class="quote-stat-label">SLA Tier</span>
+                  <span class="quote-stat-value" id="planner-sla-name">Priority (4h)</span>
+                </div>
+              </div>
+              <button class="btn btn-primary" id="btn-planner-submit" style="width: 100%; justify-content: center; margin-top: 16px;">
+                Request Architecture Proposal
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- CTA BANNER -->
+  <!-- ═══════════════════════════════════════════ -->
+  <section class="cta-banner" id="cta-banner">
+    <div class="container">
+      <div class="cta-content">
+        <h2 class="scramble-text">Ready to Turn Your Website Into Your<br>Highest-Performing Revenue Driver?</h2>
+        <p>Stop losing qualified leads to slow response times and passive designs. Claim your strategy session today.</p>
+        <div class="cta-actions">
+          <button class="btn btn-primary btn-lg" id="btn-cta-onboard">Book Your Growth Strategy Call &rarr;</button>
+          <button class="btn btn-ghost btn-lg" id="btn-chat">Talk to AI Assistant</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- CONTACT -->
+  <!-- ═══════════════════════════════════════════ -->
+  <section class="section" id="contact">
+    <div class="container">
+      <div class="contact-layout">
+        <div class="contact-info">
+          <span class="section-label">Book a Strategy Session</span>
+          <h2 class="section-title scramble-text">Build Your Custom<br>Growth Engine.</h2>
+          <p class="section-desc scroll-highlight">Ready to transform your online presence into a 24/7 lead-generating machine? Send us a message and we'll analyze your current system within 12 hours.</p>
+
+          <div class="contact-details">
+            <div class="contact-detail">
+              <div class="contact-detail-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              </div>
+              <div>
+                <div class="contact-detail-label">Email</div>
+                <div class="contact-detail-value">ms.concode@gmail.com</div>
+              </div>
+            </div>
+            <div class="contact-detail">
+              <div class="contact-detail-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>
+              </div>
+              <div>
+                <div class="contact-detail-label">Phone</div>
+                <div class="contact-detail-value">+91 9904717666</div>
+              </div>
+            </div>
+            <div class="contact-detail">
+              <div class="contact-detail-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              </div>
+              <div>
+                <div class="contact-detail-label">Location</div>
+                <div class="contact-detail-value">Vadodara, India</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <form id="contact-form" class="contact-form">
+          <div class="form-group">
+            <label for="contact-name">Name</label>
+            <input type="text" id="contact-name" required placeholder="Your full name">
+          </div>
+          <div class="form-group">
+            <label for="contact-email">Email</label>
+            <input type="email" id="contact-email" required placeholder="you@company.com">
+          </div>
+          <div class="form-group">
+            <label for="contact-message">Message</label>
+            <textarea id="contact-message" required placeholder="Tell us about your project..." rows="5"></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary">Send Message</button>
+          <div id="contact-console" class="form-console hidden">
+            <div class="console-output"></div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- FOOTER -->
+  <!-- ═══════════════════════════════════════════ -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="#" class="nav-logo" id="footer-logo">
+            <svg class="nav-logo-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <filter id="liquid-eye-filter-footer" x="-20%" y="-20%" width="140%" height="140%">
+                  <feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="3" result="noise"/>
+                  <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G"/>
+                  <feGaussianBlur stdDeviation="0.4" result="blur"/>
+                </filter>
+              </defs>
+              <g filter="url(#liquid-eye-filter-footer)" class="liquid-eye-group">
+                <!-- Fluid Outer Aura Ring -->
+                <circle cx="50" cy="50" r="42" stroke="#38bdf8" stroke-width="2" class="liquid-outer-ring" stroke-dasharray="120, 10"/>
+                <!-- Fluid Top Arc -->
+                <path class="liquid-arc-top" d="M 16 50 C 30 20, 70 20, 84 50" stroke="#38bdf8" stroke-width="7" stroke-linecap="round"/>
+                <!-- Fluid Bottom Arc -->
+                <path class="liquid-arc-bot" d="M 16 50 C 30 80, 70 80, 84 50" stroke="#38bdf8" stroke-width="7" stroke-linecap="round"/>
+                <!-- Fluid Core Nucleus -->
+                <g class="eye-pupil-group">
+                  <circle cx="50" cy="50" r="14" fill="#38bdf8" class="logo-nucleus-svg"/>
+                  <path d="M 45 44 L 39 50 L 45 56 M 55 44 L 61 50 L 55 56 M 52 42 L 48 58" stroke="#0f172a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                </g>
+              </g>
+            </svg>
+            <span class="nav-logo-text scramble-logo" id="footer-logo-text" data-scramble="CONCODE"><span class="logo-letter" data-letter="C">C</span><span class="logo-letter" data-letter="O">O</span><span class="logo-letter" data-letter="N">N</span><span class="logo-letter" data-letter="C">C</span><span class="logo-letter" data-letter="O">O</span><span class="logo-letter" data-letter="D">D</span><span class="logo-letter" data-letter="E">E</span></span>
+          </a>
+          <p>High-performance digital platforms engineered for companies that refuse to settle.</p>
+        </div>
+        <div class="footer-col">
+          <h4>Company</h4>
+          <ul>
+            <li><a href="#services">Services</a></li>
+            <li><a href="#work">Work</a></li>
+            <li><a href="#process">Process</a></li>
+            <li><a href="#pricing">Pricing</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Connect</h4>
+          <ul>
+            <li><a href="#contact">Contact</a></li>
+            <li><a href="mailto:ms.concode@gmail.com">Email Us</a></li>
+            <li><a href="tel:+919904717666">Call Us</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2025 CONCODE. All rights reserved.</p>
+        <p>We Code. You Grow.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- MODALS (kept from original) -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div id="onboard-modal" class="modal-overlay">
+    <div class="modal-panel">
+      <button class="modal-close" id="modal-close">&times;</button>
+      <h2 class="modal-title">Start Your Project</h2>
+      <p class="modal-desc">Tell us what you're building. We'll get back within 12 hours.</p>
+      <form id="onboard-form">
+        <div class="form-group">
+          <label for="client-name">Name</label>
+          <input type="text" id="client-name" required placeholder="Your full name">
+        </div>
+        <div class="form-group">
+          <label for="client-email">Email</label>
+          <input type="email" id="client-email" required placeholder="you@company.com">
+        </div>
+        <div class="form-group">
+          <label for="client-module">Plan</label>
+          <select id="client-module">
+            <option value="Starter">Starter ($99 flat)</option>
+            <option value="Professional" selected>Professional ($299 flat)</option>
+            <option value="Enterprise">Enterprise ($799 flat)</option>
+            <option value="Custom">Custom Architecture Configuration</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="project-desc">Project Details</label>
+          <textarea id="project-desc" required placeholder="Describe your project goals..." rows="4"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Submit Inquiry</button>
+      </form>
+      <div id="sync-console" class="form-console hidden">
+        <div class="console-output"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Case Study / System Inspector Drawer -->
+  <div id="inspector-drawer" class="drawer-overlay">
+    <div class="drawer-panel drawer-panel-lg">
+      <div class="drawer-header" style="display: flex; align-items: center; justify-content: space-between;">
+        <span class="drawer-title" id="inspector-title">System Subsystem Specs</span>
+        <div style="display: flex; align-items: center; gap: 12px; margin-left: auto;">
+          <a id="inspector-launch-btn" href="#" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-primary" style="display: none; text-decoration: none; align-items: center; gap: 6px; font-size: 0.82rem; padding: 6px 14px;">Launch Live App &nearr;</a>
+          <button class="modal-close" id="inspector-close">&times;</button>
+        </div>
+      </div>
+      
+      <div class="inspector-content">
+        <!-- Left Panel: Specs -->
+        <div class="inspector-specs">
+          <h3 class="inspector-section-label">Subsystem Telemetry</h3>
+          
+          <div class="metrics-grid">
+            <div class="metric-card">
+              <div class="metric-value" id="metric-latency">--</div>
+              <div class="metric-label">Latency Reduction</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-value" id="metric-concurrency">--</div>
+              <div class="metric-label">Req/Sec Capacity</div>
+            </div>
+            <div class="metric-card">
+              <div class="metric-value" id="metric-saving">--</div>
+              <div class="metric-label">DevOps Automation</div>
+            </div>
+          </div>
+
+          <div class="inspector-description-block">
+            <h4 class="specs-subheader">Architectural Overview</h4>
+            <p id="inspector-summary">Loading specs...</p>
+          </div>
+
+          <div class="inspector-simulation-block">
+            <h4 class="specs-subheader">Live Network Load Testing</h4>
+            <p class="control-help">Execute real concurrent network requests against a local endpoint or custom URL.</p>
+            <div class="simulation-input-group" style="margin-bottom: 12px; display: flex; flex-direction: column; gap: 4px;">
+              <label for="sim-target-url" style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); text-align: left; display: block;">Target Endpoint URL</label>
+              <input type="text" id="sim-target-url" style="width: 100%; box-sizing: border-box; padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.3); color: #fff; font-family: monospace; font-size: 12px;" value="/api/health">
+            </div>
+            <div class="simulation-actions">
+              <button class="btn btn-primary btn-sm" id="btn-simulate-load">Simulate Load (10k req/s)</button>
+              <span class="sim-status-label" id="sim-status">Idle</span>
+            </div>
+            <div class="sim-progress-bar-container">
+              <div class="sim-progress-bar" id="sim-progress"></div>
+            </div>
+            
+            <div class="sim-console-output" id="sim-console">
+              <div>// Ready to launch thread pool simulator...</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Panel: IDE Inspector -->
+        <div class="inspector-ide">
+          <div class="ide-tab-bar" id="ide-tabs">
+            <!-- Dynamic tabs go here -->
+          </div>
+          <div class="ide-editor-container">
+            <pre class="ide-code-block"><code id="ide-code-content">// Code contents here...</code></pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONCODE AI Live Interactive Chat Drawer -->
+  <div id="chat-drawer" class="drawer-overlay">
+    <div class="drawer-panel concode-ai-drawer-panel">
+      <div class="drawer-header ai-drawer-header">
+        <div class="ai-drawer-title-group">
+          <div class="ai-header-circle">
+            <span class="ai-live-indicator"></span>
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#00f0ff" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+          </div>
+          <div>
+            <div class="drawer-title ai-brand-title">CONCODE AI Core <span class="ai-model-badge">CONCODE AI Engine</span></div>
+            <div class="ai-status-sub">Online &bull; Real-time AI System Assistant</div>
+          </div>
+        </div>
+        <button class="modal-close" id="chat-close">&times;</button>
+      </div>
+
+      <!-- Quick Suggestion Chips -->
+      <div class="ai-quick-chips">
+        <button class="ai-chip" data-prompt="What services does CONCODE provide?">Services</button>
+        <button class="ai-chip" data-prompt="How do I build a 3D web application?">3D Web</button>
+        <button class="ai-chip" data-prompt="Show me GitHub open-source repositories">GitHub Code</button>
+        <button class="ai-chip" data-prompt="How can I start a project with CONCODE?">Start Project</button>
+      </div>
+
+      <div class="chat-log" id="chat-output">
+        <div class="bot-msg">
+          <strong>Welcome to CONCODE AI</strong><br>
+          I am your real-time cognitive assistant. Ask me anything about our 3D web engineering, cloud architecture, AI models, open-source repositories, or project pricing.
+        </div>
+      </div>
+
+      <div class="chat-input-bar">
+        <input type="text" id="chat-input" placeholder="Type your message or command (e.g. /help)..." spellcheck="false">
+        <button class="btn btn-primary btn-sm" id="chat-send">
+          Send
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-left:4px;"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CDNs -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+  <script src="src/three-scene.js?v=2.7"></script>
+  <script src="src/body/concode-human-body-system.js?v=1.0"></script>
+  <script src="src/voice/wake-word-listener.js?v=1.0"></script>
+  <script src="src/voice/voice-orb-visualizer.js?v=1.0"></script>
+  <script src="src/voice/voice-command-dispatcher.js?v=1.0"></script>
+  <script src="src/voice/concode-voice-agent.js?v=1.0"></script>
+  <script src="src/main.js?v=2.5"></script>
+</body>
+</html>

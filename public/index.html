@@ -10,8 +10,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="src/style.css?v=2.4">
+  <link rel="stylesheet" href="src/style.css?v=2.5">
   <link rel="stylesheet" href="src/voice/voice-style.css?v=1.0">
+  <script src="src/cyber-audio.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
@@ -28,23 +29,35 @@
   <!-- ═══════════════════════════════════════════ -->
   <nav class="nav" id="main-nav">
     <div class="nav-inner">
-      <a href="#" class="nav-logo" id="nav-logo">
+      <a href="/" class="nav-logo" id="nav-logo" aria-label="CONCODE Home">
         <svg class="nav-logo-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <!-- 7 Eyelashes on top arc -->
-          <path d="M 20 39 L 13 28 M 29 31 L 23 18 M 39 26 L 35 12 M 50 24 L 50 10 M 61 26 L 65 12 M 71 31 L 77 18 M 80 39 L 87 28" stroke="#38bdf8" stroke-width="4.5" stroke-linecap="round"/>
-          <!-- Eye outer bracket path -->
-          <path d="M 15 50 C 30 20, 70 20, 85 50" stroke="#38bdf8" stroke-width="7" stroke-linecap="round"/>
-          <path d="M 15 50 C 30 80, 70 80, 85 50" stroke="#38bdf8" stroke-width="7" stroke-linecap="round"/>
-          <!-- Central core circular nucleus -->
-          <circle cx="50" cy="50" r="14" fill="#38bdf8" class="logo-nucleus-svg"/>
-          <!-- Internal bracket </> code symbol -->
-          <path d="M 45 44 L 39 50 L 45 56 M 55 44 L 61 50 L 55 56 M 52 42 L 48 58" stroke="#0f172a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          <defs>
+            <filter id="liquid-eye-filter" x="-20%" y="-20%" width="140%" height="140%">
+              <feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="3" result="noise" id="liquid-turbulence"/>
+              <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G" id="liquid-displacement"/>
+              <feGaussianBlur stdDeviation="0.4" result="blur"/>
+            </filter>
+          </defs>
+          <g filter="url(#liquid-eye-filter)" class="liquid-eye-group">
+            <!-- Fluid Outer Aura Ring -->
+            <circle cx="50" cy="50" r="42" stroke="#38bdf8" stroke-width="2" class="liquid-outer-ring" stroke-dasharray="120, 10"/>
+            <!-- Fluid Top Arc -->
+            <path class="liquid-arc-top" d="M 16 50 C 30 20, 70 20, 84 50" stroke="#38bdf8" stroke-width="7" stroke-linecap="round"/>
+            <!-- Fluid Bottom Arc -->
+            <path class="liquid-arc-bot" d="M 16 50 C 30 80, 70 80, 84 50" stroke="#38bdf8" stroke-width="7" stroke-linecap="round"/>
+            <!-- Fluid Core Nucleus -->
+            <g class="eye-pupil-group">
+              <circle cx="50" cy="50" r="14" fill="#38bdf8" class="logo-nucleus-svg"/>
+              <path d="M 45 44 L 39 50 L 45 56 M 55 44 L 61 50 L 55 56 M 52 42 L 48 58" stroke="#0f172a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+            </g>
+          </g>
         </svg>
-        <span class="nav-logo-text scramble-logo" data-scramble="CONCODE">CONCODE</span>
+        <span class="nav-logo-text scramble-logo" id="nav-logo-text" data-scramble="CONCODE"><span class="logo-letter" data-letter="C">C</span><span class="logo-letter" data-letter="O">O</span><span class="logo-letter" data-letter="N">N</span><span class="logo-letter" data-letter="C">C</span><span class="logo-letter" data-letter="O">O</span><span class="logo-letter" data-letter="D">D</span><span class="logo-letter" data-letter="E">E</span></span>
       </a>
       <ul class="nav-menu" id="nav-menu">
         <li><a href="#services">Services</a></li>
         <li><a href="#ai-engine">AI Brain</a></li>
+        <li><a href="/project/ai-idea-planner/" target="_blank" rel="noopener noreferrer" style="color: var(--cyan); font-weight: 600;">Idea Planner</a></li>
         <li><a href="#portfolio">Portfolio</a></li>
         <li><a href="#work">Work</a></li>
         <li><a href="#process">Process</a></li>
@@ -78,6 +91,62 @@
   </nav>
 
   <!-- ═══════════════════════════════════════════ -->
+  <!-- HUD NAVIGATION WAYFINDER (Zero-Lag Dock)   -->
+  <!-- ═══════════════════════════════════════════ -->
+  <nav id="hud-wayfinder" class="hud-wayfinder" aria-label="Section Wayfinder">
+    <div class="hud-telemetry-chip">
+      <div class="hud-ping-dot"></div>
+      <span class="hud-ping-text" id="hud-ping-text">2ms</span>
+      <button class="hud-sfx-toggle" id="hud-sfx-toggle" title="Toggle Sound FX (Web Audio)" aria-label="Toggle Sound Effects">
+        <svg class="sfx-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+        </svg>
+      </button>
+    </div>
+    <a href="#hero" class="hud-waypoint active" data-target="hero" aria-label="Hero Section">
+      <span class="hud-waypoint-label">01 // HERO</span>
+      <span class="hud-waypoint-indicator"></span>
+    </a>
+    <a href="#problem-shift" class="hud-waypoint" data-target="problem-shift" aria-label="The Shift">
+      <span class="hud-waypoint-label">02 // SHIFT</span>
+      <span class="hud-waypoint-indicator"></span>
+    </a>
+    <a href="#services" class="hud-waypoint" data-target="services" aria-label="Core Solutions">
+      <span class="hud-waypoint-label">03 // SOLUTIONS</span>
+      <span class="hud-waypoint-indicator"></span>
+    </a>
+    <a href="#ai-engine" class="hud-waypoint" data-target="ai-engine" aria-label="AI Engine">
+      <span class="hud-waypoint-label">04 // AI BRAIN</span>
+      <span class="hud-waypoint-indicator"></span>
+    </a>
+    <a href="#portfolio" class="hud-waypoint" data-target="portfolio" aria-label="Developer Terminal">
+      <span class="hud-waypoint-label">05 // TERMINAL</span>
+      <span class="hud-waypoint-indicator"></span>
+    </a>
+    <a href="#work" class="hud-waypoint" data-target="work" aria-label="Selected Work">
+      <span class="hud-waypoint-label">06 // WORK</span>
+      <span class="hud-waypoint-indicator"></span>
+    </a>
+    <a href="#workspace" class="hud-waypoint" data-target="workspace" aria-label="Developer Studio">
+      <span class="hud-waypoint-label">07 // STUDIO</span>
+      <span class="hud-waypoint-indicator"></span>
+    </a>
+    <a href="#process" class="hud-waypoint" data-target="process" aria-label="Engineering Process">
+      <span class="hud-waypoint-label">08 // PROCESS</span>
+      <span class="hud-waypoint-indicator"></span>
+    </a>
+    <a href="#pricing" class="hud-waypoint" data-target="pricing" aria-label="Pricing & Architecture">
+      <span class="hud-waypoint-label">09 // PRICING</span>
+      <span class="hud-waypoint-indicator"></span>
+    </a>
+    <a href="#contact" class="hud-waypoint" data-target="contact" aria-label="Book a Session">
+      <span class="hud-waypoint-label">10 // CONTACT</span>
+      <span class="hud-waypoint-indicator"></span>
+    </a>
+  </nav>
+
+  <!-- ═══════════════════════════════════════════ -->
   <!-- HERO -->
   <!-- ═══════════════════════════════════════════ -->
   <section class="hero" id="hero">
@@ -93,6 +162,7 @@
       </p>
       <div class="hero-actions">
         <button class="btn btn-primary" id="btn-hero-onboard">Build Your Growth System &rarr;</button>
+        <a href="/project/ai-idea-planner/" class="btn btn-ghost" style="border-color: rgba(0, 240, 255, 0.4); color: var(--cyan); display: inline-flex; align-items: center; gap: 6px;">Validate Idea with AI &rarr;</a>
         <a href="#pricing" class="btn btn-ghost">Calculate Estimated ROI</a>
       </div>
     </div>
@@ -244,23 +314,6 @@
               <span class="detail-text">Zero downtime under high traffic bursts and up to 40% reduced infrastructure hosting costs.</span>
             </div>
           </div>
-        <!-- Service 7: DeepTech & Nanotechnology Engineering -->
-        <div class="service-card reveal-item" style="border: 1px solid rgba(0, 240, 255, 0.3); background: rgba(15, 23, 42, 0.9);">
-          <div class="service-icon" style="color: #00f0ff;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 000 18M3 12h18"/><path d="M12 7a5 5 0 015 5 5 5 0 01-5 5 5 5 0 01-5-5 5 5 0 015-5z"/></svg>
-          </div>
-          <h3 style="color: #00f0ff;">DeepTech & Nanotech Suite <span class="expand-icon" style="color: #00ff9d;">+</span></h3>
-          <p>Scientific Web Engineering, 3D WebGL Nanostructure Modeling, Quantum Property AI Predictors & Microfluidic Swarm Simulators.</p>
-          <div class="service-details">
-            <div class="detail-item">
-              <span class="detail-label">Function</span>
-              <span class="detail-text">Custom Three.js 3D lattice generators, Brus equation quantum inference engines, and 2D canvas particle physics loops.</span>
-            </div>
-            <div class="detail-item">
-              <span class="detail-label">Business Result</span>
-              <span class="detail-text">Establishes market authority for biotech, semiconductor, and emerging tech enterprises looking to build cutting-edge web platforms.</span>
-            </div>
-          </div>
         </div>
       </div>
     </div>
@@ -269,116 +322,145 @@
   <!-- ═══════════════════════════════════════════ -->
   <!-- CONCODE AI COMPUTERIZED BRAIN & VOICE ENGINE -->
   <!-- ═══════════════════════════════════════════ -->
-  <section class="section" id="ai-engine" style="position: relative; overflow: hidden; background: radial-gradient(circle at 50% 20%, rgba(0, 240, 255, 0.06), transparent 70%); border-top: 1px solid rgba(0,240,255,0.15); border-bottom: 1px solid rgba(0,240,255,0.15);">
+  <section class="section" id="ai-engine">
     <div class="container">
-      <div class="section-header" style="text-align: center; max-width: 800px; margin: 0 auto 36px;">
-        <span class="section-label" style="color: #00f0ff; border-color: rgba(0,240,255,0.3);">Standalone AI Engine v10.0</span>
-        <h2 class="section-title scramble-text">In-Process AI Brain &amp;<br>Hands-Free Voice Assistant</h2>
-        <p class="section-desc scroll-highlight">Zero external service dependencies—no cloud APIs, no background daemons, no network required. Powered by bare-metal GGUF LLMs, in-process LanceDB vector search, OpenWakeWord stream listeners, and PyQt6 visual HUDs.</p>
+      <div class="section-header">
+        <span class="section-label">Cognitive Core</span>
+        <h2 class="section-title scramble-text">In-Process AI Brain &amp;<br>Autonomous Voice Agent</h2>
+        <p class="section-desc scroll-highlight">Zero external cloud dependencies. Bare-metal GGUF neural models, in-process LanceDB vector indexer, real-time voice stream listener, and self-healing multi-agent AST synthesis.</p>
       </div>
 
       <!-- Live Hardware Telemetry Banner -->
-      <div class="ai-telemetry-banner" id="ai-telemetry-banner" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 36px;">
-        <div class="telemetry-card" style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(0, 240, 255, 0.2); border-radius: 12px; padding: 16px 20px; display: flex; align-items: center; gap: 14px;">
-          <div class="telemetry-icon" style="font-size: 14px; font-weight: 700; color: #00f0ff; font-family: monospace;">[GPU]</div>
-          <div class="telemetry-info" style="display: flex; flex-direction: column;">
-            <span class="telemetry-label" style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em;">Hardware Acceleration</span>
-            <span class="telemetry-value" id="tel-backend" style="font-size: 13px; font-weight: 600; color: #00f0ff;">METAL / CUDA Auto-Gated</span>
+      <div class="ai-telemetry-banner" id="ai-telemetry-banner">
+        <div class="ai-telemetry-card">
+          <span class="ai-telemetry-tag">GPU</span>
+          <div class="ai-telemetry-info">
+            <span class="ai-telemetry-label">Hardware Acceleration</span>
+            <span class="ai-telemetry-value" id="tel-backend">METAL / CUDA Auto-Gated</span>
           </div>
         </div>
-        <div class="telemetry-card" style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(0, 240, 255, 0.2); border-radius: 12px; padding: 16px 20px; display: flex; align-items: center; gap: 14px;">
-          <div class="telemetry-icon" style="font-size: 14px; font-weight: 700; color: #a855f7; font-family: monospace;">[MEM]</div>
-          <div class="telemetry-info" style="display: flex; flex-direction: column;">
-            <span class="telemetry-label" style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em;">VRAM &amp; Memory</span>
-            <span class="telemetry-value" id="tel-memory" style="font-size: 13px; font-weight: 600; color: #a855f7;">100% Unified VRAM Offload</span>
+        <div class="ai-telemetry-card">
+          <span class="ai-telemetry-tag purple">VRAM</span>
+          <div class="ai-telemetry-info">
+            <span class="ai-telemetry-label">Memory Architecture</span>
+            <span class="ai-telemetry-value" id="tel-memory">100% Unified VRAM Offload</span>
           </div>
         </div>
-        <div class="telemetry-card" style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(0, 240, 255, 0.2); border-radius: 12px; padding: 16px 20px; display: flex; align-items: center; gap: 14px;">
-          <div class="telemetry-icon" style="font-size: 14px; font-weight: 700; color: #10b981; font-family: monospace;">[AST]</div>
-          <div class="telemetry-info" style="display: flex; flex-direction: column;">
-            <span class="telemetry-label" style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em;">AST Knowledge Matrix</span>
-            <span class="telemetry-value" id="tel-ast" style="font-size: 13px; font-weight: 600; color: #10b981;">114 Workspace Nodes</span>
+        <div class="ai-telemetry-card">
+          <span class="ai-telemetry-tag green">AST</span>
+          <div class="ai-telemetry-info">
+            <span class="ai-telemetry-label">Knowledge Matrix</span>
+            <span class="ai-telemetry-value" id="tel-ast">114 Workspace Nodes</span>
           </div>
         </div>
-        <div class="telemetry-card" style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(0, 240, 255, 0.2); border-radius: 12px; padding: 16px 20px; display: flex; align-items: center; gap: 14px;">
-          <div class="telemetry-icon" style="font-size: 14px; font-weight: 700; color: #f59e0b; font-family: monospace;">[MIC]</div>
-          <div class="telemetry-info" style="display: flex; flex-direction: column;">
-            <span class="telemetry-label" style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em;">Voice Activation</span>
-            <span class="telemetry-value" id="tel-wake" style="font-size: 13px; font-weight: 600; color: #f59e0b;">Always Active ("Hey ConCode")</span>
+        <div class="ai-telemetry-card">
+          <span class="ai-telemetry-tag amber">VAD</span>
+          <div class="ai-telemetry-info">
+            <span class="ai-telemetry-label">Voice Activation</span>
+            <span class="ai-telemetry-value" id="tel-wake">Always Active ("Hey ConCode")</span>
           </div>
         </div>
       </div>
 
       <!-- Interactive Voice Engine & State Machine Showcase Grid -->
-      <div class="ai-showcase-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: start;">
+      <div class="ai-showcase-grid">
         
         <!-- Left: Interactive Voice Loop Controller Card -->
-        <div class="ai-interactive-card" style="background: rgba(10, 16, 30, 0.85); border: 1px solid rgba(0, 240, 255, 0.25); border-radius: 16px; padding: 28px; backdrop-filter: blur(12px); box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <div style="display: flex; align-items: center; gap: 10px;">
-              <span class="pulse-dot" style="width: 10px; height: 10px; border-radius: 50%; background: #10b981; box-shadow: 0 0 10px #10b981; display: inline-block;"></span>
-              <h3 style="margin: 0; font-size: 1.25rem; font-weight: 600; color: #fff;">Voice Agent Live Control (Always Activated)</h3>
+        <div class="ai-voice-panel">
+          <div>
+            <div class="ai-panel-header">
+              <div class="ai-panel-title-wrap">
+                <span class="ai-status-indicator-dot"></span>
+                <h3 class="ai-panel-title">Voice Agent Stream</h3>
+              </div>
+              <span class="ai-state-badge" id="ai-current-state-badge">[STATE: LISTENING]</span>
             </div>
-            <span class="state-badge" id="ai-current-state-badge" style="padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3);">[STATE: LISTENING]</span>
-          </div>
 
-          <!-- Interactive Visualizer Controls -->
-          <div style="text-align: center; padding: 20px 0;">
-            <button class="btn btn-primary" id="btn-trigger-voice-section" style="padding: 14px 28px; font-size: 1rem; border-radius: 30px; background: linear-gradient(135deg, #10b981, #00f0ff); box-shadow: 0 0 25px rgba(0, 240, 255, 0.4); border: none; cursor: pointer;">
-              Voice Assistant Active (Listening)
-            </button>
-            <p style="font-size: 12px; color: var(--text-secondary); margin-top: 12px;">Speak directly: "Hey ConCode", "ConCode", or "Refactor this function" into your microphone.</p>
-          </div>
+            <!-- Interactive Visualizer Controls -->
+            <div class="ai-voice-action-box">
+              <button class="ai-voice-btn" id="btn-trigger-voice-section">
+                <span class="pulse-inner-dot"></span>
+                <span>Voice Assistant Active (Listening)</span>
+              </button>
+              <p class="ai-voice-hint">Hands-free trigger: speak "Hey ConCode" or issue code instructions into your microphone.</p>
+            </div>
 
-          <!-- Live State Transition Selector Test Bar -->
-          <div style="margin-top: 16px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 16px;">
-            <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); display: block; margin-bottom: 10px;">Test HUD Visualizer Reactive States</span>
-            <div style="display: flex; flex-wrap: wrap; gap: 8px;" id="hud-state-btn-group">
-              <button class="hud-state-btn" data-state="IDLE" style="padding: 6px 12px; border-radius: 6px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #ccc; font-size: 12px; cursor: pointer;">1. IDLE</button>
-              <button class="hud-state-btn" data-state="WAKE_DETECTED" style="padding: 6px 12px; border-radius: 6px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #ccc; font-size: 12px; cursor: pointer;">2. WAKE</button>
-              <button class="hud-state-btn active" data-state="LISTENING" style="padding: 6px 12px; border-radius: 6px; background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #fff; font-size: 12px; cursor: pointer;">3. LISTENING</button>
-              <button class="hud-state-btn" data-state="PROCESSING" style="padding: 6px 12px; border-radius: 6px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #ccc; font-size: 12px; cursor: pointer;">4. PROCESSING</button>
-              <button class="hud-state-btn" data-state="SPEAKING" style="padding: 6px 12px; border-radius: 6px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #ccc; font-size: 12px; cursor: pointer;">5. SPEAKING</button>
+            <!-- Live State Transition Selector Test Bar -->
+            <div class="ai-states-control-wrap">
+              <span class="ai-states-label">Simulate Reactive HUD States</span>
+              <div class="ai-states-btn-group" id="hud-state-btn-group">
+                <button class="hud-state-btn" data-state="IDLE">01 // IDLE</button>
+                <button class="hud-state-btn" data-state="WAKE_DETECTED">02 // WAKE</button>
+                <button class="hud-state-btn active" data-state="LISTENING">03 // LISTENING</button>
+                <button class="hud-state-btn" data-state="PROCESSING">04 // PROCESSING</button>
+                <button class="hud-state-btn" data-state="SPEAKING">05 // SPEAKING</button>
+              </div>
             </div>
           </div>
 
           <!-- Real-Time Voice Log Output -->
-          <div class="voice-live-log" id="voice-live-log" style="margin-top: 16px; padding: 12px 16px; background: rgba(0,0,0,0.5); border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #38bdf8; max-height: 120px; overflow-y: auto;">
-            <div>// ConCode AI Voice Engine v10.0 active. Microphone stream listening...</div>
+          <div class="ai-voice-terminal-log" id="voice-live-log">
+            <div>// ConCode AI Voice Engine v10.0 stream active. Microphone stream listening...</div>
           </div>
         </div>
 
         <!-- Right: 4-Pillar Subsystems Architecture Cards -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+        <div class="ai-subsystems-grid">
           <!-- Pillar 1 -->
-          <div class="ai-feature-card" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 20px;">
-            <div style="font-size: 12px; font-weight: 700; color: #00f0ff; font-family: monospace; margin-bottom: 8px;">[LLM]</div>
-            <h4 style="margin: 0 0 6px; color: #fff; font-size: 1rem;">Bare-Metal LLM Core</h4>
-            <p style="margin: 0; font-size: 13px; color: var(--text-secondary); line-height: 1.5;">Direct GGUF model execution in RAM/VRAM via <code>llama-cpp-python</code> (Qwen 2.5 Coder / Llama 3).</p>
+          <div class="ai-subsystem-card">
+            <div class="ai-subsystem-code">// 01 &bull; LLM</div>
+            <h4>Bare-Metal LLM Core</h4>
+            <p>Direct GGUF model execution in RAM/VRAM via <code>llama-cpp-python</code> (Qwen 2.5 Coder / Llama 3).</p>
           </div>
 
           <!-- Pillar 2 -->
-          <div class="ai-feature-card" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 20px;">
-            <div style="font-size: 12px; font-weight: 700; color: #10b981; font-family: monospace; margin-bottom: 8px;">[RAG]</div>
-            <h4 style="margin: 0 0 6px; color: #fff; font-size: 1rem;">Embedded LanceDB RAG</h4>
-            <p style="margin: 0; font-size: 13px; color: var(--text-secondary); line-height: 1.5;">Offline vector search engine indexing active codebase AST symbol graphs and scopes.</p>
+          <div class="ai-subsystem-card">
+            <div class="ai-subsystem-code">// 02 &bull; RAG</div>
+            <h4>Embedded LanceDB RAG</h4>
+            <p>Offline vector search engine indexing active codebase AST symbol graphs and scopes.</p>
           </div>
 
           <!-- Pillar 3 -->
-          <div class="ai-feature-card" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 20px;">
-            <div style="font-size: 12px; font-weight: 700; color: #f59e0b; font-family: monospace; margin-bottom: 8px;">[VAD]</div>
-            <h4 style="margin: 0 0 6px; color: #fff; font-size: 1rem;">OpenWakeWord Stream</h4>
-            <p style="margin: 0; font-size: 13px; color: var(--text-secondary); line-height: 1.5;">Low-latency audio ring buffer + Silero VAD filtering out keyboard typing &amp; ambient noise.</p>
+          <div class="ai-subsystem-card">
+            <div class="ai-subsystem-code">// 03 &bull; VAD</div>
+            <h4>OpenWakeWord Stream</h4>
+            <p>Low-latency audio ring buffer + Silero VAD filtering out keyboard typing and background noise.</p>
           </div>
 
           <!-- Pillar 4 -->
-          <div class="ai-feature-card" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 20px;">
-            <div style="font-size: 12px; font-weight: 700; color: #a855f7; font-family: monospace; margin-bottom: 8px;">[HUD]</div>
-            <h4 style="margin: 0 0 6px; color: #fff; font-size: 1rem;">PyQt6 &amp; Canvas Floating HUD</h4>
-            <p style="margin: 0; font-size: 13px; color: var(--text-secondary); line-height: 1.5;">Always-on-top frameless 5-state visualizer pulsing to real-time speech pitch and model states.</p>
+          <div class="ai-subsystem-card">
+            <div class="ai-subsystem-code">// 04 &bull; HUD</div>
+            <h4>Floating Reactive HUD</h4>
+            <p>Always-on-top frameless 5-state visualizer pulsing to real-time speech pitch and model states.</p>
           </div>
         </div>
 
+      </div>
+
+      <!-- Live Interactive Brain Code & Skill Synthesizer Playground Card -->
+      <div class="ai-studio-card">
+        <div class="ai-studio-header">
+          <div>
+            <h3 class="ai-studio-title">Neural Code &amp; Skill Generator Studio</h3>
+            <p class="ai-studio-desc">Test multi-file code synthesis, self-healing syntax validation, and dynamic skill creation powered by the Neural Brain Engine.</p>
+          </div>
+          <span class="ai-audit-pill">[QA AUDIT: 10/10 READY]</span>
+        </div>
+
+        <div class="ai-studio-input-bar">
+          <input type="text" id="hp-brain-prompt-input" class="ai-studio-input" placeholder="e.g. Synthesize express rate limiter middleware or Build dark mode UI card...">
+          <button id="hp-btn-generate-code" class="ai-studio-btn-action">Synthesize Code</button>
+          <button id="hp-btn-create-skill" class="ai-studio-btn-secondary">Create Skill</button>
+        </div>
+
+        <!-- Output Code Box -->
+        <div id="hp-brain-output-container" class="ai-code-output-terminal" style="display: none;">
+          <div class="ai-terminal-header-meta">
+            <span id="hp-brain-guild-badge" style="color: #c084fc; font-weight: 600;">[Guild: UI/UX Craftsman]</span>
+            <span id="hp-brain-qa-score" style="color: #34d399; font-weight: 600;">[QA Score: 100/100]</span>
+          </div>
+          <pre id="hp-brain-code-display" style="margin: 0; white-space: pre-wrap; word-break: break-all; max-height: 250px; overflow-y: auto; color: #f1f5f9; font-family: var(--font-mono);"></pre>
+        </div>
       </div>
     </div>
   </section>
@@ -462,19 +544,269 @@
         <h2 class="section-title scramble-text">Projects that<br>move the needle.</h2>
         <p class="section-desc scroll-highlight">Real systems generating value for real businesses. Not mockups — production engines.</p>
       </div>
-
-      <!-- Gallery Controls: Category Tabs & Real-time Search -->
       <div class="project-gallery-controls">
         <div class="project-category-tabs" id="project-category-tabs">
           <button class="project-cat-tab active" data-category="all">All Projects</button>
+          <button class="project-cat-tab" data-category="software">Desktop Software</button>
+          <button class="project-cat-tab" data-category="mobile">Mobile Apps</button>
           <button class="project-cat-tab" data-category="web">Web Apps & Portals</button>
           <button class="project-cat-tab" data-category="ai">AI & Neural Gateways</button>
           <button class="project-cat-tab" data-category="microservices">Microservices & Systems</button>
           <button class="project-cat-tab" data-category="github">GitHub Repositories</button>
-          <button class="project-cat-tab" data-category="generated">Live Generated (Port 3001)</button>
         </div>
         <div class="project-search-box">
           <input type="text" id="project-search-input" placeholder="Search projects by title, tech, or tags..." spellcheck="false" />
+        </div>
+      </div>
+
+      <!-- Selected Production Core Projects Grid -->
+      <div class="portfolio-grid" id="main-portfolio-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 20px; margin-bottom: 32px;">
+        <!-- Project 1: Antigravity Dashboard -->
+        <div class="portfolio-card reveal-item btn-inspect-project" style="--accent: #00f0ff; cursor: pointer; border-radius: 6px;" data-project="antigravity" data-category="software ai microservices" data-keywords="antigravity desktop software ai assistant win32 com python gemini pyside6 hooks word excel caret windows macos">
+          <div class="portfolio-visual">
+            <div class="portfolio-gradient"></div>
+            <div class="portfolio-number">01</div>
+            <div class="visual-device-badge software-badge">
+              <span class="device-icon">💻</span>
+              <span>DESKTOP SOFTWARE</span>
+            </div>
+          </div>
+          <div class="portfolio-info">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+              <h3 style="margin: 0; font-size: 1.15rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.02em;">Antigravity Dashboard</h3>
+              <span class="github-topic-badge" style="background: rgba(0, 240, 255, 0.12); border: 1px solid rgba(0, 240, 255, 0.35); color: #00f0ff; font-size: 10px; font-weight: 500; padding: 2px 8px; border-radius: 4px; font-family: var(--font-mono); letter-spacing: 0.04em; text-transform: uppercase;">Desktop Software &bull; Win32 / macOS</span>
+            </div>
+            <p style="color: var(--text-secondary); font-size: 0.85rem; line-height: 1.6; margin-bottom: 14px;">Next-generation stealth desktop software that hooks directly into Microsoft Word, Excel, and IDEs via Win32 COM APIs and local low-latency kernel hooks.</p>
+            <div class="portfolio-tags" style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px;">
+              <span style="font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); font-family: var(--font-mono);">Desktop App</span>
+              <span style="font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); font-family: var(--font-mono);">Win32 COM</span>
+              <span style="font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); font-family: var(--font-mono);">Python / PySide6</span>
+              <span style="font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); font-family: var(--font-mono);">Gemini 2.5 Flash</span>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center; justify-content: space-between; margin-top: 14px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px;">
+              <a href="/project/antigravity-dashboard/" target="_blank" rel="noopener noreferrer" class="btn-launch-demo" onclick="event.stopPropagation();" style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 4px; background: rgba(0, 240, 255, 0.12); border: 1px solid #00f0ff; color: #00f0ff; text-decoration: none; font-size: 0.78rem; font-weight: 500; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.04em;">Launch Software &nearr;</a>
+              <div class="portfolio-inspect-cta" style="font-size: 0.75rem; font-weight: 500; font-family: var(--font-mono); color: #00f0ff; display: inline-flex; align-items: center; gap: 4px; text-transform: uppercase; letter-spacing: 0.04em;">
+                <span>Specs</span> &rarr;
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Project 2: AI Sigma (AI Σ) Gateway -->
+        <div class="portfolio-card reveal-item btn-inspect-project" style="--accent: #a855f7; cursor: pointer; border-radius: 6px;" data-project="aisigma" data-category="mobile web ai" data-keywords="ai sigma gateway expo router react native express proxy rate limit firebase firestore mobile app ios android">
+          <div class="portfolio-visual">
+            <div class="portfolio-gradient"></div>
+            <div class="portfolio-number">02</div>
+            <div class="visual-device-badge app-badge">
+              <span class="device-icon">📱</span>
+              <span>MOBILE APP</span>
+            </div>
+          </div>
+          <div class="portfolio-info">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+              <h3 style="margin: 0; font-size: 1.15rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.02em;">AI Sigma (AI Σ) Gateway</h3>
+              <span class="github-topic-badge" style="background: rgba(168, 85, 247, 0.12); border: 1px solid rgba(168, 85, 247, 0.35); color: #c084fc; font-size: 10px; font-weight: 500; padding: 2px 8px; border-radius: 4px; font-family: var(--font-mono); letter-spacing: 0.04em; text-transform: uppercase;">Mobile App &bull; Expo / iOS / Android</span>
+            </div>
+            <p style="color: var(--text-secondary); font-size: 0.85rem; line-height: 1.6; margin-bottom: 14px;">Cross-platform mobile smartphone app (React Native / Expo Router) backed by an Express token-bucket proxy and Firebase automated intelligence feeds.</p>
+            <div class="portfolio-tags" style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px;">
+              <span style="font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); font-family: var(--font-mono);">Mobile App</span>
+              <span style="font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); font-family: var(--font-mono);">Expo Router</span>
+              <span style="font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); font-family: var(--font-mono);">Express Proxy</span>
+              <span style="font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); font-family: var(--font-mono);">Firebase Cloud</span>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center; justify-content: space-between; margin-top: 14px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px;">
+              <a href="/project/ai-sigma-gateway/" target="_blank" rel="noopener noreferrer" class="btn-launch-demo" onclick="event.stopPropagation();" style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 4px; background: rgba(168, 85, 247, 0.12); border: 1px solid #a855f7; color: #c084fc; text-decoration: none; font-size: 0.78rem; font-weight: 500; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.04em;">Launch Mobile App &nearr;</a>
+              <div class="portfolio-inspect-cta" style="font-size: 0.75rem; font-weight: 500; font-family: var(--font-mono); color: #a855f7; display: inline-flex; align-items: center; gap: 4px; text-transform: uppercase; letter-spacing: 0.04em;">
+                <span>Specs</span> &rarr;
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Project 3: Virtual Audit SaaS -->
+        <div class="portfolio-card reveal-item btn-inspect-project" style="--accent: #00f0ff; cursor: pointer; border-radius: 6px;" data-project="virtualaudit" data-category="web" data-keywords="saas audit security telemetry latency nodes compliance">
+          <div class="portfolio-visual">
+            <div class="portfolio-gradient"></div>
+            <div class="portfolio-number">03</div>
+            <div class="visual-device-badge web-badge">
+              <span class="device-icon">🌐</span>
+              <span>SAAS WEB APP</span>
+            </div>
+          </div>
+          <div class="portfolio-info">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+              <h3 style="margin: 0; font-size: 1.15rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.02em;">Virtual Audit SaaS</h3>
+              <span class="github-topic-badge" style="background: rgba(0, 240, 255, 0.12); border: 1px solid rgba(0, 240, 255, 0.35); color: #00f0ff; font-size: 10px; font-weight: 500; padding: 2px 8px; border-radius: 4px; font-family: var(--font-mono); letter-spacing: 0.04em; text-transform: uppercase;">Security &amp; Audit</span>
+            </div>
+            <p style="color: var(--text-secondary); font-size: 0.85rem; line-height: 1.6; margin-bottom: 14px;">Autonomous security posture scanner, 60 FPS live edge latency sparklines, zero-trust access audits, and dynamic node provisioning console.</p>
+            <div class="portfolio-tags" style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px;">
+              <span style="font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); font-family: var(--font-mono);">Live Sparkline</span>
+              <span style="font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); font-family: var(--font-mono);">SOC2 / HIPAA</span>
+              <span style="font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); font-family: var(--font-mono);">Node Control</span>
+              <span style="font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); font-family: var(--font-mono);">JSON Export</span>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center; justify-content: space-between; margin-top: 14px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px;">
+              <a href="/project/virtual-audit-saas/dashboard.html" target="_blank" rel="noopener noreferrer" class="btn-launch-demo" onclick="event.stopPropagation();" style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 4px; background: rgba(0, 240, 255, 0.12); border: 1px solid #00f0ff; color: #00f0ff; text-decoration: none; font-size: 0.78rem; font-weight: 500; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.04em;">Launch Dashboard &nearr;</a>
+              <div class="portfolio-inspect-cta" style="font-size: 0.75rem; font-weight: 500; font-family: var(--font-mono); color: #00f0ff; display: inline-flex; align-items: center; gap: 4px; text-transform: uppercase; letter-spacing: 0.04em;">
+                <span>Specs</span> &rarr;
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Project 4: FitPulse AI Fitness -->
+        <div class="portfolio-card reveal-item btn-inspect-project" style="--accent: #ff007f; cursor: pointer; border-radius: 6px;" data-project="fitpulse" data-category="web" data-keywords="fitness health workout calorie bpm telemetry tracker gym">
+          <div class="portfolio-visual">
+            <div class="portfolio-gradient"></div>
+            <div class="portfolio-number">04</div>
+            <div class="visual-device-badge web-badge" style="background: rgba(255, 0, 127, 0.12); border-color: rgba(255, 0, 127, 0.35); color: #ff007f;">
+              <span class="device-icon">⚡</span>
+              <span>HEALTH PORTAL</span>
+            </div>
+          </div>
+          <div class="portfolio-info">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+              <h3 style="margin: 0; font-size: 1.15rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.02em;">FitPulse AI Fitness</h3>
+              <span class="github-topic-badge" style="background: rgba(255, 0, 127, 0.12); border: 1px solid rgba(255, 0, 127, 0.35); color: #ff007f; font-size: 10px; font-weight: 500; padding: 2px 8px; border-radius: 4px; font-family: var(--font-mono); letter-spacing: 0.04em; text-transform: uppercase;">Health Telemetry</span>
+            </div>
+            <p style="color: var(--text-secondary); font-size: 0.85rem; line-height: 1.6; margin-bottom: 14px;">Real-time bio-telemetry cockpit featuring SVG calorie target rings, live BPM heart rate zones, hydration tracker, and 1-on-1 trainer booking.</p>
+            <div class="portfolio-tags" style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px;">
+              <span style="font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); font-family: var(--font-mono);">Calorie Ring</span>
+              <span style="font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); font-family: var(--font-mono);">Live BPM</span>
+              <span style="font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); font-family: var(--font-mono);">Hydration</span>
+              <span style="font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); font-family: var(--font-mono);">Workout Logger</span>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center; justify-content: space-between; margin-top: 14px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px;">
+              <a href="/project/fitpulse-app/" target="_blank" rel="noopener noreferrer" class="btn-launch-demo" onclick="event.stopPropagation();" style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 4px; background: rgba(255, 0, 127, 0.12); border: 1px solid #ff007f; color: #ff007f; text-decoration: none; font-size: 0.78rem; font-weight: 500; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.04em;">Launch FitPulse &nearr;</a>
+              <div class="portfolio-inspect-cta" style="font-size: 0.75rem; font-weight: 500; font-family: var(--font-mono); color: #ff007f; display: inline-flex; align-items: center; gap: 4px; text-transform: uppercase; letter-spacing: 0.04em;">
+                <span>Specs</span> &rarr;
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Project 5: Hyperion DEX -->
+        <div class="portfolio-card reveal-item btn-inspect-project" style="--accent: #a855f7; cursor: pointer; border-radius: 6px;" data-project="hyperion" data-category="web" data-keywords="web3 crypto dex defi liquidity ethereum solana swap">
+          <div class="portfolio-visual">
+            <div class="portfolio-gradient"></div>
+            <div class="portfolio-number">05</div>
+            <div class="visual-device-badge web-badge" style="background: rgba(168, 85, 247, 0.12); border-color: rgba(168, 85, 247, 0.35); color: #c084fc;">
+              <span class="device-icon">⚡</span>
+              <span>WEB3 DEX</span>
+            </div>
+          </div>
+          <div class="portfolio-info">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+              <h3 style="margin: 0; font-size: 1.15rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.02em;">Hyperion Web3 DEX</h3>
+              <span class="github-topic-badge" style="background: rgba(168, 85, 247, 0.12); border: 1px solid rgba(168, 85, 247, 0.35); color: #c084fc; font-size: 10px; font-weight: 500; padding: 2px 8px; border-radius: 4px; font-family: var(--font-mono); letter-spacing: 0.04em; text-transform: uppercase;">DeFi &amp; Web3</span>
+            </div>
+            <p style="color: var(--text-secondary); font-size: 0.85rem; line-height: 1.6; margin-bottom: 14px;">Next-generation decentralized exchange protocol with live ticker streams, slippage routing, liquidity pools, and Web3 wallet integration.</p>
+            <div class="portfolio-tags" style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px;">
+              <span style="font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); font-family: var(--font-mono);">JavaScript</span>
+              <span style="font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); font-family: var(--font-mono);">Web3 API</span>
+              <span style="font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); font-family: var(--font-mono);">DeFi Pools</span>
+              <span style="font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); font-family: var(--font-mono);">Canvas Chart</span>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center; justify-content: space-between; margin-top: 14px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px;">
+              <a href="/project/hyperion-web3-dex/" target="_blank" rel="noopener noreferrer" class="btn-launch-demo" onclick="event.stopPropagation();" style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 4px; background: rgba(168, 85, 247, 0.12); border: 1px solid #a855f7; color: #c084fc; text-decoration: none; font-size: 0.78rem; font-weight: 500; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.04em;">Launch Live DEX &nearr;</a>
+              <div class="portfolio-inspect-cta" style="font-size: 0.75rem; font-weight: 500; font-family: var(--font-mono); color: #a855f7; display: inline-flex; align-items: center; gap: 4px; text-transform: uppercase; letter-spacing: 0.04em;">
+                <span>Specs</span> &rarr;
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Project 6: Neural Network Studio -->
+        <div class="portfolio-card reveal-item btn-inspect-project" style="--accent: #00f0ff; cursor: pointer; border-radius: 6px;" data-project="neuralstudio" data-category="ai web" data-keywords="ai neural studio machine learning tensor nodes cluster matrix edge autonomous">
+          <div class="portfolio-visual">
+            <div class="portfolio-gradient"></div>
+            <div class="portfolio-number">06</div>
+            <div class="visual-device-badge web-badge" style="background: rgba(0, 240, 255, 0.12); border-color: rgba(0, 240, 255, 0.35); color: #00f0ff;">
+              <span class="device-icon">🤖</span>
+              <span>NEURAL STUDIO</span>
+            </div>
+          </div>
+          <div class="portfolio-info">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+              <h3 style="margin: 0; font-size: 1.15rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.02em;">Neural Network Studio</h3>
+              <span class="github-topic-badge" style="background: rgba(0, 240, 255, 0.12); border: 1px solid rgba(0, 240, 255, 0.35); color: #00f0ff; font-size: 10px; font-weight: 500; padding: 2px 8px; border-radius: 4px; font-family: var(--font-mono); letter-spacing: 0.04em; text-transform: uppercase;">AI &amp; Neural Gateway</span>
+            </div>
+            <p style="color: var(--text-secondary); font-size: 0.85rem; line-height: 1.6; margin-bottom: 14px;">Distributed autonomous tensor constructor with multi-region cluster node provisioning, live eBPF latency telemetry, and neural mesh routing.</p>
+            <div class="portfolio-tags" style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px;">
+              <span style="font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); font-family: var(--font-mono);">Tensor Mesh</span>
+              <span style="font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); font-family: var(--font-mono);">Edge Latency</span>
+              <span style="font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); font-family: var(--font-mono);">Zero-Trust</span>
+              <span style="font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); font-family: var(--font-mono);">Node Provision</span>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center; justify-content: space-between; margin-top: 14px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px;">
+              <a href="/project/neural-network-studio/dashboard.html" target="_blank" rel="noopener noreferrer" class="btn-launch-demo" onclick="event.stopPropagation();" style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 4px; background: rgba(0, 240, 255, 0.12); border: 1px solid #00f0ff; color: #00f0ff; text-decoration: none; font-size: 0.78rem; font-weight: 500; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.04em;">Launch Studio &nearr;</a>
+              <div class="portfolio-inspect-cta" style="font-size: 0.75rem; font-weight: 500; font-family: var(--font-mono); color: #00f0ff; display: inline-flex; align-items: center; gap: 4px; text-transform: uppercase; letter-spacing: 0.04em;">
+                <span>Specs</span> &rarr;
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Project 7: Interactive Shell Terminal -->
+        <div class="portfolio-card reveal-item btn-inspect-project" style="--accent: #39ff14; cursor: pointer; border-radius: 6px;" data-project="terminalcli" data-category="microservices web" data-keywords="terminal cli console bash shell system microservices matrix crt devops zero-trust">
+          <div class="portfolio-visual">
+            <div class="portfolio-gradient"></div>
+            <div class="portfolio-number">07</div>
+            <div class="visual-device-badge web-badge" style="background: rgba(57, 255, 20, 0.12); border-color: rgba(57, 255, 20, 0.35); color: #39ff14;">
+              <span class="device-icon">📟</span>
+              <span>CLI TERMINAL</span>
+            </div>
+          </div>
+          <div class="portfolio-info">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+              <h3 style="margin: 0; font-size: 1.15rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.02em;">Interactive Shell Terminal</h3>
+              <span class="github-topic-badge" style="background: rgba(57, 255, 20, 0.12); border: 1px solid rgba(57, 255, 20, 0.35); color: #39ff14; font-size: 10px; font-weight: 500; padding: 2px 8px; border-radius: 4px; font-family: var(--font-mono); letter-spacing: 0.04em; text-transform: uppercase;">CLI &amp; Microservices</span>
+            </div>
+            <p style="color: var(--text-secondary); font-size: 0.85rem; line-height: 1.6; margin-bottom: 14px;">Authentic CRT Matrix command line interface with hardware scanline shaders, command execution, live system diagnostics, and zero-trust shell.</p>
+            <div class="portfolio-tags" style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px;">
+              <span style="font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); font-family: var(--font-mono);">CLI Shell</span>
+              <span style="font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); font-family: var(--font-mono);">CRT Shaders</span>
+              <span style="font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); font-family: var(--font-mono);">Matrix Mode</span>
+              <span style="font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); font-family: var(--font-mono);">Command Parser</span>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center; justify-content: space-between; margin-top: 14px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px;">
+              <a href="/project/terminal-portfolio/" target="_blank" rel="noopener noreferrer" class="btn-launch-demo" onclick="event.stopPropagation();" style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 4px; background: rgba(57, 255, 20, 0.12); border: 1px solid #39ff14; color: #39ff14; text-decoration: none; font-size: 0.78rem; font-weight: 500; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.04em;">Launch Terminal &nearr;</a>
+              <div class="portfolio-inspect-cta" style="font-size: 0.75rem; font-weight: 500; font-family: var(--font-mono); color: #39ff14; display: inline-flex; align-items: center; gap: 4px; text-transform: uppercase; letter-spacing: 0.04em;">
+                <span>Specs</span> &rarr;
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Project 8: AI Idea Planner & Feasibility Validator -->
+        <div class="portfolio-card reveal-item btn-inspect-project" style="--accent: #00f0ff; cursor: pointer; border-radius: 6px;" data-project="ideaplanner" data-category="ai web microservices" data-keywords="ai idea planner venture validator feasibility neural viability index nvi saas startup product intelligence concode brain">
+          <div class="portfolio-visual">
+            <div class="portfolio-gradient"></div>
+            <div class="portfolio-number">08</div>
+            <div class="visual-device-badge web-badge" style="background: rgba(0, 240, 255, 0.12); border-color: rgba(0, 240, 255, 0.35); color: #00f0ff;">
+              <span class="device-icon">//</span>
+              <span>VENTURE ENGINE</span>
+            </div>
+          </div>
+          <div class="portfolio-info">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+              <h3 style="margin: 0; font-size: 1.15rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.02em;">AI Idea Planner &amp; Validator</h3>
+              <span class="github-topic-badge" style="background: rgba(0, 240, 255, 0.12); border: 1px solid rgba(0, 240, 255, 0.35); color: #00f0ff; font-size: 10px; font-weight: 500; padding: 2px 8px; border-radius: 4px; font-family: var(--font-mono); letter-spacing: 0.04em; text-transform: uppercase;">Neural Brain &bull; NVI Validator</span>
+            </div>
+            <p style="color: var(--text-secondary); font-size: 0.85rem; line-height: 1.6; margin-bottom: 14px;">Commercial feasibility auditor powered by CONCODE's Venture &amp; Product Intelligence Engine. Computes 4D Neural Viability Index (NVI), stress-tests pricing, red-teams bottlenecks, and maps to CONCODE Guilds.</p>
+            <div class="portfolio-tags" style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px;">
+              <span style="font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); font-family: var(--font-mono);">NVI Matrix</span>
+              <span style="font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); font-family: var(--font-mono);">Unit Economics</span>
+              <span style="font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); font-family: var(--font-mono);">Red Team</span>
+              <span style="font-size: 10px; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted); font-family: var(--font-mono);">30-Day Sprint</span>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center; justify-content: space-between; margin-top: 14px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px;">
+              <a href="/project/ai-idea-planner/" target="_blank" rel="noopener noreferrer" class="btn-launch-demo" onclick="event.stopPropagation();" style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 4px; background: rgba(0, 240, 255, 0.12); border: 1px solid #00f0ff; color: #00f0ff; text-decoration: none; font-size: 0.78rem; font-weight: 500; font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.04em;">Launch Planner &nearr;</a>
+              <div class="portfolio-inspect-cta" style="font-size: 0.75rem; font-weight: 500; font-family: var(--font-mono); color: #00f0ff; display: inline-flex; align-items: center; gap: 4px; text-transform: uppercase; letter-spacing: 0.04em;">
+                <span>Specs</span> &rarr;
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1098,19 +1430,30 @@
     <div class="container">
       <div class="footer-grid">
         <div class="footer-brand">
-          <a href="#" class="nav-logo" id="footer-logo">
+          <a href="/" class="nav-logo" id="footer-logo" aria-label="CONCODE Home">
             <svg class="nav-logo-svg" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <!-- 7 Eyelashes on top arc -->
-              <path d="M 20 39 L 13 28 M 29 31 L 23 18 M 39 26 L 35 12 M 50 24 L 50 10 M 61 26 L 65 12 M 71 31 L 77 18 M 80 39 L 87 28" stroke="#00f0ff" stroke-width="5" stroke-linecap="round"/>
-              <!-- Eye outer bracket path -->
-              <path d="M 15 50 C 30 20, 70 20, 85 50" stroke="#00f0ff" stroke-width="8" stroke-linecap="round"/>
-              <path d="M 15 50 C 30 80, 70 80, 85 50" stroke="#00f0ff" stroke-width="8" stroke-linecap="round"/>
-              <!-- Central glowing core circular nucleus -->
-              <circle cx="50" cy="50" r="14" fill="#00f0ff" class="logo-nucleus-svg"/>
-              <!-- Internal bracket </> code symbol -->
-              <path d="M 45 44 L 39 50 L 45 56 M 55 44 L 61 50 L 55 56 M 52 42 L 48 58" stroke="#121c26" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+              <defs>
+                <filter id="liquid-eye-filter-footer" x="-20%" y="-20%" width="140%" height="140%">
+                  <feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="3" result="noise"/>
+                  <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G"/>
+                  <feGaussianBlur stdDeviation="0.4" result="blur"/>
+                </filter>
+              </defs>
+              <g filter="url(#liquid-eye-filter-footer)" class="liquid-eye-group">
+                <!-- Fluid Outer Aura Ring -->
+                <circle cx="50" cy="50" r="42" stroke="#38bdf8" stroke-width="2" class="liquid-outer-ring" stroke-dasharray="120, 10"/>
+                <!-- Fluid Top Arc -->
+                <path class="liquid-arc-top" d="M 16 50 C 30 20, 70 20, 84 50" stroke="#38bdf8" stroke-width="7" stroke-linecap="round"/>
+                <!-- Fluid Bottom Arc -->
+                <path class="liquid-arc-bot" d="M 16 50 C 30 80, 70 80, 84 50" stroke="#38bdf8" stroke-width="7" stroke-linecap="round"/>
+                <!-- Fluid Core Nucleus -->
+                <g class="eye-pupil-group">
+                  <circle cx="50" cy="50" r="14" fill="#38bdf8" class="logo-nucleus-svg"/>
+                  <path d="M 45 44 L 39 50 L 45 56 M 55 44 L 61 50 L 55 56 M 52 42 L 48 58" stroke="#0f172a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                </g>
+              </g>
             </svg>
-            <span class="nav-logo-text scramble-logo" data-scramble="CONCODE">CONCODE</span>
+            <span class="nav-logo-text scramble-logo" id="footer-logo-text" data-scramble="CONCODE"><span class="logo-letter" data-letter="C">C</span><span class="logo-letter" data-letter="O">O</span><span class="logo-letter" data-letter="N">N</span><span class="logo-letter" data-letter="C">C</span><span class="logo-letter" data-letter="O">O</span><span class="logo-letter" data-letter="D">D</span><span class="logo-letter" data-letter="E">E</span></span>
           </a>
           <p>High-performance digital platforms engineered for companies that refuse to settle.</p>
         </div>
@@ -1180,9 +1523,12 @@
   <!-- Case Study / System Inspector Drawer -->
   <div id="inspector-drawer" class="drawer-overlay">
     <div class="drawer-panel drawer-panel-lg">
-      <div class="drawer-header">
+      <div class="drawer-header" style="display: flex; align-items: center; justify-content: space-between;">
         <span class="drawer-title" id="inspector-title">System Subsystem Specs</span>
-        <button class="modal-close" id="inspector-close">&times;</button>
+        <div style="display: flex; align-items: center; gap: 12px; margin-left: auto;">
+          <a id="inspector-launch-btn" href="#" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-primary" style="display: none; text-decoration: none; align-items: center; gap: 6px; font-size: 0.82rem; padding: 6px 14px;">Launch Live App &nearr;</a>
+          <button class="modal-close" id="inspector-close">&times;</button>
+        </div>
       </div>
       
       <div class="inspector-content">
@@ -1287,16 +1633,16 @@
   </div>
 
   <!-- CDNs -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
-  <script src="src/three-scene.js?v=2.4"></script>
+  <script src="src/three-scene.js?v=2.7"></script>
+  <script src="src/body/concode-human-body-system.js?v=1.0"></script>
   <script src="src/voice/wake-word-listener.js?v=1.0"></script>
   <script src="src/voice/voice-orb-visualizer.js?v=1.0"></script>
   <script src="src/voice/voice-command-dispatcher.js?v=1.0"></script>
   <script src="src/voice/concode-voice-agent.js?v=1.0"></script>
-  <script src="src/main.js?v=2.4"></script>
+  <script src="src/main.js?v=2.5"></script>
 </body>
 </html>

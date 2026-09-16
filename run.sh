@@ -30,14 +30,14 @@ if [ -z "$NODE_BIN" ] && command -v node >/dev/null 2>&1; then
 fi
 
 if [ -z "$NODE_BIN" ]; then
-  echo -e "${RED}❌ Node.js not detected under NVM version paths or system PATH.${NC}"
+  echo -e "${RED}[ERROR] Node.js not detected under NVM version paths or system PATH.${NC}"
   exit 1
 fi
 
 # Export Node directory to PATH so npm sub-processes can resolve 'node'
 export PATH="$(dirname "$NODE_BIN"):$PATH"
 
-echo -e "${GREEN}✓ Node.js loaded: ${NODE_BIN}${NC}"
+echo -e "${GREEN}[OK] Node.js loaded: ${NODE_BIN}${NC}"
 
 # Install packages
 if [ ! -d "node_modules" ]; then
@@ -46,13 +46,44 @@ if [ ! -d "node_modules" ]; then
 fi
 
 
+# Clean up any stale instances on ports 3000 and 3001 to prevent EADDRINUSE crash
+if lsof -ti :3000 >/dev/null 2>&1; then
+  echo -e "${YELLOW}[PORT 3000] Clearing previous process to prevent collision...${NC}"
+  lsof -ti :3000 | xargs kill -9 2>/dev/null || true
+  sleep 0.5
+fi
+if lsof -ti :3001 >/dev/null 2>&1; then
+  lsof -ti :3001 | xargs kill -9 2>/dev/null || true
+fi
+if lsof -ti :8000 >/dev/null 2>&1; then
+  echo -e "${YELLOW}[PORT 8000] Clearing previous neural brain process...${NC}"
+  lsof -ti :8000 | xargs kill -9 2>/dev/null || true
+  sleep 0.5
+fi
+
+# Detect Python environment for Neural Brain
+PYTHON_BIN=""
+if [ -f ".venv/bin/python" ]; then
+  PYTHON_BIN=".venv/bin/python"
+elif command -v python3 >/dev/null 2>&1; then
+  PYTHON_BIN="$(command -v python3)"
+fi
+
+PYTHON_PID=""
+if [ -n "$PYTHON_BIN" ] && [ -d "concode_engine" ]; then
+  echo -e "${CYAN}Starting Python Neural Brain API on port 8000...${NC}"
+  "$PYTHON_BIN" -m concode_engine.api_server >/dev/null 2>&1 &
+  PYTHON_PID=$!
+fi
+
 # Run Express App
 echo -e "${CYAN}Starting backend server...${NC}"
 "$NODE_BIN" server.js &
 SERVER_PID=$!
 
 cleanup() {
-  echo -e "\n${YELLOW}⏹️  Shutting down server (PID: $SERVER_PID)...${NC}"
+  echo -e "\n${YELLOW}[SHUTDOWN] Shutting down servers (Node PID: $SERVER_PID, Python PID: $PYTHON_PID)...${NC}"
+  [ -n "$PYTHON_PID" ] && kill "$PYTHON_PID" 2>/dev/null
   kill "$SERVER_PID" 2>/dev/null
   wait "$SERVER_PID" 2>/dev/null
   exit 0
@@ -76,10 +107,10 @@ if [ -z "$NO_BROWSER" ]; then
   done
 
   if [ $READY -eq 1 ]; then
-    echo -e "${GREEN}✓ Ecosystem ready. Launching viewport to: $URL${NC}"
+    echo -e "${GREEN}[READY] Ecosystem ready. Launching viewport to: $URL${NC}"
     open "$URL"
   else
-    echo -e "${RED}❌ Server mount timeout. Check logs.${NC}"
+    echo -e "${RED}[ERROR] Server mount timeout. Check logs.${NC}"
   fi
 fi
 

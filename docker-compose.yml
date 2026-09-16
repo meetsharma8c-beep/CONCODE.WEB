@@ -21,6 +21,8 @@ services:
       - ./config:/app/config
       - ./utils:/app/utils
       - ./server.js:/app/server.js
+      # Optional: Mount Obsidian Vault for emotional graph sync
+      # - ${OBSIDIAN_VAULT_PATH:-./data/obsidian}:/data/obsidian-vault
 
   concode-db:
     image: mongo:6.0
@@ -32,5 +34,5 @@ services:
       - ./mongo-data:/data/db
     environment:
       - MONGO_INITDB_ROOT_USERNAME=concode_admin
-      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD:-concode_secure_db_pw}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD:?MONGO_PASSWORD must be set in .env}
 

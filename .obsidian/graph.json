@@ -1,0 +1,72 @@
+{
+  "collapse-filter": false,
+  "search": "",
+  "showTags": true,
+  "showAttachments": false,
+  "hideUnresolved": false,
+  "showOrphans": true,
+  "collapse-color-groups": false,
+  "colorGroups": [
+    {
+      "query": "tag:#layer/frontend",
+      "color": {
+        "a": 1,
+        "rgb": 8490232
+      }
+    },
+    {
+      "query": "tag:#layer/backend",
+      "color": {
+        "a": 1,
+        "rgb": 3462041
+      }
+    },
+    {
+      "query": "tag:#layer/python",
+      "color": {
+        "a": 1,
+        "rgb": 12616956
+      }
+    },
+    {
+      "query": "tag:#layer/ai",
+      "color": {
+        "a": 1,
+        "rgb": 3719160
+      }
+    },
+    {
+      "query": "tag:#emotion",
+      "color": {
+        "a": 1,
+        "rgb": 16042166
+      }
+    },
+    {
+      "query": "tag:#layer/storage",
+      "color": {
+        "a": 1,
+        "rgb": 16487004
+      }
+    },
+    {
+      "query": "tag:#layer/docker",
+      "color": {
+        "a": 1,
+        "rgb": 2533370
+      }
+    }
+  ],
+  "collapse-display": false,
+  "showArrow": true,
+  "textFadeMultiplier": 0,
+  "nodeSizeMultiplier": 1.5,
+  "lineSizeMultiplier": 1.3,
+  "collapse-forces": false,
+  "centerStrength": 0.5,
+  "repelStrength": 14,
+  "linkStrength": 1,
+  "linkDistance": 180,
+  "scale": 1.0,
+  "close": false
+}

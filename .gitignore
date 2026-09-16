@@ -13,6 +13,9 @@ web_modules/
 # Database fallbacks (User leads, chats, routes)
 data/*.json
 !data/.gitkeep
+data/deployments/
+data/dynamic_skills/
+data/obsidian_vault/
 
 # System files
 .DS_Store
@@ -45,6 +48,8 @@ config/*.json
 mongo-data/
 .vercel
 .env*
+**/__pycache__/
 __pycache__/
 *.pyc
+**/*.pyc
 .pytest_cache/

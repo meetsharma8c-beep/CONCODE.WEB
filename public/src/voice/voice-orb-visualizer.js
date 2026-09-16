@@ -1,9 +1,14 @@
 /**
  * ==========================================================================
- * CONCODE AI — Holographic Quantum Fluid Voice Visualizer
- * Dynamic 60FPS Fluid Wave Sphere & Audio-Reactive Quantum Core Organism.
- * Renders multi-harmonic radial wave ripples, glowing particle nucleus,
- * and liquid spectral lighting.
+ * CONCODE AI — High-Energy Glowing Plasma Core Voice Engine v21.0
+ * File: public/src/voice/voice-orb-visualizer.js
+ * 
+ * FEATURES:
+ *  1. White-Hot Central Plasma Nucleus with Multi-Layer Radiance Halo
+ *  2. Audio-Reactive Energy Breathing & Radial Shockwave Expansion
+ *  3. High-Velocity Rotating Energy Plasma Arcs & Floating Star Dust
+ *  4. Affective Emotion Color Adaptation (Cyan, Gold, Crimson, Violet)
+ *  5. Pure High-Energy Visualizer — Compact, Vibrant, Zero Clutter
  * ==========================================================================
  */
 
@@ -14,227 +19,185 @@ class VoiceOrbVisualizer {
     this.listener = listenerModule;
 
     this.state = 'PASSIVE'; // 'PASSIVE' | 'ACTIVATED' | 'PROCESSING' | 'SPEAKING' | 'ERROR'
+    this.currentEmotionKey = 'CALM';
     this.animFrameId = null;
-    this.phase = 0;
+    this.time = 0;
+    this.smoothedEnergy = 0;
+
+    // Energy Rays & Star Dust Particles
+    this.rays = [];
     this.particles = [];
-    this.particleCount = 28;
+    this.initEnergyElements();
 
     this.initCanvasDpr();
-    this.initParticles();
     this.startRenderLoop();
   }
 
-  /**
-   * DPR Scaling for high-density Retina displays
-   */
   initCanvasDpr() {
     const dpr = window.devicePixelRatio || 1;
     const rect = this.canvas.getBoundingClientRect();
-    this.width = rect.width || 80;
-    this.height = rect.height || 80;
+    this.width = rect.width || 96;
+    this.height = rect.height || 96;
 
     this.canvas.width = this.width * dpr;
     this.canvas.height = this.height * dpr;
     this.ctx.scale(dpr, dpr);
   }
 
-  /**
-   * Initializes floating quantum particles
-   */
-  initParticles() {
-    this.particles = [];
-    for (let i = 0; i < this.particleCount; i++) {
-      this.particles.push({
-        angle: Math.random() * Math.PI * 2,
-        dist: 6 + Math.random() * 22,
-        radius: 0.8 + Math.random() * 1.8,
-        speed: (0.008 + Math.random() * 0.02) * (Math.random() > 0.5 ? 1 : -1),
-        pulseOffset: Math.random() * Math.PI * 2,
-        alpha: 0.3 + Math.random() * 0.7
-      });
-    }
-  }
-
-  /**
-   * Updates state transition
-   */
   setState(newState) {
     if (this.state === newState) return;
     this.state = newState;
   }
 
-  /**
-   * Main 60FPS fluid render loop
-   */
+  setEmotion(emotionKey) {
+    if (emotionKey && this.currentEmotionKey !== emotionKey) {
+      this.currentEmotionKey = emotionKey;
+    }
+  }
+
+  initEnergyElements() {
+    // 12 Plasma Energy Rays
+    this.rays = [];
+    for (let i = 0; i < 12; i++) {
+      this.rays.push({
+        angle: (i / 12) * Math.PI * 2,
+        length: Math.random() * 18 + 14,
+        speed: Math.random() * 0.04 + 0.02,
+        width: Math.random() * 2 + 1
+      });
+    }
+
+    // 24 Floating Star Dust Particles
+    this.particles = [];
+    for (let i = 0; i < 24; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const dist = Math.random() * 28 + 8;
+      this.particles.push({
+        angle,
+        dist,
+        baseDist: dist,
+        speed: Math.random() * 0.03 + 0.01,
+        size: Math.random() * 1.8 + 0.8,
+        alpha: Math.random() * 0.7 + 0.3
+      });
+    }
+  }
+
+  getEmotionPalette() {
+    const palettes = {
+      JOY: { core: '#ffffff', mid: '#fbbf24', outer: '#f59e0b', glow: 'rgba(251, 191, 36, 0.65)' },
+      FRUSTRATION: { core: '#ffffff', mid: '#ef4444', outer: '#dc2626', glow: 'rgba(239, 68, 68, 0.65)' },
+      CURIOSITY: { core: '#ffffff', mid: '#a855f7', outer: '#ec4899', glow: 'rgba(168, 85, 247, 0.65)' },
+      URGENCY: { core: '#ffffff', mid: '#f59e0b', outer: '#ea580c', glow: 'rgba(245, 158, 11, 0.65)' },
+      ANXIETY: { core: '#ffffff', mid: '#ec4899', outer: '#d946ef', glow: 'rgba(236, 72, 153, 0.65)' },
+      CALM: { core: '#ffffff', mid: '#00f0ff', outer: '#10b981', glow: 'rgba(0, 240, 255, 0.65)' },
+      EMPATHY: { core: '#ffffff', mid: '#3b82f6', outer: '#60a5fa', glow: 'rgba(59, 130, 246, 0.65)' },
+      CREATIVITY: { core: '#ffffff', mid: '#a855f7', outer: '#00f0ff', glow: 'rgba(168, 85, 247, 0.65)' }
+    };
+    return palettes[this.currentEmotionKey] || palettes.CALM;
+  }
+
   startRenderLoop() {
     const render = () => {
-      this.ctx.clearRect(0, 0, this.width, this.height);
-      const cx = this.width / 2;
-      const cy = this.height / 2;
-
-      // Extract microphone audio energy
-      const audioData = this.listener ? this.listener.getAudioData() : new Uint8Array(0);
-      let audioEnergy = 0;
-      if (audioData && audioData.length > 0) {
-        let sum = 0;
-        for (let i = 0; i < audioData.length; i++) sum += audioData[i];
-        audioEnergy = sum / audioData.length / 255; // Normalized 0..1
-      }
-
-      this.phase += 0.03 + audioEnergy * 0.08;
-
-      // 1. Ambient Glow Aura Field
-      this.drawGlowAura(cx, cy, audioEnergy);
-
-      // 2. Multi-Layer Fluid Wave Mesh
-      this.drawFluidWaveMesh(cx, cy, audioEnergy);
-
-      // 3. Quantum Nucleus Core
-      this.drawQuantumCore(cx, cy, audioEnergy);
-
-      // 4. Orbiting Energy Particles
-      this.drawOrbitParticles(cx, cy, audioEnergy);
-
+      this.time += 0.03;
+      this.drawGlowingPlasmaCore();
       this.animFrameId = requestAnimationFrame(render);
     };
-
     render();
   }
 
-  /**
-   * 1. Ambient Fluid Glow Aura Field
-   */
-  drawGlowAura(cx, cy, energy) {
-    const pulse = Math.sin(this.phase * 0.5) * 2 + energy * 8;
-    const radius = 22 + pulse;
-    const grad = this.ctx.createRadialGradient(cx, cy, 2, cx, cy, radius + 14);
+  drawGlowingPlasmaCore() {
+    const { ctx, width, height, time } = this;
+    ctx.clearRect(0, 0, width, height);
 
-    let colorStop0 = 'rgba(0, 240, 255, 0.9)';
-    let colorStop1 = 'rgba(168, 85, 247, 0.4)';
+    const centerX = width / 2;
+    const centerY = height / 2;
+    const colors = this.getEmotionPalette();
 
-    if (this.state === 'PASSIVE') {
-      colorStop0 = 'rgba(16, 185, 129, 0.85)';
-      colorStop1 = 'rgba(6, 182, 212, 0.3)';
-    } else if (this.state === 'PROCESSING') {
-      colorStop0 = 'rgba(236, 72, 153, 0.95)';
-      colorStop1 = 'rgba(168, 85, 247, 0.5)';
-    } else if (this.state === 'SPEAKING') {
-      colorStop0 = 'rgba(251, 191, 36, 0.95)';
-      colorStop1 = 'rgba(245, 158, 11, 0.5)';
+    // Fetch Audio Frequency Energy
+    let rawAudioEnergy = 0;
+    if (this.listener && typeof this.listener.getAudioEnergy === 'function') {
+      rawAudioEnergy = this.listener.getAudioEnergy() || 0;
+    }
+    this.smoothedEnergy += (rawAudioEnergy - this.smoothedEnergy) * 0.2;
+
+    let energyPulse = 0.15 + this.smoothedEnergy * 0.75;
+    if (this.state === 'SPEAKING') energyPulse = 0.55 + this.smoothedEnergy * 0.65;
+    else if (this.state === 'PROCESSING') energyPulse = 0.35 + Math.sin(time * 6) * 0.2;
+
+    // 1. Draw Outer Glowing Energy Aura
+    const auraRadius = width * 0.42 * (1 + energyPulse * 0.25);
+    const auraGrad = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, auraRadius);
+    auraGrad.addColorStop(0, colors.glow);
+    auraGrad.addColorStop(0.55, colors.outer);
+    auraGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+    ctx.fillStyle = auraGrad;
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, auraRadius, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 2. Draw Rotating Plasma Energy Rays
+    for (let i = 0; i < this.rays.length; i++) {
+      const ray = this.rays[i];
+      ray.angle += ray.speed + (this.state === 'SPEAKING' ? 0.03 : 0);
+
+      const rLength = ray.length * (1 + energyPulse * 0.4);
+      const startX = centerX + Math.cos(ray.angle) * 8;
+      const startY = centerY + Math.sin(ray.angle) * 8;
+      const endX = centerX + Math.cos(ray.angle) * rLength;
+      const endY = centerY + Math.sin(ray.angle) * rLength;
+
+      ctx.beginPath();
+      ctx.moveTo(startX, startY);
+      ctx.lineTo(endX, endY);
+      ctx.strokeStyle = colors.mid;
+      ctx.lineWidth = ray.width * (1 + energyPulse * 0.5);
+      ctx.globalAlpha = 0.6 + Math.sin(time * 4 + i) * 0.3;
+      ctx.stroke();
     }
 
-    grad.addColorStop(0, colorStop0);
-    grad.addColorStop(0.6, colorStop1);
-    grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.globalAlpha = 1.0;
 
-    this.ctx.fillStyle = grad;
-    this.ctx.beginPath();
-    this.ctx.arc(cx, cy, radius + 14, 0, Math.PI * 2);
-    this.ctx.fill();
-  }
+    // 3. Draw Orbiting Star Dust Particles
+    for (let i = 0; i < this.particles.length; i++) {
+      const p = this.particles[i];
+      p.angle += p.speed * (1 + energyPulse * 0.5);
+      const currentDist = p.baseDist * (1 + Math.sin(time * 2 + i) * 0.15 + energyPulse * 0.3);
 
-  /**
-   * 2. Multi-Harmonic Fluid Radial Wave Mesh (Silky Liquid Wave Spheres)
-   */
-  drawFluidWaveMesh(cx, cy, energy) {
-    const numPoints = 120;
-    const layers = 3;
+      const px = centerX + Math.cos(p.angle) * currentDist;
+      const py = centerY + Math.sin(p.angle) * currentDist;
 
-    let strokeColors = [
-      'rgba(0, 240, 255, 0.85)',
-      'rgba(168, 85, 247, 0.65)',
-      'rgba(236, 72, 153, 0.55)'
-    ];
-
-    if (this.state === 'PASSIVE') {
-      strokeColors = [
-        'rgba(16, 185, 129, 0.85)',
-        'rgba(6, 182, 212, 0.65)',
-        'rgba(52, 211, 153, 0.55)'
-      ];
-    } else if (this.state === 'SPEAKING') {
-      strokeColors = [
-        'rgba(251, 191, 36, 0.9)',
-        'rgba(245, 158, 11, 0.7)',
-        'rgba(253, 230, 138, 0.5)'
-      ];
+      ctx.beginPath();
+      ctx.arc(px, py, p.size, 0, Math.PI * 2);
+      ctx.fillStyle = colors.mid;
+      ctx.globalAlpha = p.alpha;
+      ctx.shadowColor = colors.glow;
+      ctx.shadowBlur = 6;
+      ctx.fill();
     }
 
-    for (let layer = 0; layer < layers; layer++) {
-      const baseR = 18 + layer * 3.5 + energy * 6;
-      const phaseOffset = this.phase * (1 + layer * 0.3) * (layer % 2 === 0 ? 1 : -1);
-      const harmonics = 3 + layer;
+    ctx.globalAlpha = 1.0;
+    ctx.shadowBlur = 0;
 
-      this.ctx.beginPath();
-      for (let i = 0; i <= numPoints; i++) {
-        const angle = (i / numPoints) * Math.PI * 2;
-        const wave1 = Math.sin(angle * harmonics + phaseOffset) * (2.5 + energy * 7);
-        const wave2 = Math.cos(angle * (harmonics + 2) - phaseOffset) * (1.5 + energy * 4);
-        const r = baseR + wave1 + wave2;
+    // 4. Central White-Hot Energy Core
+    const coreRadius = Math.max(6, width * 0.18 * (1 + energyPulse * 0.3));
+    const coreGrad = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, coreRadius * 2);
+    coreGrad.addColorStop(0, '#ffffff');
+    coreGrad.addColorStop(0.35, colors.mid);
+    coreGrad.addColorStop(0.85, colors.outer);
+    coreGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
 
-        const x = cx + Math.cos(angle) * r;
-        const y = cy + Math.sin(angle) * r;
+    ctx.fillStyle = coreGrad;
+    ctx.shadowColor = colors.glow;
+    ctx.shadowBlur = 15;
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, coreRadius * 2, 0, Math.PI * 2);
+    ctx.fill();
 
-        if (i === 0) this.ctx.moveTo(x, y);
-        else this.ctx.lineTo(x, y);
-      }
-
-      this.ctx.closePath();
-      this.ctx.strokeStyle = strokeColors[layer];
-      this.ctx.lineWidth = 1.6 - layer * 0.3;
-      this.ctx.stroke();
-    }
+    ctx.shadowBlur = 0;
   }
 
-  /**
-   * 3. Quantum Core Nucleus
-   */
-  drawQuantumCore(cx, cy, energy) {
-    const pulse = Math.sin(this.phase * 2) * 1.5 + energy * 5;
-    const coreR = Math.max(4, 7 + pulse);
-
-    let coreColor = '#00f0ff';
-    if (this.state === 'PASSIVE') coreColor = '#10b981';
-    if (this.state === 'PROCESSING') coreColor = '#ec4899';
-    if (this.state === 'SPEAKING') coreColor = '#fbbf24';
-
-    this.ctx.save();
-    this.ctx.shadowColor = coreColor;
-    this.ctx.shadowBlur = 14;
-    this.ctx.fillStyle = coreColor;
-
-    this.ctx.beginPath();
-    this.ctx.arc(cx, cy, coreR, 0, Math.PI * 2);
-    this.ctx.fill();
-    this.ctx.restore();
-  }
-
-  /**
-   * 4. Orbiting Energy Micro-Particles
-   */
-  drawOrbitParticles(cx, cy, energy) {
-    for (let p of this.particles) {
-      p.angle += p.speed * (this.state === 'PROCESSING' ? 2.5 : 1);
-      const r = p.dist + Math.sin(this.phase + p.pulseOffset) * (2 + energy * 6);
-
-      const x = cx + Math.cos(p.angle) * r;
-      const y = cy + Math.sin(p.angle) * r;
-
-      let pColor = 'rgba(0, 240, 255, ';
-      if (this.state === 'PASSIVE') pColor = 'rgba(16, 185, 129, ';
-      if (this.state === 'PROCESSING') pColor = 'rgba(236, 72, 153, ';
-      if (this.state === 'SPEAKING') pColor = 'rgba(251, 191, 36, ';
-
-      this.ctx.fillStyle = pColor + p.alpha + ')';
-      this.ctx.beginPath();
-      this.ctx.arc(x, y, p.radius, 0, Math.PI * 2);
-      this.ctx.fill();
-    }
-  }
-
-  /**
-   * Cleanup animation frame
-   */
   destroy() {
     if (this.animFrameId) {
       cancelAnimationFrame(this.animFrameId);
@@ -242,8 +205,7 @@ class VoiceOrbVisualizer {
   }
 }
 
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = VoiceOrbVisualizer;
-} else {
+// Global Export
+if (typeof window !== 'undefined') {
   window.VoiceOrbVisualizer = VoiceOrbVisualizer;
 }

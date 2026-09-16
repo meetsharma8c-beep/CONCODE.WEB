@@ -89,10 +89,18 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 16px;
+  padding: 8px 14px;
   background-color: var(--header-bg);
   border-bottom: 1px solid var(--border-color);
   user-select: none;
+  position: relative;
+  z-index: 20;
+}
+
+.title-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
 }
 
 .buttons {
@@ -111,11 +119,179 @@ body {
 .buttons .minimize { background-color: #ffbd2e; }
 .buttons .maximize { background-color: #27c93f; }
 
+/* Custom Animated CRT Monitor Logo */
+.terminal-brand-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.terminal-logo-svg {
+  width: 28px;
+  height: 25px;
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 6px var(--glow-color));
+  overflow: visible;
+}
+@keyframes crtSweep {
+  0% { transform: translateY(0); opacity: 0.2; }
+  50% { opacity: 0.95; }
+  100% { transform: translateY(16px); opacity: 0.2; }
+}
+.crt-sweep-line {
+  animation: crtSweep 2.2s linear infinite;
+}
+@keyframes crtCursorBlink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+.crt-cursor-blink {
+  animation: crtCursorBlink 0.85s step-end infinite;
+}
+.terminal-brand-title {
+  color: var(--text-color);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-shadow: 0 0 6px var(--glow-color);
+}
+
 .title-text {
   color: #8c96a3;
   font-size: 12px;
   font-weight: 500;
-  margin-right: 48px; /* Offset buttons gap for balance */
+}
+
+.title-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-hud-toggle {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+  font-family: inherit;
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: 0.05em;
+}
+.btn-hud-toggle:hover {
+  background: rgba(57, 255, 20, 0.15);
+  box-shadow: 0 0 10px var(--glow-color);
+}
+
+/* Floating 3D Holographic Monolith HUD */
+.terminal-3d-hud {
+  position: absolute;
+  top: 52px;
+  right: 20px;
+  width: 270px;
+  background: rgba(10, 15, 20, 0.92);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  box-shadow: 0 0 25px rgba(0, 0, 0, 0.85), 0 0 12px var(--glow-color);
+  z-index: 60;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+  transition: transform 0.28s ease, opacity 0.28s ease;
+}
+.terminal-3d-hud.closed {
+  transform: scale(0.85) translateY(-20px);
+  opacity: 0;
+  pointer-events: none;
+}
+.hud-3d-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 7px 12px;
+  background: rgba(20, 25, 32, 0.85);
+  border-bottom: 1px solid var(--border-color);
+  font-size: 11px;
+}
+.hud-live-tag {
+  color: var(--text-color);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+.hud-dot {
+  width: 6px;
+  height: 6px;
+  background: var(--text-color);
+  border-radius: 50%;
+  box-shadow: 0 0 8px var(--text-color);
+  animation: blink 1.2s step-end infinite;
+}
+.hud-btn-close {
+  background: transparent;
+  border: none;
+  color: #8c96a3;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+}
+.hud-btn-close:hover {
+  color: #ff5f56;
+}
+.hud-3d-canvas-wrap {
+  width: 100%;
+  height: 200px;
+  position: relative;
+  cursor: grab;
+  background: radial-gradient(circle at center, rgba(16, 32, 22, 0.5) 0%, rgba(8, 12, 16, 0.95) 100%);
+}
+.hud-3d-canvas-wrap:active {
+  cursor: grabbing;
+}
+#terminal-3d-canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+.hud-3d-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 12px;
+  background: rgba(14, 18, 24, 0.85);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 10px;
+}
+.hud-status-text {
+  color: #8c96a3;
+  letter-spacing: 0.03em;
+}
+.hud-action-btn {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-color);
+  font-family: inherit;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  cursor: pointer;
+}
+.hud-action-btn:hover {
+  background: rgba(57, 255, 20, 0.2);
+  box-shadow: 0 0 8px var(--glow-color);
+}
+
+/* CRT Screen Power-On & Command Flash Animation */
+.crt-flicker-pulse {
+  animation: crtScreenFlicker 0.35s ease-out;
+}
+@keyframes crtScreenFlicker {
+  0% { filter: brightness(1.8) contrast(1.3); }
+  50% { filter: brightness(0.85) contrast(0.95); }
+  100% { filter: brightness(1) contrast(1); }
 }
 
 /* Console logs area */
@@ -138,7 +314,7 @@ body {
   text-shadow: 0 0 8px var(--glow-color);
   line-height: 1.1;
   margin-bottom: 15px;
-  font-weight: bold;
+  font-weight: 500;
   overflow-x: auto;
 }
 

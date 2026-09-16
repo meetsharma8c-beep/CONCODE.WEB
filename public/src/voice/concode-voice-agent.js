@@ -40,8 +40,8 @@ class ConCodeVoiceAgent {
       container.setAttribute('data-state', 'PASSIVE');
 
       container.innerHTML = `
-        <!-- Toast Popup -->
-        <div class="voice-toast-popup" id="voice-toast-popup">Copied to Clipboard!</div>
+        <!-- Sonar Radar Wave Ripple Burst -->
+        <div class="voice-sonar-ripple" id="voice-sonar-ripple"></div>
 
         <!-- Dedicated Voice Response Card (Independent from Chat Drawer) -->
         <div class="voice-response-card" id="voice-response-card">
@@ -57,7 +57,7 @@ class ConCodeVoiceAgent {
               </div>
               <span id="voice-status-label">Voice Guide</span>
             </div>
-            <span class="voice-agent-badge" id="voice-agent-badge">📐 Architect Agent</span>
+            <span class="voice-agent-badge" id="voice-agent-badge">ARCHITECT CORE</span>
             <button class="voice-card-close" id="voice-card-close" title="Close Voice Card">&times;</button>
           </div>
           
@@ -110,8 +110,9 @@ class ConCodeVoiceAgent {
           <div class="voice-chips-bar" id="voice-chips-bar"></div>
         </div>
 
-        <!-- Bioluminescent Nature Orb -->
+        <!-- Bioluminescent Nature Orb with Calling Halo -->
         <div class="voice-orb-wrapper" id="voice-orb-wrapper" title="CONCODE AI Hands-Free Voice Assistant">
+          <div class="voice-calling-halo" id="voice-calling-halo"></div>
           <div class="voice-glow-ring"></div>
           <div class="voice-glow-ring-2"></div>
           <canvas class="voice-canvas" id="voice-canvas" width="80" height="80"></canvas>
@@ -123,6 +124,9 @@ class ConCodeVoiceAgent {
             </svg>
           </div>
         </div>
+
+        <!-- Floating Toast Popup -->
+        <div class="voice-toast-popup" id="voice-toast-popup"></div>
       `;
 
       document.body.appendChild(container);
@@ -131,6 +135,8 @@ class ConCodeVoiceAgent {
 
     this.orbWrapper = document.getElementById('voice-orb-wrapper');
     this.voiceCardEl = document.getElementById('voice-response-card');
+    this.sonarRippleEl = document.getElementById('voice-sonar-ripple');
+    this.callingHaloEl = document.getElementById('voice-calling-halo');
     this.queryEl = document.getElementById('voice-query-text');
     this.responseEl = document.getElementById('voice-reply-text');
     this.agentBadgeEl = document.getElementById('voice-agent-badge');
@@ -142,10 +148,7 @@ class ConCodeVoiceAgent {
 
     const cardClose = document.getElementById('voice-card-close');
     if (cardClose) {
-      cardClose.addEventListener('click', () => {
-        if (this.voiceCardEl) this.voiceCardEl.classList.remove('active');
-        if (window.speechSynthesis) window.speechSynthesis.cancel();
-      });
+      cardClose.addEventListener('click', () => this.dismissVoiceAssistant());
     }
 
     // Attach Control Action Bar Listeners
@@ -156,10 +159,7 @@ class ConCodeVoiceAgent {
 
     const btnStop = document.getElementById('voice-btn-stop');
     if (btnStop) {
-      btnStop.addEventListener('click', () => {
-        if (window.speechSynthesis) window.speechSynthesis.cancel();
-        this.setState('PASSIVE');
-      });
+      btnStop.addEventListener('click', () => this.dismissVoiceAssistant());
     }
 
     const btnReplay = document.getElementById('voice-btn-replay');
@@ -193,6 +193,57 @@ class ConCodeVoiceAgent {
     setTimeout(() => {
       if (this.toastEl) this.toastEl.classList.remove('show');
     }, 2000);
+  }
+
+  /**
+   * Triggers sudden visual Call Summoning, Sonar Wave Ripple Burst, Bioluminescent Calling Halo & 3D Spring Response Card entrance
+   */
+  triggerCallActivationAnimation() {
+    // 0. Sudden Summon HUD container onto screen (from default hidden state)
+    if (this.hudContainer) {
+      this.hudContainer.classList.add('summoned');
+    }
+
+    // 1. Expand Sonar Radar Wave Ripple
+    if (this.sonarRippleEl) {
+      this.sonarRippleEl.classList.remove('active');
+      void this.sonarRippleEl.offsetWidth; // Trigger DOM reflow
+      this.sonarRippleEl.classList.add('active');
+    }
+
+    // 2. Activate Bioluminescent Calling Halo around Orb
+    if (this.orbWrapper) {
+      this.orbWrapper.classList.add('calling');
+      setTimeout(() => {
+        if (this.orbWrapper) this.orbWrapper.classList.remove('calling');
+      }, 3500);
+    }
+
+    // 3. Update Status Label & Open 3D Spring Response Card
+    if (this.statusLabelEl) {
+      this.statusLabelEl.textContent = 'Call Activated';
+    }
+    if (this.voiceCardEl) {
+      this.voiceCardEl.classList.add('active');
+    }
+  }
+
+  /**
+   * Smoothly dismisses the Voice Assistant back to default hidden state (display: none)
+   */
+  dismissVoiceAssistant() {
+    if (this.voiceCardEl) {
+      this.voiceCardEl.classList.remove('active');
+    }
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+    setTimeout(() => {
+      if (this.hudContainer) {
+        this.hudContainer.classList.remove('summoned');
+      }
+      this.setState('PASSIVE');
+    }, 350);
   }
 
   /**
@@ -240,7 +291,7 @@ class ConCodeVoiceAgent {
   }
 
   /**
-   * Attaches zero-effort auto-listening unlock
+   * Attaches zero-effort auto-listening unlock & orb trigger listeners
    */
   attachEventListeners() {
     const unlockHandsFreeListening = () => {
@@ -253,12 +304,18 @@ class ConCodeVoiceAgent {
       window.addEventListener(evt, unlockHandsFreeListening, { passive: true });
     });
 
+    const sectionBtn = document.getElementById('btn-trigger-voice-section');
+    if (sectionBtn) {
+      sectionBtn.addEventListener('click', () => {
+        if (this.voiceCardEl) this.voiceCardEl.classList.add('active');
+        this.activateVoiceCommandMode();
+      });
+    }
+
     if (this.orbWrapper) {
       this.orbWrapper.addEventListener('click', () => {
-        if (this.voiceCardEl && !this.voiceCardEl.classList.contains('active')) {
-          this.voiceCardEl.classList.add('active');
-        } else if (this.voiceCardEl) {
-          this.voiceCardEl.classList.remove('active');
+        if (this.voiceCardEl) {
+          this.voiceCardEl.classList.toggle('active');
         }
         this.activateVoiceCommandMode();
       });
@@ -269,30 +326,86 @@ class ConCodeVoiceAgent {
    * Spoken speech detected event handler -> Dispatches command to Voice Assistant pipeline
    * Applies intelligibility gate: rejects garbled transcripts gracefully per guidelines.
    */
+  /**
+   * Spoken speech detected event handler -> Dispatches command to Voice Assistant pipeline
+   * Applies wake keyword gating in PASSIVE mode & accepts direct speech in ACTIVATED mode.
+   */
   handleWakeWordTrigger(data) {
     if (this.state === 'SPEAKING' || this.state === 'PROCESSING') return;
-    
-    const transcript = (data.transcript || '').trim();
-    
-    // Intelligibility gate: reject noise, single chars, or garbled fragments
-    const wordCount = transcript.split(/\s+/).filter(w => w.length > 1).length;
+
+    const rawTranscript = (data.transcript || '').trim();
+    if (!rawTranscript) return;
+
+    const wordCount = rawTranscript.split(/\s+/).filter(w => w.length > 1).length;
     const confidence = data.confidence || 0;
-    
-    if (wordCount < 1 || (confidence > 0 && confidence < 0.3)) {
-      console.log(`[ConCodeVoiceAgent] Rejected low-quality transcript: "${transcript}" (conf: ${confidence.toFixed(2)})`);
+
+    if (wordCount < 1 || (confidence > 0 && confidence < 0.1)) {
       return;
     }
-    
-    console.log(`[ConCodeVoiceAgent] Hands-Free Voice Input Accepted: "${transcript}" (conf: ${confidence.toFixed(2)})`);
-    
-    if (this.queryEl) this.queryEl.textContent = `"${transcript}"`;
-    if (this.responseEl) this.responseEl.textContent = 'Thinking & synthesizing reply...';
-    if (this.voiceCardEl) this.voiceCardEl.classList.add('active');
 
-    this.activateVoiceCommandMode();
+    const wakeMatch = data.wakeWordMatch || { found: false, wakeWord: null, inlineCommand: rawTranscript };
 
-    if (this.dispatcher && transcript) {
-      this.dispatcher.dispatchToConCodeAi(transcript);
+    // PASSIVE MODE: Require explicit Wake Phrase (e.g., "Hey Concode") to wake up
+    if (this.state === 'PASSIVE') {
+      if (!wakeMatch.found) {
+        // Ambient background speech without wake phrase -> ignore gracefully
+        return;
+      }
+
+      console.log(`[ConCodeVoiceAgent] Wake Word Detected: "${wakeMatch.wakeWord}"`);
+      
+      // Play Web Audio activation chime & trigger visual Call Activation animation
+      if (this.dispatcher) {
+        this.dispatcher.playActivationChime();
+      }
+      this.triggerCallActivationAnimation();
+
+      // Check if user spoke an inline command after the wake word (e.g., "Hey Concode, what is API")
+      const inlineCmd = (wakeMatch.inlineCommand || '').trim();
+      if (inlineCmd.length > 0) {
+        if (this.queryEl) this.queryEl.textContent = `"${inlineCmd}"`;
+
+        // Only dispatch if the audio frame is finalized (user finished speaking)
+        if (data.isFinal) {
+          console.log(`[ConCodeVoiceAgent] Executing Finalized Inline Command: "${inlineCmd}"`);
+          if (this.responseEl) this.responseEl.textContent = 'Thinking & synthesizing reply...';
+          this.setState('PROCESSING');
+          if (this.dispatcher) {
+            this.dispatcher.dispatchToConCodeAi(inlineCmd);
+          }
+          return;
+        }
+      }
+
+      // Wake phrase spoken without immediate inline command -> enter ACTIVATED listening mode
+      this.setState('ACTIVATED');
+      if (this.queryEl) this.queryEl.textContent = `"Hey Concode..."`;
+      if (this.responseEl) this.responseEl.textContent = 'I am listening! What can I help you with?';
+      return;
+    }
+
+    // ACTIVATED MODE: User or Wake Word unlocked listening mode -> accept command text directly
+    let cleanCommand = rawTranscript;
+    if (wakeMatch.found && wakeMatch.inlineCommand) {
+      cleanCommand = wakeMatch.inlineCommand;
+    }
+
+    if (this.queryEl) this.queryEl.textContent = `"${cleanCommand}"`;
+
+    if (this.responseEl && (this.state === 'ACTIVATED' || this.state === 'LISTENING')) {
+      this.responseEl.textContent = 'Listening to your full sentence...';
+      if (this.voiceCardEl) this.voiceCardEl.classList.add('active');
+    }
+
+    // ONLY dispatch to AI backend when sentence is finalized (isFinal is true)
+    if (data.isFinal) {
+      console.log(`[ConCodeVoiceAgent] Voice Command Finalized (${wordCount} words): "${cleanCommand}"`);
+      if (this.responseEl) this.responseEl.textContent = 'Thinking & synthesizing reply...';
+      this.setState('PROCESSING');
+
+      if (this.dispatcher) {
+        this.dispatcher.dispatchToConCodeAi(cleanCommand);
+      }
     }
   }
 
@@ -300,7 +413,7 @@ class ConCodeVoiceAgent {
    * Handles Computerized Brain response directly inside Voice Assistant interface.
    */
   handleVoiceBrainReply(data) {
-    if (this.queryEl && data.query) {
+    if (data.query && this.queryEl) {
       this.queryEl.textContent = `"${data.query}"`;
     }
     
@@ -312,7 +425,14 @@ class ConCodeVoiceAgent {
     }
 
     if (this.agentBadgeEl && data.agentBadge) {
-      this.agentBadgeEl.textContent = data.agentBadge;
+      let badgeText = data.agentBadge;
+      if (data.emotionalResonance) {
+        badgeText += ` | ${data.emotionalResonance.symbol} ${data.emotionalResonance.name}`;
+        if (this.visualizer && data.emotionalResonance.key) {
+          this.visualizer.setEmotion(data.emotionalResonance.key);
+        }
+      }
+      this.agentBadgeEl.textContent = badgeText;
     }
 
     // Render quick voice follow-up suggestion chips
@@ -337,8 +457,9 @@ class ConCodeVoiceAgent {
       this.voiceCardEl.classList.add('active');
     }
 
-    // Speak the ear-sanitized answer aloud
-    this.speak(spokenText);
+    // Speak with dynamic Affective TTS pitch & rate modulation
+    const speechParams = data.emotionalResonance ? data.emotionalResonance.ttsSpeechParams : null;
+    this.speak(spokenText, speechParams);
   }
 
   /**
@@ -361,7 +482,11 @@ class ConCodeVoiceAgent {
   /**
    * Switches to active voice command capture
    */
+  /**
+   * Switches to active voice command capture
+   */
   activateVoiceCommandMode() {
+    this.triggerCallActivationAnimation();
     if (this.listener) {
       this.listener.activateMic().catch(() => {});
     }
@@ -370,6 +495,17 @@ class ConCodeVoiceAgent {
       this.dispatcher.startCapture();
     } else {
       this.setState('ACTIVATED');
+    }
+  }
+
+  /**
+   * Toggles Voice Assistant listening mode on / off
+   */
+  toggleListening() {
+    if (this.state === 'PASSIVE') {
+      this.activateVoiceCommandMode();
+    } else {
+      this.dismissVoiceAssistant();
     }
   }
 
@@ -399,37 +535,52 @@ class ConCodeVoiceAgent {
     let clean = rawText
       // Strip code blocks entirely
       .replace(/```[\s\S]*?```/g, '')
-      // Strip inline code
+    clean = clean
+      .replace(/Node\.js/gi, 'Node JS')
+      .replace(/Express\.js/gi, 'Express JS')
+      .replace(/Three\.js/gi, 'Three JS')
+      .replace(/Vue\.js/gi, 'Vue JS')
+      .replace(/React\.js/gi, 'React JS')
+      .replace(/MongoDB/gi, 'Mongo D B')
+      .replace(/PostgreSQL/gi, 'Postgres S Q L')
+      .replace(/C\+\+/g, 'C plus plus')
+      .replace(/3D/g, 'Three D')
       .replace(/`[^`]+`/g, '')
-      // Strip HTML
       .replace(/<[^>]*>?/gm, '')
-      // Strip URLs
       .replace(/https?:\/\/\S+/gi, '')
-      // Strip markdown headers
       .replace(/^#{1,6}\s+/gm, '')
-      // Strip bold/italic/strikethrough markers
       .replace(/[\*\_\~\`]/g, '')
-      // Strip markdown links, keep text
       .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
-      // Strip numbered & bullet lists
       .replace(/^\s*\d+\.\s+/gm, '')
       .replace(/^\s*[\-\*\u2022]\s+/gm, '')
-      // Collapse whitespace
       .replace(/\n+/g, ' ')
       .replace(/\s{2,}/g, ' ')
       .trim();
     
-    // Take first 3 sentences
-    const sentences = clean.match(/[^.!?]*[.!?]/g) || [];
-    const spoken = sentences.filter(s => s.trim().length > 8).slice(0, 3).join(' ').trim();
-    return spoken || "Got it, I've processed that for you.";
+    if (!clean) return "I've processed your request.";
+
+    if (!/[.!?]$/.test(clean)) clean += '.';
+
+    const sentences = clean.match(/[^.!?]+[.!?]+/g) || [clean];
+    const spoken = sentences
+      .map(s => s.trim())
+      .filter(s => s.length > 3)
+      .slice(0, 3)
+      .join(' ');
+
+    return spoken || clean.slice(0, 200) || "I've processed your request.";
   }
 
   /**
    * Text-to-Speech synthesis — Ear-focused verbal delivery with Nature Creation voice.
    * Pre-sanitizes all input to guarantee clean spoken output per Voice Guidelines.
+   * Pauses background microphone listening to prevent TTS self-listening echo loops.
    */
-  speak(text, onEndCallback = null) {
+  speak(text, speechParams = null, onEndCallback = null) {
+    if (typeof speechParams === 'function') {
+      onEndCallback = speechParams;
+      speechParams = null;
+    }
     if (!('speechSynthesis' in window) || !text) {
       if (onEndCallback) onEndCallback();
       return;
@@ -444,32 +595,49 @@ class ConCodeVoiceAgent {
     }
 
     const utterance = new SpeechSynthesisUtterance(spokenText);
-    utterance.rate = 1.0;
-    utterance.pitch = 1.05;
+    utterance.rate = (speechParams && speechParams.rate) ? speechParams.rate : 1.0;
+    utterance.pitch = (speechParams && speechParams.pitch) ? speechParams.pitch : 1.05;
 
     // Select the most natural-sounding English voice available
-    const voices = window.speechSynthesis.getVoices();
-    if (voices && voices.length > 0) {
-      const preferredNames = ['Natural', 'Google', 'Samantha', 'Karen', 'Daniel', 'Zira', 'Alex'];
-      const naturalVoice = voices.find(v => 
-        preferredNames.some(name => v.name.includes(name)) && v.lang.startsWith('en')
-      ) || voices.find(v => v.lang.startsWith('en')) || voices[0];
-      if (naturalVoice) utterance.voice = naturalVoice;
+    const selectVoice = () => {
+      const voices = window.speechSynthesis.getVoices();
+      if (voices && voices.length > 0) {
+        const preferredNames = ['Natural', 'Google', 'Samantha', 'Karen', 'Daniel', 'Zira', 'Alex'];
+        const naturalVoice = voices.find(v => 
+          preferredNames.some(name => v.name.includes(name)) && v.lang.startsWith('en')
+        ) || voices.find(v => v.lang.startsWith('en')) || voices[0];
+        if (naturalVoice) utterance.voice = naturalVoice;
+      }
+    };
+    selectVoice();
+    if (window.speechSynthesis.onvoiceschanged !== undefined) {
+      window.speechSynthesis.onvoiceschanged = selectVoice;
     }
 
     utterance.onstart = () => {
       this.setState('SPEAKING');
+      // Pause mic listener so speaker audio won't echo back into speech recognition
+      if (this.listener) {
+        this.listener.pause();
+      }
     };
 
-    utterance.onend = () => {
+    let isHandled = false;
+    const handleSpeechComplete = () => {
+      if (isHandled) return;
+      isHandled = true;
       this.setState('PASSIVE');
+      // Resume mic listener with 400ms guard delay after speaker stops
+      setTimeout(() => {
+        if (this.listener) {
+          this.listener.resume();
+        }
+      }, 400);
       if (onEndCallback) onEndCallback();
     };
 
-    utterance.onerror = () => {
-      this.setState('PASSIVE');
-      if (onEndCallback) onEndCallback();
-    };
+    utterance.onend = handleSpeechComplete;
+    utterance.onerror = handleSpeechComplete;
 
     window.speechSynthesis.speak(utterance);
   }
@@ -492,16 +660,33 @@ class ConCodeVoiceAgent {
       };
       this.statusLabelEl.textContent = labels[newState] || newState;
     }
+    const stateBadge = document.getElementById('ai-current-state-badge');
+    if (stateBadge) {
+      stateBadge.textContent = `[STATE: ${newState}]`;
+    }
+    const liveLog = document.getElementById('voice-live-log');
+    if (liveLog) {
+      const timeStr = new Date().toLocaleTimeString();
+      liveLog.innerHTML += `<div>[${timeStr}] Assistant state: ${newState}</div>`;
+      liveLog.scrollTop = liveLog.scrollHeight;
+    }
     if (this.visualizer) {
       this.visualizer.setState(newState);
     }
   }
 }
 
-// Auto-initialize on DOM ready
-document.addEventListener('DOMContentLoaded', () => {
-  window.concodeVoiceAgent = new ConCodeVoiceAgent();
-});
+function initConcodeVoiceAgent() {
+  if (!window.concodeVoiceAgent) {
+    window.concodeVoiceAgent = new ConCodeVoiceAgent();
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initConcodeVoiceAgent);
+} else {
+  initConcodeVoiceAgent();
+}
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = ConCodeVoiceAgent;

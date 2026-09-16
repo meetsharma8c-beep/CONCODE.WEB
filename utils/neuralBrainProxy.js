@@ -7,7 +7,7 @@
  * 
  * Architecture:
  *   Website (Express :3000) → neuralBrainProxy → Python Brain (FastAPI :8000)
- *                                              ↘ JS concodeBrainEngine (fallback)
+ *                                              -> JS concodeBrainEngine (fallback)
  */
 
 const NEURAL_BRAIN_BASE = process.env.NEURAL_BRAIN_URL || 'http://localhost:8000';
@@ -39,8 +39,9 @@ async function isNeuralBrainOnline() {
   }
 
   try {
+    const healthTimeoutMs = parseInt(process.env.BRAIN_HEALTH_TIMEOUT_MS, 10) || 2500;
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 3000);
+    const timeout = setTimeout(() => controller.abort(), healthTimeoutMs);
 
     const response = await fetch(HEALTH_ENDPOINT, {
       signal: controller.signal,
@@ -155,7 +156,7 @@ async function queryCognitive(query, options = {}) {
     return {
       code: data.code || '',
       guild: data.guild || 'fullstack',
-      guild_icon: data.guild_icon || '⚡',
+      guild_icon: data.guild_icon || '//',
       confidence: data.confidence || 0.8,
       repair_applied: Boolean(data.repair_applied),
       session_id: data.session_id || sessionId,

@@ -64,15 +64,18 @@ class LocalLLMRunner:
                 flash_attn=use_flash_attn,
                 verbose=False
             )
+            self.is_real_model_loaded = True
             logger.info("In-Process Llama Model loaded into process RAM/VRAM successfully.")
         except Exception as e:
+            self.is_real_model_loaded = False
             logger.error(f"Failed to load llama_cpp model in-process: {e}")
 
     def generate_code_completion(
         self,
         prompt: str,
         system_prompt: str = None,
-        stream_callback: Callable[[str], None] = None
+        stream_callback: Callable[[str], None] = None,
+        allow_mock: bool = False
     ) -> str:
         """Generates code and responses in-process with optional token streaming callback."""
         sys_prompt = system_prompt or SYSTEM_PERSONA_PROMPT
@@ -101,7 +104,11 @@ class LocalLLMRunner:
             except Exception as e:
                 logger.error(f"In-process inference error: {e}")
 
-        # Native Bare-Metal Fallback Synthesizer
+        # When local weights are not loaded, return empty to let caller know no model is loaded
+        if not allow_mock:
+            return ""
+
+        # Native Bare-Metal Fallback Synthesizer for mock UI previews
         logger.info("[Bare-Metal Engine] Synthesizing offline code output...")
         return (
             "[STATE: EXECUTING]\n"

@@ -1,0 +1,39 @@
+{
+  "appId": "com.concode.aisigma",
+  "appName": "AI Sigma Gateway",
+  "webDir": "public/projects/ai-sigma-gateway",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https",
+    "cleartext": true
+  },
+  "plugins": {
+    "StatusBar": {
+      "style": "DARK",
+      "backgroundColor": "#030712",
+      "overlay": true
+    },
+    "SplashScreen": {
+      "launchShowDuration": 1500,
+      "backgroundColor": "#030712",
+      "androidSplashResourceName": "splash",
+      "androidScaleType": "CENTER_CROP",
+      "showSpinner": false
+    },
+    "Keyboard": {
+      "resize": "body",
+      "style": "DARK",
+      "resizeOnFullScreen": true
+    }
+  },
+  "ios": {
+    "contentInset": "always",
+    "preferredContentMode": "mobile",
+    "scheme": "AISigma"
+  },
+  "android": {
+    "allowMixedContent": true,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": true
+  }
+}

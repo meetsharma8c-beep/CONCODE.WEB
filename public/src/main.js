@@ -4,7 +4,12 @@
  * modal/form submissions, and chat interactions.
  */
 
-gsap.registerPlugin(ScrollTrigger);
+if (typeof gsap !== 'undefined') {
+  if (typeof ScrollTrigger !== 'undefined') {
+    gsap.registerPlugin(ScrollTrigger);
+  }
+  gsap.config({ force3D: true, nullTargetWarn: false });
+}
 
 // ═══════════════════════════════════════
 // NAVBAR SCROLL EFFECT
@@ -36,6 +41,90 @@ if (navToggle) {
   });
 }
 
+// Sync Navbar Auth Button with Login Session
+const navAuthBtn = document.getElementById('nav-btn-auth');
+if (navAuthBtn) {
+  const token = localStorage.getItem('concode_admin_token');
+  if (token) {
+    navAuthBtn.textContent = 'Workspace';
+    navAuthBtn.href = 'dashboard.html';
+    navAuthBtn.classList.add('authenticated');
+    navAuthBtn.style.color = '#00f0ff';
+    navAuthBtn.style.borderColor = 'rgba(0, 240, 255, 0.4)';
+  }
+}
+
+
+// ═══════════════════════════════════════
+// FLUID KINETIC TYPOGRAPHY & SVG LIQUID MORPHING ENGINE
+// ═══════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  const navLogo = document.getElementById('nav-logo');
+  const turbulence = document.getElementById('liquid-turbulence');
+  const displacement = document.getElementById('liquid-displacement');
+  const letters = document.querySelectorAll('.logo-letter');
+  
+  if (!navLogo) return;
+
+  let baseFreq = 0.02;
+  let targetFreq = 0.02;
+  let scaleVal = 3;
+  let targetScale = 3;
+
+  let animFrameId = null;
+
+  function updateLiquidPhysics() {
+    baseFreq += (targetFreq - baseFreq) * 0.08;
+    scaleVal += (targetScale - scaleVal) * 0.08;
+
+    if (turbulence) turbulence.setAttribute('baseFrequency', baseFreq.toFixed(4));
+    if (displacement) displacement.setAttribute('scale', scaleVal.toFixed(2));
+
+    if (Math.abs(targetFreq - baseFreq) > 0.0001 || Math.abs(targetScale - scaleVal) > 0.01) {
+      animFrameId = requestAnimationFrame(updateLiquidPhysics);
+    } else {
+      animFrameId = null;
+    }
+  }
+
+  function triggerLiquidRipple(intensity = 1.0) {
+    targetFreq = 0.045 * intensity;
+    targetScale = 12 * intensity;
+    if (!animFrameId) updateLiquidPhysics();
+
+    setTimeout(() => {
+      targetFreq = 0.018;
+      targetScale = 3;
+      if (!animFrameId) updateLiquidPhysics();
+    }, 450);
+  }
+
+  navLogo.addEventListener('mousemove', (e) => {
+    const rect = navLogo.getBoundingClientRect();
+    const speed = Math.hypot(e.movementX || 0, e.movementY || 0);
+    if (speed > 3) {
+      triggerLiquidRipple(Math.min(speed / 10, 1.8));
+    }
+  });
+
+  navLogo.addEventListener('mouseenter', () => {
+    triggerLiquidRipple(1.4);
+  });
+
+  navLogo.addEventListener('click', () => {
+    triggerLiquidRipple(2.2);
+  });
+
+  // Individual letter liquid spring hover effect
+  letters.forEach(letter => {
+    letter.addEventListener('mouseenter', () => {
+      letter.style.animation = 'none';
+      void letter.offsetWidth; // Trigger reflow
+      letter.style.animation = 'fluidSpringWave 0.75s cubic-bezier(0.68, -0.6, 0.32, 1.6) forwards';
+    });
+  });
+});
+
 
 
 // ═══════════════════════════════════════
@@ -43,47 +132,117 @@ if (navToggle) {
 // ═══════════════════════════════════════
 const revealItems = document.querySelectorAll('.reveal-item');
 
-revealItems.forEach((item, index) => {
-  ScrollTrigger.create({
-    trigger: item,
-    start: 'top 88%',
-    onEnter: () => {
-      // Stagger within siblings
-      const parent = item.parentElement;
-      const siblings = parent.querySelectorAll('.reveal-item');
-      const siblingIndex = Array.from(siblings).indexOf(item);
-
-      setTimeout(() => {
-        item.classList.add('revealed');
-      }, siblingIndex * 100);
-    }
+if (typeof ScrollTrigger !== 'undefined') {
+  revealItems.forEach((item, index) => {
+    ScrollTrigger.create({
+      trigger: item,
+      start: 'top 88%',
+      onEnter: () => {
+        const parent = item.parentElement;
+        const siblings = parent ? parent.querySelectorAll('.reveal-item') : [];
+        const siblingIndex = Array.from(siblings).indexOf(item);
+        setTimeout(() => {
+          item.classList.add('revealed');
+        }, siblingIndex * 100);
+      }
+    });
   });
-});
+} else if (typeof IntersectionObserver !== 'undefined') {
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('revealed');
+        revealObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1 });
+  revealItems.forEach(item => revealObserver.observe(item));
+} else {
+  revealItems.forEach(item => item.classList.add('revealed'));
+}
 // ═══════════════════════════════════════
-// ACTIVE SECTION DETECTION (Camera Panning)
+// HUD WAYFINDER DOCK (Zero-Lag Native IntersectionObserver)
 // ═══════════════════════════════════════
-const observerOptions = {
-  root: null,
-  rootMargin: '-25% 0px -25% 0px', // Center band triggers change
-  threshold: 0.15
-};
+const wayfinderNav = document.getElementById('hud-wayfinder');
+if (wayfinderNav) {
+  const waypoints = wayfinderNav.querySelectorAll('.hud-waypoint');
+  const targetIds = ['hero', 'problem-shift', 'services', 'ai-engine', 'portfolio', 'work', 'workspace', 'process', 'pricing', 'contact'];
 
-const observer = new IntersectionObserver((entries) => {
-  entries.forEach(entry => {
-    if (entry.isIntersecting) {
-      const sectionId = entry.target.id;
-      if (typeof setActiveSection === 'function') {
-        setActiveSection(sectionId);
+  // Smooth scroll on waypoint click
+  waypoints.forEach(wp => {
+    wp.addEventListener('click', (e) => {
+      e.preventDefault();
+      window.cyberAudio?.playClick();
+      const targetId = wp.getAttribute('data-target');
+      const targetEl = document.getElementById(targetId);
+      if (targetEl) {
+        targetEl.scrollIntoView({ behavior: 'smooth' });
+      }
+    });
+  });
+
+  // Zero-CPU native IntersectionObserver (off the main thread)
+  const waypointObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const id = entry.target.id;
+        waypoints.forEach(wp => {
+          if (wp.getAttribute('data-target') === id) {
+            wp.classList.add('active');
+          } else {
+            wp.classList.remove('active');
+          }
+        });
+      }
+    });
+  }, {
+    root: null,
+    rootMargin: '-20% 0px -40% 0px',
+    threshold: 0.1
+  });
+
+  targetIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) waypointObserver.observe(el);
+  });
+
+  // SFX Toggle & Latency Telemetry
+  const hudPingText = document.getElementById('hud-ping-text');
+  const hudSfxToggle = document.getElementById('hud-sfx-toggle');
+
+  if (hudSfxToggle) {
+    hudSfxToggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (window.cyberAudio) {
+        const muted = window.cyberAudio.toggleMute();
+        hudSfxToggle.innerHTML = muted 
+          ? '<svg class="sfx-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>'
+          : '<svg class="sfx-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>';
+        hudSfxToggle.classList.toggle('muted', muted);
+        hudSfxToggle.title = muted ? 'Sound FX: Muted' : 'Sound FX: Active';
+        if (!muted) {
+          window.cyberAudio.playClick();
+        }
+      }
+    });
+  }
+
+  if (hudPingText) {
+    async function measureLatency() {
+      const t0 = performance.now();
+      try {
+        await fetch('/api/health', { cache: 'no-store' });
+        const latency = Math.max(1, Math.round(performance.now() - t0));
+        hudPingText.textContent = `${latency}ms`;
+      } catch (e) {
+        hudPingText.textContent = '--';
       }
     }
-  });
-}, observerOptions);
+    measureLatency();
+    setInterval(measureLatency, 6000);
+  }
+}
 
-const observeSections = ['hero', 'services', 'nanotech-suite', 'work', 'process', 'pricing', 'contact'];
-observeSections.forEach(id => {
-  const el = document.getElementById(id);
-  if (el) observer.observe(el);
-});
 // ═══════════════════════════════════════
 // TEXT SCRAMBLER & MATRIX REVEALS
 // ═══════════════════════════════════════
@@ -267,20 +426,28 @@ const chatDrawer = document.getElementById('chat-drawer');
 
 // Open onboard modal from various CTAs
 function openOnboardModal() {
-  onboardModal.classList.add('open');
+  if (onboardModal) onboardModal.classList.add('open');
 }
 
-document.getElementById('btn-onboard').addEventListener('click', openOnboardModal);
-document.getElementById('btn-cta-onboard').addEventListener('click', openOnboardModal);
+const btnOnboard = document.getElementById('btn-onboard');
+if (btnOnboard) btnOnboard.addEventListener('click', openOnboardModal);
 
-document.getElementById('modal-close').addEventListener('click', () => {
-  onboardModal.classList.remove('open');
-});
+const btnCtaOnboard = document.getElementById('btn-cta-onboard');
+if (btnCtaOnboard) btnCtaOnboard.addEventListener('click', openOnboardModal);
+
+const modalClose = document.getElementById('modal-close');
+if (modalClose) {
+  modalClose.addEventListener('click', () => {
+    if (onboardModal) onboardModal.classList.remove('open');
+  });
+}
 
 // Close modal on backdrop click
-onboardModal.addEventListener('click', (e) => {
-  if (e.target === onboardModal) onboardModal.classList.remove('open');
-});
+if (onboardModal) {
+  onboardModal.addEventListener('click', (e) => {
+    if (e.target === onboardModal) onboardModal.classList.remove('open');
+  });
+}
 
 // AI Chat drawer
 const openChatDrawer = () => {
@@ -325,91 +492,99 @@ document.querySelectorAll('.btn-select-tier').forEach(btn => {
 // ═══════════════════════════════════════
 // ONBOARDING FORM
 // ═══════════════════════════════════════
-document.getElementById('onboard-form').addEventListener('submit', async (e) => {
-  e.preventDefault();
+const onboardForm = document.getElementById('onboard-form');
+if (onboardForm) {
+  onboardForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
 
-  const name = document.getElementById('client-name').value;
-  const email = document.getElementById('client-email').value;
-  const serviceType = document.getElementById('client-module').value;
-  const description = document.getElementById('project-desc').value;
+    const name = document.getElementById('client-name') ? document.getElementById('client-name').value : '';
+    const email = document.getElementById('client-email') ? document.getElementById('client-email').value : '';
+    const serviceType = document.getElementById('client-module') ? document.getElementById('client-module').value : 'Professional';
+    const description = document.getElementById('project-desc') ? document.getElementById('project-desc').value : '';
 
-  const consolePanel = document.getElementById('sync-console');
-  const consoleOutput = consolePanel.querySelector('.console-output');
-  consolePanel.classList.remove('hidden');
-  consoleOutput.innerHTML = '';
+    const consolePanel = document.getElementById('sync-console');
+    const consoleOutput = consolePanel ? consolePanel.querySelector('.console-output') : null;
+    if (consolePanel) consolePanel.classList.remove('hidden');
+    if (consoleOutput) consoleOutput.innerHTML = '';
 
-  const log = (msg, color = '#6366f1') => {
-    consoleOutput.innerHTML += `<div style="color: ${color}">→ ${msg}</div>`;
-  };
+    const log = (msg, color = '#6366f1') => {
+      if (consoleOutput) consoleOutput.innerHTML += `<div style="color: ${color}">→ ${msg}</div>`;
+    };
 
-  log('Processing your inquiry...');
-  await new Promise(r => setTimeout(r, 600));
-  log('Validating project parameters...');
-  await new Promise(r => setTimeout(r, 600));
+    log('Processing your inquiry...');
+    await new Promise(r => setTimeout(r, 600));
+    log('Validating project parameters...');
+    await new Promise(r => setTimeout(r, 600));
 
-  try {
-    const res = await fetch('/api/inquiry', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, serviceType, description })
-    });
-    const result = await res.json();
-    if (result.success) {
-      log('Inquiry submitted successfully! We\'ll be in touch soon.', '#22c55e');
-      await new Promise(r => setTimeout(r, 1500));
-      onboardModal.classList.remove('open');
-      consolePanel.classList.add('hidden');
-      document.getElementById('onboard-form').reset();
-    } else {
-      log(`Error: ${result.error.message}`, '#ef4444');
+    try {
+      const res = await fetch('/api/inquiry', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, serviceType, description })
+      });
+      const result = await res.json();
+      if (result.success) {
+        log('Inquiry submitted successfully! We\'ll be in touch soon.', '#22c55e');
+        await new Promise(r => setTimeout(r, 1500));
+        if (onboardModal) onboardModal.classList.remove('open');
+        if (consolePanel) consolePanel.classList.add('hidden');
+        onboardForm.reset();
+      } else {
+        const errMsg = (typeof result.error === 'object' && result.error !== null) ? (result.error.message || JSON.stringify(result.error)) : (result.error || 'Submission failed');
+        log(`Error: ${errMsg}`, '#ef4444');
+      }
+    } catch (err) {
+      log('Network error. Your inquiry has been saved locally.', '#f97316');
     }
-  } catch (err) {
-    log('Network error. Your inquiry has been saved locally.', '#f97316');
-  }
-});
+  });
+}
 
 // ═══════════════════════════════════════
 // CONTACT FORM
 // ═══════════════════════════════════════
-document.getElementById('contact-form').addEventListener('submit', async (e) => {
-  e.preventDefault();
+const contactForm = document.getElementById('contact-form');
+if (contactForm) {
+  contactForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
 
-  const name = document.getElementById('contact-name').value;
-  const email = document.getElementById('contact-email').value;
-  const message = document.getElementById('contact-message').value;
+    const name = document.getElementById('contact-name') ? document.getElementById('contact-name').value : '';
+    const email = document.getElementById('contact-email') ? document.getElementById('contact-email').value : '';
+    const message = document.getElementById('contact-message') ? document.getElementById('contact-message').value : '';
 
-  const consolePanel = document.getElementById('contact-console');
-  const consoleOutput = consolePanel.querySelector('.console-output');
-  consolePanel.classList.remove('hidden');
-  consoleOutput.innerHTML = '';
+    const consolePanel = document.getElementById('contact-console');
+    const consoleOutput = consolePanel ? consolePanel.querySelector('.console-output') : null;
+    if (consolePanel) consolePanel.classList.remove('hidden');
+    if (consoleOutput) consoleOutput.innerHTML = '';
 
-  const log = (msg, color = '#6366f1') => {
-    consoleOutput.innerHTML += `<div style="color: ${color}">→ ${msg}</div>`;
-  };
+    const log = (msg, color = '#6366f1') => {
+      if (consoleOutput) consoleOutput.innerHTML += `<div style="color: ${color}">→ ${msg}</div>`;
+    };
 
-  log('Sending your message...');
-  await new Promise(r => setTimeout(r, 500));
+    log('Sending your message...');
+    await new Promise(r => setTimeout(r, 500));
 
-  try {
-    const res = await fetch('/api/contact', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, message })
-    });
-    const result = await res.json();
-    if (result.success) {
-      log('Message sent! We\'ll respond within 12 hours.', '#22c55e');
-      document.getElementById('contact-form').reset();
-      setTimeout(() => {
-        consolePanel.classList.add('hidden');
-      }, 3000);
-    } else {
-      log(`Error: ${result.error.message}`, '#ef4444');
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, message })
+      });
+      const result = await res.json();
+      if (result.success) {
+        log('Message sent! We\'ll respond within 12 hours.', '#22c55e');
+        contactForm.reset();
+        setTimeout(() => {
+          if (consolePanel) consolePanel.classList.add('hidden');
+        }, 3000);
+      } else {
+        const errMsg = (typeof result.error === 'object' && result.error !== null) ? (result.error.message || JSON.stringify(result.error)) : (result.error || 'Message delivery failed');
+        log(`Error: ${errMsg}`, '#ef4444');
+      }
+    } catch (err) {
+      log('Network error. Please try again or email us directly.', '#f97316');
     }
-  } catch (err) {
-    log('Network error. Please try again or email us directly.', '#f97316');
-  }
-});
+  });
+}
 
 // ═══════════════════════════════════════
 // AI CHAT
@@ -420,10 +595,15 @@ if (!chatSessionId) {
   sessionStorage.setItem('concode_chat_session_id', chatSessionId);
 }
 
-document.getElementById('chat-send').addEventListener('click', sendChatMessage);
-document.getElementById('chat-input').addEventListener('keypress', (e) => {
-  if (e.key === 'Enter') sendChatMessage();
-});
+const chatSendBtn = document.getElementById('chat-send');
+if (chatSendBtn) chatSendBtn.addEventListener('click', sendChatMessage);
+
+const chatInputEl = document.getElementById('chat-input');
+if (chatInputEl) {
+  chatInputEl.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') sendChatMessage();
+  });
+}
 
 window.sendChatMessage = sendChatMessage;
 window.addEventListener('concode:voice-command', (evt) => {
@@ -434,15 +614,7 @@ window.addEventListener('concode:voice-command', (evt) => {
   }
 });
 
-// Section voice trigger button handler
-const btnTriggerVoice = document.getElementById('btn-trigger-voice-section');
-if (btnTriggerVoice) {
-  btnTriggerVoice.addEventListener('click', () => {
-    if (window.concodeVoiceAgent) {
-      window.concodeVoiceAgent.activateVoiceCommandMode();
-    }
-  });
-}
+
 
 // Section HUD state buttons handler
 document.querySelectorAll('.hud-state-btn').forEach(btn => {
@@ -527,7 +699,7 @@ async function sendChatMessage() {
         const sentimentColor = nb.sentiment === 'confused' ? '#f59e0b' : nb.sentiment === 'negative' ? '#ef4444' : '#10b981';
         socialBannerHtml = `
           <div class="neural-empathy-banner" style="margin-bottom: 10px; padding: 8px 12px; background: rgba(15, 23, 42, 0.6); border-left: 3px solid ${sentimentColor}; border-radius: 6px; font-size: 11px; color: #cbd5e1;">
-            <span style="font-size: 12px; margin-right: 6px;">🧠</span> <em>${nb.personalizedMessage}</em>
+            <strong style="color: ${sentimentColor}; margin-right: 6px; font-family: var(--font-mono);">[INTENT]</strong> <em>${nb.personalizedMessage}</em>
           </div>
         `;
       }
@@ -537,8 +709,8 @@ async function sendChatMessage() {
       if (nb.isClarifying && nb.clarifyingQuestion) {
         clarifyingHtml = `
           <div class="neural-clarifying-card" style="margin-bottom: 10px; padding: 12px; background: rgba(30, 41, 59, 0.85); border: 1px solid rgba(245, 158, 11, 0.4); border-radius: 8px; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15);">
-            <div style="display: flex; align-items: center; gap: 8px; font-weight: 600; color: #fbbf24; font-size: 12px;">
-              <span>❓ CONCODE AI Needs Clarification</span>
+            <div style="display: flex; align-items: center; gap: 8px; font-weight: 600; color: #fbbf24; font-size: 12px; font-family: var(--font-mono);">
+              <span>// CONCODE AI Clarification Required</span>
             </div>
             <p style="margin: 6px 0 0 0; color: #f3f4f6; font-size: 12px;">${nb.clarifyingQuestion}</p>
           </div>
@@ -546,31 +718,76 @@ async function sendChatMessage() {
       }
 
       if (result.data.thought || (result.data.thoughtSteps && result.data.thoughtSteps.length > 0)) {
-        const badge = result.data.agentBadge || '📐 Architect Agent';
-        const modelTag = result.data.modelUsed || 'concode-native-v7';
-        const repairBadge = nb.repairApplied ? `<span style="background: rgba(236, 72, 153, 0.2); border: 1px solid rgba(244, 114, 182, 0.4); color: #f472b6; padding: 2px 8px; border-radius: 12px; font-size: 10px;">✨ Neural Repair</span>` : '';
+        const badge = (result.data.agentBadge || 'ARCHITECT CORE').replace(/[\u{1F300}-\u{1FAD6}\u{2000}-\u{2BFF}\u{E000}-\u{F8FF}\u{FE00}-\u{FE0F}]/gu, '').trim();
+        const modelTag = (result.data.modelUsed || 'concode-native-v7').replace(/[\u{1F300}-\u{1FAD6}\u{2000}-\u{2BFF}\u{E000}-\u{F8FF}\u{FE00}-\u{FE0F}]/gu, '').trim();
+        const repairBadge = nb.repairApplied ? `<span style="background: rgba(236, 72, 153, 0.2); border: 1px solid rgba(244, 114, 182, 0.4); color: #f472b6; padding: 2px 8px; border-radius: 12px; font-size: 10px;">[HEALED] Neural Repair</span>` : '';
         
+        const emo = result.data.emotionalResonance;
+        const emotionBadge = emo ? `<span class="emotion-badge" style="background: rgba(236, 72, 153, 0.15); border: 1px solid ${emo.color || '#f472b6'}; color: ${emo.color || '#f472b6'}; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: 600;">[RESONANCE] ${(emo.name || 'Adaptive Tone').replace(/[\u{1F300}-\u{1FAD6}\u{2000}-\u{2BFF}\u{E000}-\u{F8FF}\u{FE00}-\u{FE0F}]/gu, '')}</span>` : '';
+        const obsidianBadge = `<span style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); color: #38bdf8; padding: 2px 8px; border-radius: 12px; font-size: 10px;">[VAULT] Synced to Obsidian</span>`;
+
         let stepsHtml = '';
         if (result.data.thoughtSteps && result.data.thoughtSteps.length > 0) {
-          stepsHtml = result.data.thoughtSteps.map(s => `
+          // Separate base cognitive steps from agentic code reasoning steps
+          const baseSteps = result.data.thoughtSteps.filter(s => !s.isCodeReasoning);
+          const codeReasoningSteps = result.data.thoughtSteps.filter(s => s.isCodeReasoning);
+
+          // Render base cognitive steps (cyan theme)
+          stepsHtml = baseSteps.map(s => {
+            const cleanName = s.name.replace(/[\u{1F300}-\u{1FAD6}\u{2000}-\u{2BFF}\u{E000}-\u{F8FF}\u{FE00}-\u{FE0F}]/gu, '').trim();
+            return `
             <div class="thought-step-item" style="display: flex; align-items: flex-start; gap: 8px; margin: 4px 0;">
               <span class="step-num" style="background: rgba(0, 240, 255, 0.15); color: #00f0ff; font-weight: bold; padding: 2px 6px; border-radius: 4px; font-size: 10px;">Step ${s.step}</span>
               <div style="flex: 1;">
-                <strong style="color: #e2e8f0; font-size: 11px;">${s.name}</strong>
+                <strong style="color: #e2e8f0; font-size: 11px;">${cleanName}</strong>
                 <p style="margin: 2px 0 0 0; color: #94a3b8; font-size: 10px;">${s.detail}</p>
               </div>
             </div>
-          `).join('');
+          `;}).join('');
+
+          // Render agentic code reasoning steps (amber/gold theme) in grouped section
+          if (codeReasoningSteps.length > 0) {
+            const codeStepsInner = codeReasoningSteps.map(s => {
+              const cleanName = s.name.replace(/[\u{1F300}-\u{1FAD6}\u{2000}-\u{2BFF}\u{E000}-\u{F8FF}\u{FE00}-\u{FE0F}]/gu, '').trim();
+              return `
+              <div class="thought-step-item thought-step-code-reasoning" style="display: flex; align-items: flex-start; gap: 8px; margin: 4px 0; padding: 6px 10px; background: rgba(245, 158, 11, 0.06); border-left: 2px solid rgba(245, 158, 11, 0.5); border-radius: 0 6px 6px 0;">
+                <span class="step-num thought-step-code-pulse" style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; font-weight: bold; padding: 2px 6px; border-radius: 4px; font-size: 10px;">Step ${s.step}</span>
+                <div style="flex: 1;">
+                  <strong style="color: #fbbf24; font-size: 11px;">${cleanName}</strong>
+                  <p style="margin: 2px 0 0 0; color: #d4a06a; font-size: 10px;">${s.detail}</p>
+                </div>
+              </div>
+            `;}).join('');
+
+            stepsHtml += `
+              <div class="thought-step-group" style="margin-top: 8px; padding: 8px 0 4px 0; border-top: 1px dashed rgba(245, 158, 11, 0.25);">
+                <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+                  <span style="font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #f59e0b;">// Agentic Code Reasoning</span>
+                  <span style="background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.35); color: #fbbf24; padding: 1px 7px; border-radius: 10px; font-size: 9px; font-weight: 600;">Best Coding Agent</span>
+                </div>
+                ${codeStepsInner}
+              </div>
+            `;
+          }
         }
 
+        // Detect if agentic code reasoning was active for the badge
+        const hasCodeReasoning = result.data.thoughtSteps && result.data.thoughtSteps.some(s => s.isCodeReasoning);
+        const codeReasoningBadge = hasCodeReasoning
+          ? `<span style="background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.4); color: #f59e0b; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: 600;">[AGENT] Code Engine</span>`
+          : '';
+
         thoughtHtml = `
-          <details class="ai-thought-accordion" style="margin-bottom: 12px; background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(12px); border: 1px solid rgba(0, 240, 255, 0.25); border-radius: 10px; padding: 10px 14px; font-size: 11px; color: #a5f3fc; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+          <details class="ai-thought-accordion" style="margin-bottom: 12px; background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(12px); border: 1px solid ${hasCodeReasoning ? 'rgba(245, 158, 11, 0.3)' : 'rgba(0, 240, 255, 0.25)'}; border-radius: 10px; padding: 10px 14px; font-size: 11px; color: #a5f3fc; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
             <summary style="cursor: pointer; font-weight: 700; color: #00f0ff; outline: none; user-select: none; display: flex; align-items: center; justify-content: space-between; width: 100%;">
-              <span>🧠 CONCODE AI Cognitive Matrix</span>
+              <span>// CONCODE AI Cognitive Matrix</span>
               <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                ${codeReasoningBadge}
+                ${emotionBadge}
+                ${obsidianBadge}
                 ${repairBadge}
                 <span class="agent-badge" style="background: rgba(139, 92, 246, 0.2); border: 1px solid rgba(167, 139, 250, 0.4); color: #c084fc; padding: 2px 8px; border-radius: 12px; font-size: 10px;">${badge}</span>
-                <span class="model-badge" style="background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(52, 211, 153, 0.4); color: #34d399; padding: 2px 8px; border-radius: 12px; font-size: 10px;">⚡ ${modelTag}</span>
+                <span class="model-badge" style="background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(52, 211, 153, 0.4); color: #34d399; padding: 2px 8px; border-radius: 12px; font-size: 10px;">${modelTag}</span>
               </div>
             </summary>
             <div style="margin-top: 10px; border-top: 1px dashed rgba(0, 240, 255, 0.15); padding-top: 8px;">
@@ -589,10 +806,6 @@ async function sendChatMessage() {
       }
 
       logEl.innerHTML += `<div class="bot-msg">${socialBannerHtml}${clarifyingHtml}${thoughtHtml}${marked.parse(result.data.reply)}${smartRepliesHtml}</div>`;
-
-      if (window.concodeVoiceAgent && typeof window.concodeVoiceAgent.speak === 'function') {
-        window.concodeVoiceAgent.speak(result.data.voiceSummary || result.data.reply);
-      }
 
       // Bind handlers for new smart reply buttons
       logEl.querySelectorAll('.smart-reply-btn:not(.bound)').forEach(btn => {
@@ -691,7 +904,8 @@ async function handleCliCommand(cmd, logEl) {
               print(`• Live Preview: <a href="${data.data.previewUrl}" target="_blank" style="color: var(--cyan); font-weight: bold; text-decoration: underline;">${data.data.previewUrl}</a>`);
               print(`• Tip: Use <code>/savefile ${id} index.html &lt;html&gt;...</code> to inject custom code.`);
             } else {
-              print(`<span style="color: var(--orange)">Create Error</span>: ${data.error.message}`);
+              const errMsg = (typeof data.error === 'object' && data.error !== null) ? (data.error.message || JSON.stringify(data.error)) : (data.error || 'Scaffolding failed');
+              print(`<span style="color: var(--orange)">Create Error</span>: ${errMsg}`);
             }
           });
       } catch (err) {
@@ -722,7 +936,8 @@ async function handleCliCommand(cmd, logEl) {
               print(`<span style="color: var(--green)"> Saved "${filename}" to project ${id}!</span>`);
               print(`• Live Preview: <a href="${data.data.previewUrl}" target="_blank" style="color: var(--cyan); font-weight: bold; text-decoration: underline;">${data.data.previewUrl}</a>`);
             } else {
-              print(`<span style="color: var(--orange)">Save Error</span>: ${data.error.message}`);
+              const errMsg = (typeof data.error === 'object' && data.error !== null) ? (data.error.message || JSON.stringify(data.error)) : (data.error || 'Save failed');
+              print(`<span style="color: var(--orange)">Save Error</span>: ${errMsg}`);
             }
           });
       } catch (err) {
@@ -748,7 +963,8 @@ async function handleCliCommand(cmd, logEl) {
             } else if (resData.success) {
               print('No matching vector documents found. Index data using <code>POST /api/data/index</code>.');
             } else {
-              print(`<span style="color: var(--orange)">Search Error</span>: ${resData.error.message}`);
+              const errMsg = (typeof resData.error === 'object' && resData.error !== null) ? (resData.error.message || JSON.stringify(resData.error)) : (resData.error || 'Search failed');
+              print(`<span style="color: var(--orange)">Search Error</span>: ${errMsg}`);
             }
           });
       } catch (err) {
@@ -789,7 +1005,8 @@ async function handleCliCommand(cmd, logEl) {
             if (data.success) {
               print(`<span style="color: var(--green)"> Project ${id} and its gateway routes deleted successfully.</span>`);
             } else {
-              print(`<span style="color: var(--orange)">Deletion Error</span>: ${data.error.message}`);
+              const errMsg = (typeof data.error === 'object' && data.error !== null) ? (data.error.message || JSON.stringify(data.error)) : (data.error || 'Deletion failed');
+              print(`<span style="color: var(--orange)">Deletion Error</span>: ${errMsg}`);
             }
           });
       } catch (err) {
@@ -842,7 +1059,8 @@ async function handleCliCommand(cmd, logEl) {
               print(`• API Gateway live routing activated.`);
               print(`• Live Preview: <a href="${data.data.previewUrl}" target="_blank" style="color: var(--cyan); font-weight: bold; text-decoration: underline;">${data.data.previewUrl}</a>`);
             } else {
-              print(`<span style="color: var(--orange)">Generation Error</span>: ${data.error.message}`);
+              const errMsg = (typeof data.error === 'object' && data.error !== null) ? (data.error.message || JSON.stringify(data.error)) : (data.error || 'Generation failed');
+              print(`<span style="color: var(--orange)">Generation Error</span>: ${errMsg}`);
             }
           });
       } catch (err) {
@@ -899,7 +1117,8 @@ async function handleCliCommand(cmd, logEl) {
                   });
               }, 800);
             } else {
-              print(`<span style="color: var(--orange)">Deployment Error</span>: ${data.error.message}`);
+              const errMsg = (typeof data.error === 'object' && data.error !== null) ? (data.error.message || JSON.stringify(data.error)) : (data.error || 'Deployment failed');
+              print(`<span style="color: var(--orange)">Deployment Error</span>: ${errMsg}`);
             }
           });
       };
@@ -956,7 +1175,8 @@ async function handleCliCommand(cmd, logEl) {
               report += sparkline + '</pre>';
               print(report);
             } else {
-              print(`<span style="color: var(--orange)">Analytics Error</span>: ${data.error.message}`);
+              const errMsg = (typeof data.error === 'object' && data.error !== null) ? (data.error.message || JSON.stringify(data.error)) : (data.error || 'Analytics fetch failed');
+              print(`<span style="color: var(--orange)">Analytics Error</span>: ${errMsg}`);
             }
           });
       };
@@ -1098,6 +1318,7 @@ if (btnTiers && btnPlanner && paneTiers && panePlanner) {
     btnPlanner.classList.remove('active');
     paneTiers.classList.add('active');
     panePlanner.classList.remove('active');
+    window.cyberAudio?.playClick();
   });
 
   btnPlanner.addEventListener('click', () => {
@@ -1105,6 +1326,7 @@ if (btnTiers && btnPlanner && paneTiers && panePlanner) {
     btnTiers.classList.remove('active');
     panePlanner.classList.add('active');
     paneTiers.classList.remove('active');
+    window.cyberAudio?.playClick();
     updatePlannerEstimate();
   });
 }
@@ -1147,69 +1369,16 @@ function updatePlannerEstimate() {
     plannerSlaEl.innerText = slaSelect.options[slaSelect.selectedIndex].text.split(' ($')[0];
   }
 
-  updateSvgTopology(selections);
-}
-
-function updateSvgTopology(selections) {
-  const diagram = document.getElementById('architecture-diagram');
-  if (!diagram) return;
-
-  const toggleNode = (id, active) => {
-    const el = diagram.querySelector(`#node-${id}`);
-    if (el) {
-      if (active) el.classList.add('active');
-      else el.classList.remove('active');
-    }
-  };
-
-  const togglePath = (id, active) => {
-    const el = diagram.querySelector(`#path-${id}`);
-    if (el) {
-      if (active) el.classList.add('active');
-      else el.classList.remove('active');
-    }
-  };
-
-  toggleNode('gateway', true);
-  togglePath('client-gateway', true);
-
-  const apiTier = selections['plan-api'].value;
-  const hasUpgradedAPI = apiTier !== 'starter';
-  const apiNode = diagram.querySelector('#node-gateway');
-  if (apiNode) {
-    if (hasUpgradedAPI) apiNode.classList.add('active');
-    else apiNode.classList.remove('active');
+  if (typeof updateSvgTopology === 'function') {
+    updateSvgTopology(selections);
   }
-
-  const hasWebGL = selections['plan-webgl'].value !== 'starter';
-  toggleNode('webgl', hasWebGL);
-  togglePath('gateway-webgl', hasWebGL);
-
-  const hasAI = selections['plan-ai'].value !== 'starter';
-  toggleNode('ai', hasAI);
-  togglePath('gateway-ai', hasAI);
-
-  const dbTier = selections['plan-db'].value;
-  const hasUpgradedDB = dbTier !== 'starter';
-  toggleNode('db', true);
-  const dbNode = diagram.querySelector('#node-db');
-  if (dbNode) {
-    if (hasUpgradedDB) dbNode.classList.add('active');
-    else dbNode.classList.remove('active');
-  }
-  togglePath('gateway-db', true);
-
-  togglePath('webgl-db', hasWebGL);
-
-  const devopsTier = selections['plan-devops'].value;
-  const hasUpgradedDevOps = devopsTier !== 'starter';
-  toggleNode('devops', hasUpgradedDevOps);
-  togglePath('ai-devops', hasUpgradedDevOps && hasAI);
-  togglePath('db-devops', hasUpgradedDevOps);
 }
 
 plannerSelects.forEach(select => {
-  select.addEventListener('change', updatePlannerEstimate);
+  select.addEventListener('change', () => {
+    updatePlannerEstimate();
+    window.cyberAudio?.playClick();
+  });
 });
 
 const btnPlannerSubmit = document.getElementById('btn-planner-submit');
@@ -1245,6 +1414,7 @@ updatePlannerEstimate();
 const INSPECTOR_DATA = {
   antigravity: {
     title: "System Inspector — Antigravity Dashboard",
+    url: "/project/antigravity-dashboard/",
     latency: "Direct Inject",
     concurrency: "Local Hooks",
     saving: "No copy-paste",
@@ -1314,6 +1484,7 @@ class WordConnector:
   },
   aisigma: {
     title: "System Inspector — AI Sigma Gateway",
+    url: "/project/ai-sigma-gateway/",
     latency: "8ms",
     concurrency: "20k/s",
     saving: "Firestore Core",
@@ -1380,6 +1551,298 @@ export const useChatStore = create<ChatState>((set, get) => ({
       "[FUNCTIONS] Executing scheduled news API sync... 5 articles seeded.",
       "AI Sigma API gateway telemetry verified."
     ]
+  },
+  virtualaudit: {
+    title: "System Inspector — Virtual Audit SaaS",
+    url: "/project/virtual-audit-saas/dashboard.html",
+    latency: "1.4ms",
+    concurrency: "50k/s",
+    saving: "eBPF Live Mesh",
+    summary: "Autonomous security posture and telemetry audit SaaS with real-time 60 FPS latency sparklines, zero-trust node provisioning, and SOC2/HIPAA compliance engines.",
+    tabs: [
+      {
+        name: "Audit Scanner (JS)",
+        code: `// virtualaudit - Autonomous Posture Scanner
+async function executeComplianceAudit(nodeId) {
+  const t0 = performance.now();
+  const checks = [
+    verifyTLS13CipherSuites(),
+    auditZeroTrustHeaders(),
+    checkContainerIsolation(),
+    validateIAMTokenLifespans()
+  ];
+  const results = await Promise.all(checks);
+  return {
+    nodeId,
+    passed: results.every(r => r.ok),
+    latencyMs: (performance.now() - t0).toFixed(2),
+    score: 98.4
+  };
+}`
+      },
+      {
+        name: "Node Provisioning",
+        code: `// Cluster Node Provisioner
+function provisionClusterNode(region, spec) {
+  return {
+    id: \`node-\${region}-\${Date.now()}\`,
+    cores: spec.cores || 8,
+    memory: spec.ram || '32GiB',
+    status: 'ONLINE',
+    mTLSEnabled: true
+  };
+}`
+      }
+    ],
+    simLogs: [
+      "Starting Virtual Audit SOC2 security scan...",
+      "Validating TLS 1.3 cryptographic cipher suites across 14 edge clusters... PASS",
+      "Auditing Zero-Trust mTLS service mesh sidecars... 100% OK",
+      "Edge latency sparkline streaming: 60 FPS verified.",
+      "Compliance report generated: SOC2 Type II Certified."
+    ]
+  },
+  fitpulse: {
+    title: "System Inspector — FitPulse AI Bio-Telemetry Platform",
+    url: "/project/fitpulse-app/",
+    latency: "12ms",
+    concurrency: "25k/s",
+    saving: "Reactive Bio-Rings",
+    summary: "Real-time bio-telemetry cockpit featuring dynamic SVG calorie burn calculation, live BPM heart rate zones, hydration tracker, and 1-on-1 trainer booking.",
+    tabs: [
+      {
+        name: "Calorie Ring Math (JS)",
+        code: `// FitPulse Bio-Telemetry SVG Target Ring Calculator
+function updateCalorieProgress(burned, target) {
+  const circle = document.querySelector('.calorie-ring-circle');
+  const radius = circle.r.baseVal.value;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - (burned / target) * circumference;
+  circle.style.strokeDashoffset = Math.max(0, offset);
+}`
+      },
+      {
+        name: "Heart Rate Engine",
+        code: `// Live BPM Zone Classifier
+function classifyHeartRateZone(currentBPM, maxBPM = 190) {
+  const pct = (currentBPM / maxBPM) * 100;
+  if (pct >= 90) return { zone: 'Peak Anaerobic', color: '#ff007f' };
+  if (pct >= 70) return { zone: 'Cardio Endurance', color: '#a855f7' };
+  if (pct >= 50) return { zone: 'Fat Burn', color: '#00f0ff' };
+  return { zone: 'Resting / Warmup', color: '#34d399' };
+}`
+      }
+    ],
+    simLogs: [
+      "Connecting to Bluetooth Low Energy (BLE) bio-telemetry strap...",
+      "Heart rate stream synchronized: 142 BPM (Cardio Zone).",
+      "Dynamic SVG calorie progress ring recalculating: 72% of target.",
+      "Hydration timer scheduled for 15-minute intervals."
+    ]
+  },
+  'concode-web': {
+    title: "System Inspector — ConCode 3D Engine",
+    latency: "3ms",
+    concurrency: "35k/s",
+    saving: "WebGL Canvas",
+    summary: "Standalone multi-page cognitive web ecosystem featuring custom Three.js isometric rendering, cursor-reactive cloth deformation physics, in-process LanceDB vector search, and hardware-accelerated shaders.",
+    tabs: [
+      {
+        name: "Three Scene (JS)",
+        code: `// public/src/three-scene.js - Three.js WebGL Engine
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('webgl-canvas'), antialias: true, alpha: true });
+
+// Cursor-reactive dynamic fabric mesh
+function updateCursorFabricPhysics(elapsed) {
+  fabricRaycaster.setFromCamera(fabricMouse2D, camera);
+  const intersects = fabricRaycaster.intersectObject(fabricMesh);
+  if (intersects.length > 0) fabricWorldMouse.copy(intersects[0].point);
+}`
+      },
+      {
+        name: "Shader Material",
+        code: `// Holographic Scanline Shader
+const hologramMaterial = new THREE.ShaderMaterial({
+  uniforms: {
+    uTime: { value: 0 },
+    uColor: { value: new THREE.Color(0x00f0ff) },
+    uScanlineFrequency: { value: 12.0 }
+  },
+  vertexShader: 'varying vec3 vNormal; void main() { vNormal = normal; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+  fragmentShader: 'uniform float uTime; uniform vec3 uColor; void main() { float scanline = sin(gl_FragCoord.y * 0.4 + uTime * 3.0) * 0.1; gl_FragColor = vec4(uColor + scanline, 0.85); }'
+});`
+      }
+    ],
+    simLogs: [
+      "Initializing WebGL rendering context...",
+      "Compiling holographic GLSL shaders... OK",
+      "Binding cursor physics listener... 60fps stable.",
+      "Hardware thermal governor: active."
+    ]
+  },
+  'edge-gateway': {
+    title: "System Inspector — Edge Proxy Gateway (Rust/Go)",
+    latency: "1.2ms",
+    concurrency: "50k/s",
+    saving: "Zero-Trust",
+    summary: "Ultra-low latency ingress gateway written in Rust/Go featuring token-bucket rate limiting, OWASP security headers, mTLS service mesh sidecars, and distributed eBPF telemetry.",
+    tabs: [
+      {
+        name: "Rust Proxy Core",
+        code: `// src/main.rs - Tokio async proxy with rate limiter
+use tokio::net::{TcpListener, TcpStream};
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let listener = TcpListener::bind("127.0.0.1:8080").await?;
+    println!("Ingress proxy listening on 8080");
+    loop {
+        let (socket, _) = listener.accept().await?;
+        tokio::spawn(async move {
+            process_socket(socket).await;
+        });
+    }
+}`
+      }
+    ],
+    simLogs: [
+      "Binding Tokio asynchronous runtime...",
+      "mTLS certificates validated.",
+      "Rate-limit token bucket initialized: 50,000 req/sec peak capacity."
+    ]
+  },
+  hyperion: {
+    title: "System Inspector — Hyperion Web3 DEX Protocol",
+    url: "/project/hyperion-web3-dex/",
+    latency: "42ms",
+    concurrency: "15k/s",
+    saving: "Constant-Product AMM",
+    summary: "Decentralized automated market maker (AMM) protocol built with multi-token reserve math (x * y = k), dynamic price impact slippage routing, Web3 wallet state synchronization, and live ticker feeds.",
+    tabs: [
+      {
+        name: "Swap Engine (JS)",
+        code: `// Hyperion AMM Core Swap Formula & Ticker Feeds
+function calculateSwapQuote(payToken, recvToken, payAmount) {
+  const payPrice = tokenPrices[payToken] || 1;
+  const recvPrice = tokenPrices[recvToken] || 1;
+  const totalPayUSD = payAmount * payPrice;
+  const recvAmount = totalPayUSD / recvPrice;
+  const slippageFee = 0.003; // 0.3% protocol LP fee
+  return {
+    recvAmount: recvAmount * (1 - slippageFee),
+    priceImpact: Math.min(0.05, (payAmount / 100000)),
+    rate: payPrice / recvPrice
+  };
+}`
+      },
+      {
+        name: "Liquidity Pools (JS)",
+        code: `// Multi-Asset Liquidity Pool State Registry
+const liquidityPools = [
+  { id: 'ETH-USDC', totalLiquidity: 42850000, apr: 18.4, volume24h: 12400000 },
+  { id: 'SOL-USDC', totalLiquidity: 18900000, apr: 24.2, volume24h: 8600000 },
+  { id: 'HYP-ETH',  totalLiquidity: 9400000,  apr: 46.8, volume24h: 3100000 }
+];`
+      }
+    ],
+    simLogs: [
+      "Connecting to EVM JSON-RPC provider... CONNECTED",
+      "Fetching token pair reserves: ETH/USDC pool (Liquidity: $42.8M)...",
+      "Calculating constant-product slippage routing: dy = y * dx / (x + dx)...",
+      "Optimal route: Uniswap v3 Pool -> 0.05% fee tier. Price impact: 0.04%.",
+      "Estimating gas: 124,500 gas units (~12 Gwei). Verification: SUCCESS."
+    ]
+  },
+  neuralstudio: {
+    title: "System Inspector — Neural Network Studio Core",
+    url: "/project/neural-network-studio/dashboard.html",
+    latency: "0.08ms",
+    concurrency: "4.8M ops/s",
+    saving: "Autonomous Mesh",
+    summary: "Distributed cognitive tensor execution mesh featuring multi-region node provisioning, real-time eBPF packet latency telemetry, and TLS 1.3 encrypted cluster routing.",
+    tabs: [
+      {
+        name: "Tensor Dispatcher (JS)",
+        code: `// Distributed Tensor Mesh Dispatcher
+async function dispatchTensorWorkload(nodeId, tensorBatch) {
+  const t0 = performance.now();
+  const res = await fetch(\`/api/cluster/worker/\${nodeId}/infer\`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Node-Sig': 'sha256-mesh' },
+    body: JSON.stringify({ batchSize: tensorBatch.length, tensorPayload: tensorBatch })
+  });
+  const latency = (performance.now() - t0).toFixed(2);
+  return { status: 'COMMITTED', latency: \`\${latency}ms\` };
+}`
+      },
+      {
+        name: "Cluster Topology (Node)",
+        code: `// Neural Cluster Node Health Monitor
+class ClusterTopologyMonitor {
+  constructor(nodes) {
+    this.nodes = new Map(nodes.map(n => [n.id, n]));
+  }
+  pingAllNodes() {
+    return Promise.all(Array.from(this.nodes.values()).map(async node => ({
+      id: node.id,
+      ping: (0.04 + Math.random() * 0.08).toFixed(2) + 'ms',
+      status: 'HEALTHY'
+    })));
+  }
+}`
+      }
+    ],
+    simLogs: [
+      "Synchronizing cluster node topology...",
+      "Node #node-01 (Main Ingress): 0.14ms (ONLINE)",
+      "Node #node-02 (Cognitive Worker): 0.08ms (ONLINE)",
+      "eBPF packet telemetry: 0% packet loss across 5 edge clusters."
+    ]
+  },
+  terminalcli: {
+    title: "System Inspector — Interactive CRT Shell & CLI Engine",
+    url: "/project/terminal-portfolio/",
+    latency: "1.2ms",
+    concurrency: "100k/s",
+    saving: "Zero Proxy Overhead",
+    summary: "Authentic hardware CRT Matrix command line interface with hardware scanline shaders, terminal command parser, remote diagnostic probes, and zero-trust shell.",
+    tabs: [
+      {
+        name: "Command Parser (JS)",
+        code: `// Interactive Terminal Command Execution Engine
+function executeCommand(rawInput) {
+  const tokens = rawInput.trim().split(' ');
+  const cmd = tokens[0].toLowerCase();
+  const args = tokens.slice(1);
+
+  switch (cmd) {
+    case 'help': return renderHelp();
+    case 'status': return getSystemMetrics();
+    case 'matrix': return triggerMatrixOverlay();
+    case 'ping': return measureSocketLatency(args[0]);
+    default: return \`Command not found: \${cmd}. Type 'help' for manual.\`;
+  }
+}`
+      },
+      {
+        name: "CRT Scanline Shader",
+        code: `/* CRT Hardware Scanline Shader & Radial Glow */
+.scanlines {
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%),
+              linear-gradient(90deg, rgba(255,0,0,0.06), rgba(0,255,0,0.02), rgba(0,0,255,0.06));
+  background-size: 100% 4px, 6px 100%;
+  pointer-events: none;
+}`
+      }
+    ],
+    simLogs: [
+      "Allocating pseudo-TTY session...",
+      "Attaching CRT scanline canvas filter... OK",
+      "Parsing ANSI color escape sequences... READY",
+      "Interactive shell listening on visitor@concode:~$."
+    ]
   }
 };
 
@@ -1400,37 +1863,66 @@ function triggerInspectProjectModal(key) {
   activeProjectKey = key;
 
   // Set text metrics
-  document.getElementById('inspector-title').innerText = data.title;
-  document.getElementById('metric-latency').innerText = data.latency;
-  document.getElementById('metric-concurrency').innerText = data.concurrency;
-  document.getElementById('metric-saving').innerText = data.saving;
-  document.getElementById('inspector-summary').innerText = data.summary;
+  const titleEl = document.getElementById('inspector-title');
+  if (titleEl) titleEl.innerText = data.title;
+  const latEl = document.getElementById('metric-latency');
+  if (latEl) latEl.innerText = data.latency;
+  const concEl = document.getElementById('metric-concurrency');
+  if (concEl) concEl.innerText = data.concurrency;
+  const savEl = document.getElementById('metric-saving');
+  if (savEl) savEl.innerText = data.saving;
+  const sumEl = document.getElementById('inspector-summary');
+  if (sumEl) sumEl.innerText = data.summary;
+
+  // Update launch live demo button in inspector drawer
+  const launchBtn = document.getElementById('inspector-launch-btn');
+  if (launchBtn) {
+    if (data.url) {
+      launchBtn.href = data.url;
+      launchBtn.style.display = 'inline-flex';
+    } else {
+      launchBtn.style.display = 'none';
+    }
+  }
+
+  // Prepopulate target simulation URL
+  const targetUrlInput = document.getElementById('sim-target-url');
+  if (targetUrlInput) {
+    targetUrlInput.value = data.url || '/api/health';
+  }
 
   // Reset simulator visual states
-  document.getElementById('sim-status').innerText = "Idle";
-  document.getElementById('sim-status').classList.remove('running');
-  document.getElementById('sim-progress').style.width = "0%";
-  document.getElementById('sim-console').innerHTML = "<div>// Ready to launch thread pool simulator...</div>";
+  const simStatus = document.getElementById('sim-status');
+  if (simStatus) {
+    simStatus.innerText = "Idle";
+    simStatus.classList.remove('running');
+  }
+  const simProg = document.getElementById('sim-progress');
+  if (simProg) simProg.style.width = "0%";
+  const simCon = document.getElementById('sim-console');
+  if (simCon) simCon.innerHTML = "<div>// Ready to launch thread pool simulator...</div>";
 
   // Build tabs dynamically
   const tabsContainer = document.getElementById('ide-tabs');
   const codeContent = document.getElementById('ide-code-content');
-  tabsContainer.innerHTML = '';
+  if (tabsContainer && codeContent && data.tabs && data.tabs.length > 0) {
+    tabsContainer.innerHTML = '';
 
-  data.tabs.forEach((tab, index) => {
-    const btn = document.createElement('button');
-    btn.className = `ide-tab ${index === 0 ? 'active' : ''}`;
-    btn.innerText = tab.name;
-    btn.addEventListener('click', () => {
-      tabsContainer.querySelectorAll('.ide-tab').forEach(t => t.classList.remove('active'));
-      btn.classList.add('active');
-      codeContent.innerText = tab.code;
+    data.tabs.forEach((tab, index) => {
+      const btn = document.createElement('button');
+      btn.className = `ide-tab ${index === 0 ? 'active' : ''}`;
+      btn.innerText = tab.name;
+      btn.addEventListener('click', () => {
+        tabsContainer.querySelectorAll('.ide-tab').forEach(t => t.classList.remove('active'));
+        btn.classList.add('active');
+        codeContent.innerText = tab.code;
+      });
+      tabsContainer.appendChild(btn);
     });
-    tabsContainer.appendChild(btn);
-  });
 
-  // Set first tab code content
-  codeContent.innerText = data.tabs[0].code;
+    // Set first tab code content
+    codeContent.innerText = data.tabs[0].code;
+  }
 
   // Slide open drawer
   if (inspectorDrawer) inspectorDrawer.classList.add('open');
@@ -1444,7 +1936,7 @@ function filterProjects() {
   cards.forEach(card => {
     const cat = card.getAttribute('data-category') || 'all';
     const keywords = (card.getAttribute('data-keywords') || '') + ' ' + (card.innerText || '');
-    const matchesCat = (currentCategory === 'all' || cat === currentCategory);
+    const matchesCat = (currentCategory === 'all' || cat.split(' ').includes(currentCategory));
     const matchesQuery = !query || keywords.toLowerCase().includes(query);
 
     if (matchesCat && matchesQuery) {
@@ -1482,48 +1974,12 @@ if (searchInput) {
 
 // Register portfolio cards click triggers
 document.querySelectorAll('.btn-inspect-project').forEach(card => {
-  card.addEventListener('click', () => {
+  card.addEventListener('click', (e) => {
+    if (e.target.closest('a') && e.target.closest('a').classList.contains('btn-launch-demo')) {
+      return;
+    }
     const key = card.getAttribute('data-project');
-    const data = INSPECTOR_DATA[key];
-    if (!data) return;
-
-    activeProjectKey = key;
-
-    // Set text metrics
-    document.getElementById('inspector-title').innerText = data.title;
-    document.getElementById('metric-latency').innerText = data.latency;
-    document.getElementById('metric-concurrency').innerText = data.concurrency;
-    document.getElementById('metric-saving').innerText = data.saving;
-    document.getElementById('inspector-summary').innerText = data.summary;
-
-    // Reset simulator visual states
-    document.getElementById('sim-status').innerText = "Idle";
-    document.getElementById('sim-status').classList.remove('running');
-    document.getElementById('sim-progress').style.width = "0%";
-    document.getElementById('sim-console').innerHTML = "<div>// Ready to launch thread pool simulator...</div>";
-
-    // Build tabs dynamically
-    const tabsContainer = document.getElementById('ide-tabs');
-    const codeContent = document.getElementById('ide-code-content');
-    tabsContainer.innerHTML = '';
-
-    data.tabs.forEach((tab, index) => {
-      const btn = document.createElement('button');
-      btn.className = `ide-tab \${index === 0 ? 'active' : ''}`;
-      btn.innerText = tab.name;
-      btn.addEventListener('click', () => {
-        tabsContainer.querySelectorAll('.ide-tab').forEach(t => t.classList.remove('active'));
-        btn.classList.add('active');
-        codeContent.innerText = tab.code;
-      });
-      tabsContainer.appendChild(btn);
-    });
-
-    // Set first tab code content
-    codeContent.innerText = data.tabs[0].code;
-
-    // Slide open drawer
-    inspectorDrawer.classList.add('open');
+    triggerInspectProjectModal(key);
   });
 });
 
@@ -2034,16 +2490,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Utility to clear console logs
   function clearTerminal() {
-    terminalLogs.innerHTML = '';
+    if (terminalLogs) terminalLogs.innerHTML = '';
   }
 
   // Utility to append log lines
   function printLog(text, type = 'system') {
+    if (!terminalLogs) {
+      console.log(`[${type}] ${text}`);
+      return;
+    }
     const line = document.createElement('div');
     line.className = `terminal-line ${type}`;
     line.innerText = `[${new Date().toLocaleTimeString()}] ${text}`;
     terminalLogs.appendChild(line);
-    monitorTerminalWrapper.scrollTop = monitorTerminalWrapper.scrollHeight;
+    if (monitorTerminalWrapper) monitorTerminalWrapper.scrollTop = monitorTerminalWrapper.scrollHeight;
   }
 
   // Monitor Display Elements
@@ -2071,18 +2531,18 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     if (viewType === 'iframe' || viewType === 'preview') {
-      monitorIframeWrapper.style.display = 'block';
-      monitorCodeWrapper.style.display = 'none';
-      monitorTerminalWrapper.style.display = 'none';
+      if (monitorIframeWrapper) monitorIframeWrapper.style.display = 'block';
+      if (monitorCodeWrapper) monitorCodeWrapper.style.display = 'none';
+      if (monitorTerminalWrapper) monitorTerminalWrapper.style.display = 'none';
     } else if (viewType === 'code') {
-      monitorIframeWrapper.style.display = 'none';
-      monitorCodeWrapper.style.display = 'flex';
-      monitorTerminalWrapper.style.display = 'none';
+      if (monitorIframeWrapper) monitorIframeWrapper.style.display = 'none';
+      if (monitorCodeWrapper) monitorCodeWrapper.style.display = 'flex';
+      if (monitorTerminalWrapper) monitorTerminalWrapper.style.display = 'none';
       loadProjectFiles(activeProjectId);
     } else {
-      monitorIframeWrapper.style.display = 'none';
-      monitorCodeWrapper.style.display = 'none';
-      monitorTerminalWrapper.style.display = 'block';
+      if (monitorIframeWrapper) monitorIframeWrapper.style.display = 'none';
+      if (monitorCodeWrapper) monitorCodeWrapper.style.display = 'none';
+      if (monitorTerminalWrapper) monitorTerminalWrapper.style.display = 'block';
     }
   }
 
@@ -2102,11 +2562,13 @@ document.addEventListener('DOMContentLoaded', () => {
       if (data.success && data.data.files) {
         projectFilesCache = data.data.files;
         renderFileTabs(Object.keys(projectFilesCache));
-        if (projectFilesCache[currentActiveFile]) {
-          codeEditor.value = projectFilesCache[currentActiveFile];
-        } else if (projectFilesCache['index.html']) {
-          currentActiveFile = 'index.html';
-          codeEditor.value = projectFilesCache['index.html'];
+        if (codeEditor) {
+          if (projectFilesCache[currentActiveFile]) {
+            codeEditor.value = projectFilesCache[currentActiveFile];
+          } else if (projectFilesCache['index.html']) {
+            currentActiveFile = 'index.html';
+            codeEditor.value = projectFilesCache['index.html'];
+          }
         }
       }
     } catch (e) {
@@ -2115,6 +2577,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function renderFileTabs(filenames) {
+    if (!fileTabsContainer) return;
     fileTabsContainer.innerHTML = '';
     filenames.forEach(filename => {
       const btn = document.createElement('button');
@@ -2122,72 +2585,95 @@ document.addEventListener('DOMContentLoaded', () => {
       btn.innerText = filename;
       btn.addEventListener('click', () => {
         // Save un-saved text before switching
-        if (projectFilesCache[currentActiveFile] !== undefined) {
+        if (codeEditor && projectFilesCache[currentActiveFile] !== undefined) {
           projectFilesCache[currentActiveFile] = codeEditor.value;
         }
         currentActiveFile = filename;
         renderFileTabs(filenames);
-        codeEditor.value = projectFilesCache[filename] || '';
+        if (codeEditor) codeEditor.value = projectFilesCache[filename] || '';
       });
       fileTabsContainer.appendChild(btn);
     });
   }
 
   // Save edits handler
-  btnSaveCode.addEventListener('click', async () => {
-    const content = codeEditor.value;
-    printLog(`Saving file: ${currentActiveFile} for project ${activeProjectId}...`, 'system');
-    try {
-      const res = await fetch('/api/studio/savefile', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ projectId: activeProjectId, filename: currentActiveFile, content })
-      });
-      const data = await res.json();
-      if (data.success) {
-        projectFilesCache[currentActiveFile] = content;
-        printLog(` Saved ${currentActiveFile} cleanly. Reloading review host (http://localhost:3001)...`, 'success');
-        previewIframe.src = `http://localhost:3001/project/${activeProjectId}/?t=${Date.now()}`;
+  if (btnSaveCode) {
+    btnSaveCode.addEventListener('click', async () => {
+      const content = codeEditor ? codeEditor.value : '';
+      const adminToken = localStorage.getItem('concode_admin_token') || 'admin123';
+      printLog(`Saving file: ${currentActiveFile} for project ${activeProjectId}...`, 'system');
+      try {
+        const res = await fetch('/api/studio/savefile', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-admin-token': adminToken,
+            'Authorization': `Bearer ${adminToken}`
+          },
+          body: JSON.stringify({ projectId: activeProjectId, filename: currentActiveFile, content })
+        });
+        const data = await res.json();
+        if (data.success) {
+          projectFilesCache[currentActiveFile] = content;
+          printLog(` Saved ${currentActiveFile} cleanly. Reloading live preview...`, 'success');
+          if (previewIframe) previewIframe.src = `/project/${activeProjectId}/?t=${Date.now()}`;
+        }
+      } catch (e) {
+        printLog(`Error saving file: ${e.message}`, 'error');
       }
-    } catch (e) {
-      printLog(`Error saving file: ${e.message}`, 'error');
-    }
-  });
+    });
+  }
 
   // AI Refine Handler
-  btnRefine.addEventListener('click', async () => {
-    const instruction = inputRefine.value.trim();
-    if (!instruction) return alert('Enter a refinement prompt for CONCODE AI.');
-
-    showView('terminal');
-    printLog(`[CONCODE AI REFINEMENT v5.0] Processing instruction: "${instruction}"...`, 'system');
-    statusIndicator.className = 'status-indicator working';
-    statusLabel.innerText = 'REFINING PROJECT...';
-
-    try {
-      const res = await fetch('/api/studio/refine', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ projectId: activeProjectId, instruction })
-      });
-      const data = await res.json();
-
-      if (data.success) {
-        printLog(` Project refined cleanly by CONCODE AI.`, 'success');
-        statusIndicator.className = 'status-indicator live';
-        statusLabel.innerText = 'MONITOR LIVE';
-        inputRefine.value = '';
-        previewIframe.src = `http://localhost:3001/project/${activeProjectId}/?t=${Date.now()}`;
-        setTimeout(() => { showView('preview'); }, 800);
-      } else {
-        throw new Error(data.error || 'Refinement failed');
+  if (btnRefine) {
+    btnRefine.addEventListener('click', async () => {
+      const instruction = inputRefine ? inputRefine.value.trim() : '';
+      if (!instruction) {
+        printLog('Please enter a refinement prompt for CONCODE AI.', 'warn');
+        return;
       }
-    } catch (e) {
-      printLog(`Error refining project: ${e.message}`, 'error');
-      statusIndicator.className = 'status-indicator live';
-      statusLabel.innerText = 'CONSOLE LIVE';
-    }
-  });
+      if (!activeProjectId) {
+        printLog('Please compile or select an active project node first before refining.', 'warn');
+        return;
+      }
+
+      const adminToken = localStorage.getItem('concode_admin_token') || 'admin123';
+      showView('terminal');
+      printLog(`[CONCODE AI REFINEMENT v5.0] Processing instruction: "${instruction}"...`, 'system');
+      if (statusIndicator) statusIndicator.className = 'status-indicator working';
+      if (statusLabel) statusLabel.innerText = 'REFINING PROJECT...';
+
+      try {
+        const res = await fetch('/api/studio/refine', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-admin-token': adminToken,
+            'Authorization': `Bearer ${adminToken}`
+          },
+          body: JSON.stringify({ projectId: activeProjectId, instruction })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          printLog(` Project refined cleanly by CONCODE AI.`, 'success');
+          if (statusIndicator) statusIndicator.className = 'status-indicator live';
+          if (statusLabel) statusLabel.innerText = 'MONITOR LIVE';
+          if (inputRefine) inputRefine.value = '';
+          await loadProjectFiles(activeProjectId);
+          if (previewIframe) previewIframe.src = `/project/${activeProjectId}/?t=${Date.now()}`;
+          setTimeout(() => { showView('preview'); }, 800);
+        } else {
+          const errMsg = typeof data.error === 'object' ? (data.error.message || JSON.stringify(data.error)) : (data.error || 'Refinement failed');
+          throw new Error(errMsg);
+        }
+      } catch (e) {
+        printLog(`Error refining project: ${e.message}`, 'error');
+        if (statusIndicator) statusIndicator.className = 'status-indicator live';
+        if (statusLabel) statusLabel.innerText = 'CONSOLE LIVE';
+      }
+    });
+  }
 
   // Tab switcher
   tabs.forEach(tab => {
@@ -2199,6 +2685,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const activeTabId = `content-${tab.getAttribute('data-tab')}`;
       document.getElementById(activeTabId).classList.add('active');
 
+      window.cyberAudio?.playClick();
       printLog(`Switched view context to module: ${tab.innerText.trim().toUpperCase()}`, 'system');
 
       // Auto-toggle views based on tab context
@@ -2240,6 +2727,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const textareaPrompt = document.getElementById('studio-prompt');
   const selectAccent = document.getElementById('studio-accent');
 
+  // Set initial preview if on studio
+  if (previewIframe && (!previewIframe.src || previewIframe.src === 'about:blank')) {
+    previewIframe.src = `/project/neural-saas-core/`;
+  }
+
   function clearProjectWorkspace() {
     inputProjectId.value = '';
     textareaPrompt.value = '';
@@ -2252,6 +2744,7 @@ document.addEventListener('DOMContentLoaded', () => {
     statusIndicator.className = 'status-indicator live';
     statusLabel.innerText = 'CONSOLE LIVE';
     showView('terminal');
+    window.cyberAudio?.playClick();
     printLog('Project workspace & monitor reset cleanly.', 'system');
   }
 
@@ -2268,6 +2761,8 @@ document.addEventListener('DOMContentLoaded', () => {
       alert('Please enter a valid Project ID.');
       return;
     }
+
+    window.cyberAudio?.playDeploy();
 
     // Sanitize Project ID to valid path slug
     const projectId = rawProjectId.toLowerCase().replace(/[^a-z0-9-_]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || 'custom-site';
@@ -2316,7 +2811,7 @@ document.addEventListener('DOMContentLoaded', () => {
         throw new Error(errMsg);
       }
 
-      printLog(` Dedicated User Website Review Host live on http://localhost:3001/project/${projectId}/`, 'success');
+      printLog(` Dedicated User Website Review Host live on /project/${projectId}/`, 'success');
       printLog(`Launching live interactive review viewport...`, 'system');
 
       // Sync the devops select dropdown immediately
@@ -2326,11 +2821,13 @@ document.addEventListener('DOMContentLoaded', () => {
       setTimeout(() => {
         statusIndicator.className = 'status-indicator live';
         statusLabel.innerText = 'MONITOR LIVE';
-        previewIframe.src = `http://localhost:3001/project/${projectId}/`;
-        showView('iframe');
+        previewIframe.src = `/project/${projectId}/`;
+        showView('preview');
+        window.cyberAudio?.playSuccess();
       }, 1000);
 
     } catch (err) {
+      window.cyberAudio?.playError();
       const errMsg = err.message || (typeof err === 'object' ? JSON.stringify(err) : String(err));
       printLog(`Error: Construction error: ${errMsg}`, 'error');
       statusIndicator.className = 'status-indicator live';
@@ -2350,7 +2847,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const cloudTarget = selectCloudTarget.value;
 
     if (!projectId) {
-      alert('Please select an active project node to deploy.');
+      showView('terminal');
+      printLog('Please compile or select an active project node to deploy.', 'warn');
       return;
     }
 
@@ -2374,7 +2872,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const deployData = await deployRes.json();
 
       if (!deployData.success) {
-        throw new Error(deployData.error || 'Pipeline queue execution failed');
+        const errObj = deployData.error;
+        const errMsg = typeof errObj === 'object' && errObj !== null ? (errObj.message || JSON.stringify(errObj)) : (errObj || 'Pipeline queue execution failed');
+        throw new Error(errMsg);
       }
 
       printLog(deployData.data.message, 'success');
@@ -2469,7 +2969,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const migrateData = await migrateRes.json();
 
       if (!migrateData.success) {
-        throw new Error(migrateData.error || 'Migration pipeline execution failed');
+        const errObj = migrateData.error;
+        const errMsg = typeof errObj === 'object' && errObj !== null ? (errObj.message || JSON.stringify(errObj)) : (errObj || 'Migration pipeline execution failed');
+        throw new Error(errMsg);
       }
 
       const report = migrateData.data || {};
@@ -2511,11 +3013,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (voiceSecBtn) {
     voiceSecBtn.addEventListener('click', () => {
-      const orb = document.getElementById('voice-orb-wrapper');
-      if (orb) {
-        orb.click();
-      } else if (window.concodeVoiceAgent) {
-        window.concodeVoiceAgent.toggleListening();
+      if (window.concodeVoiceAgent) {
+        window.concodeVoiceAgent.activateVoiceCommandMode();
       }
       if (liveLog) {
         const timeStr = new Date().toLocaleTimeString();
@@ -2556,6 +3055,152 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   });
+});
+
+/* ==========================================================================
+   CONCODE AI — Steady Quantum AI Core Engine
+   ========================================================================== */
+(function initQuantumEyeEngine() {
+  function triggerEyeBlink() {
+    const svgs = document.querySelectorAll('.nav-logo-svg');
+    svgs.forEach(svg => {
+      svg.style.transition = 'transform 0.12s ease-in-out';
+      svg.style.transform = 'scaleY(0.08)';
+      setTimeout(() => {
+        svg.style.transform = 'scaleY(1)';
+      }, 140);
+    });
+  }
+
+  // Periodic natural eye blinking (every 5 seconds)
+  setInterval(() => {
+    if (Math.random() > 0.35) {
+      triggerEyeBlink();
+    }
+  }, 5000);
+})();
+
+// ═══════════════════════════════════════
+// HOMEPAGE LIVE BRAIN STUDIO INTERACTIVE CONTROLLERS
+// ═══════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  const promptInput = document.getElementById('hp-brain-prompt-input');
+  const btnGenerateCode = document.getElementById('hp-btn-generate-code');
+  const btnCreateSkill = document.getElementById('hp-btn-create-skill');
+  const outputContainer = document.getElementById('hp-brain-output-container');
+  const guildBadge = document.getElementById('hp-brain-guild-badge');
+  const qaScore = document.getElementById('hp-brain-qa-score');
+  const codeDisplay = document.getElementById('hp-brain-code-display');
+
+  if (btnGenerateCode && promptInput) {
+    btnGenerateCode.addEventListener('click', async () => {
+      const prompt = promptInput.value.trim() || 'Synthesize express rate limiter middleware';
+      btnGenerateCode.innerText = 'Synthesizing...';
+      btnGenerateCode.disabled = true;
+
+      try {
+        const res = await fetch('/api/brain/generate-code', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt })
+        });
+        const data = await res.json();
+
+        if (data.success && data.data && data.data.files && data.data.files[0]) {
+          outputContainer.style.display = 'block';
+          guildBadge.innerText = `[Guild: ${data.data.guild || 'Architect'}]`;
+          qaScore.innerText = `[QA Score: ${data.data.multiAgentAudit ? data.data.multiAgentAudit.overallQaScore : 100}/100]`;
+          codeDisplay.innerText = data.data.files[0].content;
+        } else {
+          outputContainer.style.display = 'block';
+          const errObj = data.error;
+          const errMsg = typeof errObj === 'object' && errObj !== null ? (errObj.message || JSON.stringify(errObj)) : (errObj || 'Unknown error');
+          codeDisplay.innerText = 'Generation Error: ' + errMsg;
+        }
+      } catch (err) {
+        outputContainer.style.display = 'block';
+        codeDisplay.innerText = 'Network error: ' + err.message;
+      } finally {
+        btnGenerateCode.innerText = 'Synthesize Code';
+        btnGenerateCode.disabled = false;
+      }
+    });
+  }
+
+  if (btnCreateSkill && promptInput) {
+    btnCreateSkill.addEventListener('click', async () => {
+      const prompt = promptInput.value.trim() || 'Create a custom data validation skill';
+      btnCreateSkill.innerText = 'Creating Skill...';
+      btnCreateSkill.disabled = true;
+
+      try {
+        const res = await fetch('/api/brain/skills/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt })
+        });
+        const data = await res.json();
+
+        if (data.success && data.data && data.data.skill) {
+          outputContainer.style.display = 'block';
+          guildBadge.innerText = `[Dynamic Skill Created: ${data.data.skill.name}]`;
+          qaScore.innerText = `[Registered in /app/data/dynamic_skills]`;
+          codeDisplay.innerText = data.data.skill.executionCode;
+        } else {
+          outputContainer.style.display = 'block';
+          const errObj = data.error;
+          const errMsg = typeof errObj === 'object' && errObj !== null ? (errObj.message || JSON.stringify(errObj)) : (errObj || 'Unknown error');
+          codeDisplay.innerText = 'Skill Creation Error: ' + errMsg;
+        }
+      } catch (err) {
+        outputContainer.style.display = 'block';
+        codeDisplay.innerText = 'Network error: ' + err.message;
+      } finally {
+        btnCreateSkill.innerText = 'Create Skill';
+        btnCreateSkill.disabled = false;
+      }
+    });
+  }
+});
+
+// ═══════════════════════════════════════
+// 3D CARD TILT & CURSOR SPOTLIGHT TRACKER
+// ═══════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  const initCardTiltEngine = () => {
+    const cards = document.querySelectorAll('.glass-card, .service-card, .portfolio-card, .pricing-card, .process-card, .stat-card, .card, .glass-panel');
+    
+    cards.forEach(card => {
+      if (card.dataset.tiltInitialized) return;
+      card.dataset.tiltInitialized = 'true';
+
+      card.addEventListener('mousemove', (e) => {
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+        
+        const rotateX = ((y - centerY) / centerY) * -7;
+        const rotateY = ((x - centerX) / centerX) * 7;
+        
+        card.style.setProperty('--mouse-x', `${(x / rect.width) * 100}%`);
+        card.style.setProperty('--mouse-y', `${(y / rect.height) * 100}%`);
+        card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateZ(8px) scale(1.015)`;
+      });
+      
+      card.addEventListener('mouseleave', () => {
+        card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) translateZ(0px) scale(1)';
+      });
+    });
+  };
+
+  initCardTiltEngine();
+  
+  // Re-initialize dynamic cards if DOM mutates
+  const observer = new MutationObserver(initCardTiltEngine);
+  observer.observe(document.body, { childList: true, subtree: true });
 });
 
 

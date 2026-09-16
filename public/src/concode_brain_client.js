@@ -11,11 +11,10 @@
  */
 
 const ConcodeBrain = (() => {
-  // ── Configuration & State ─────────────────────────────────────
   let config = {
-    apiBase: 'http://localhost:8000',
-    proxyUrl: '/api/chat',
-    useProxy: false,
+    apiBase: (typeof window !== 'undefined' && window.location) ? window.location.origin : 'http://localhost:3000',
+    proxyUrl: '/api/brain/cognitive',
+    useProxy: true,
     apiKey: null,
   };
 
@@ -115,10 +114,14 @@ const ConcodeBrain = (() => {
 
     const workspaceFiles = includeWorkspace ? collectWorkspaceFiles() : {};
 
-    const payload = {
+    const unifiedPayload = {
       query: userPrompt,
+      input: userPrompt,
+      prompt: userPrompt,
       workspace_files: workspaceFiles,
+      workspaceFiles: workspaceFiles,
       session_id: sessionId,
+      sessionId: sessionId,
       mode: mode,
     };
 
@@ -132,11 +135,23 @@ const ConcodeBrain = (() => {
       : `${config.apiBase}/api/v1/cognitive`;
 
     try {
-      const response = await fetch(targetUrl, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(config.useProxy ? { input: userPrompt, sessionId, workspaceFiles } : payload),
-      });
+      let response = null;
+      try {
+        response = await fetch(targetUrl, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(unifiedPayload),
+        });
+      } catch (networkErr) {
+        // If direct or primary proxy failed, try alternative proxy/origin endpoint
+        const fallbackUrl = config.useProxy ? '/api/chat' : '/api/brain/cognitive';
+        console.warn(`[ConcodeBrain] Primary target (${targetUrl}) failed, attempting fallback to ${fallbackUrl}...`);
+        response = await fetch(fallbackUrl, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(unifiedPayload),
+        });
+      }
 
       if (!response.ok) {
         throw new Error(`Brain API error: ${response.status} ${response.statusText}`);
@@ -154,7 +169,7 @@ const ConcodeBrain = (() => {
 
       // Guild & Code Callbacks
       if (onGuildDetected && result.guild) {
-        onGuildDetected(result.guild, result.guild_icon || '⚡', result.confidence || 1.0);
+        onGuildDetected(result.guild, result.guild_icon || '//', result.confidence || 1.0);
       }
       if (onCodeGenerated && result.code) {
         onCodeGenerated(result.code, result.repair_applied || false);

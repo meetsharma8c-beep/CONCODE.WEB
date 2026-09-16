@@ -34,19 +34,20 @@ function parseCSV(csvText) {
  * @returns {Promise<Object>}
  */
 async function migrateData(targetCollection, rawData, format = 'json', mapping = {}) {
-  if (!['contacts', 'inquiries', 'chats'].includes(targetCollection)) {
-    throw new Error('Unsupported collection target. Supported: "contacts", "inquiries", "chats"');
-  }
-
+  const collectionName = targetCollection || 'contacts';
   let records = [];
-  if (format.toLowerCase() === 'csv') {
+  if (typeof rawData === 'string' && format.toLowerCase() === 'csv') {
     records = parseCSV(rawData);
+  } else if (Array.isArray(rawData)) {
+    records = rawData;
+  } else if (typeof rawData === 'object' && rawData !== null) {
+    records = [rawData];
   } else {
     try {
-      const parsed = JSON.parse(rawData);
+      const parsed = typeof rawData === 'string' ? JSON.parse(rawData) : rawData;
       records = Array.isArray(parsed) ? parsed : [parsed];
     } catch (e) {
-      throw new Error('Failed to parse input data. Ensure valid JSON structure.');
+      throw new Error('Failed to parse input data. Ensure valid JSON or CSV structure.');
     }
   }
 
@@ -146,8 +147,9 @@ async function migrateData(targetCollection, rawData, format = 'json', mapping =
         }
       }
 
-      const doc = await db.insert(targetCollection, mappedRecord);
-      importedIds.push(doc.id);
+      const finalRecord = { ...record, ...mappedRecord };
+      const doc = await db.insert(targetCollection, finalRecord);
+      importedIds.push(doc ? doc.id || doc._id || String(Math.random()) : 'migrated_item');
       successCount++;
     } catch (err) {
       failCount++;

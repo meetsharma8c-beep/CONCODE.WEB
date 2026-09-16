@@ -37,6 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function redirectToLogin() {
     localStorage.removeItem('concode_admin_token');
+    document.cookie = 'concode_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
     if (telemetryInterval) clearInterval(telemetryInterval);
     window.location.href = 'login.html';
   }
@@ -62,7 +63,8 @@ document.addEventListener('DOMContentLoaded', () => {
         startTelemetryPolling();
         return true;
       } else {
-        throw new Error(data.error.message || 'Invalid Token');
+        const errMsg = (data.error && data.error.message) || data.error || 'Invalid Token';
+        throw new Error(errMsg);
       }
     } catch (err) {
       redirectToLogin();
@@ -70,11 +72,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  logoutBtn.addEventListener('click', () => {
-    localStorage.removeItem('concode_admin_token');
-    if (telemetryInterval) clearInterval(telemetryInterval);
-    window.location.href = 'index.html';
-  });
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+      localStorage.removeItem('concode_admin_token');
+      document.cookie = 'concode_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+      if (telemetryInterval) clearInterval(telemetryInterval);
+      window.location.href = 'index.html';
+    });
+  }
 
   // Init
   if (activeToken) {
@@ -175,7 +180,8 @@ document.addEventListener('DOMContentLoaded', () => {
               // Reload page data silently
               validateAndLoad(activeToken);
             } else {
-              alert(`Deletion failed: ${delData.error.message}`);
+              const errMsg = (delData.error && delData.error.message) || delData.error || 'Unknown error';
+              alert(`Deletion failed: ${errMsg}`);
               btn.textContent = 'Delete';
               btn.disabled = false;
             }
@@ -403,7 +409,8 @@ document.addEventListener('DOMContentLoaded', () => {
           logsBody.textContent = logLines.join('\n') || 'Pipeline initialization complete.\nWaiting for cloud providers...';
           logsBody.scrollTop = logsBody.scrollHeight;
         } else {
-          logsBody.textContent = 'Error loading build logs: ' + data.error.message;
+          const errMsg = (data.error && data.error.message) || data.error || 'Unknown error';
+          logsBody.textContent = 'Error loading build logs: ' + errMsg;
         }
       } catch (err) {
         logsBody.textContent = 'Error establishing telemetry logs link.';
@@ -443,7 +450,8 @@ document.addEventListener('DOMContentLoaded', () => {
           projInput.value = '';
           validateAndLoad(activeToken); // Refresh view
         } else {
-          alert('Rollout error: ' + data.error.message);
+          const errMsg = (data.error && data.error.message) || data.error || 'Unknown error';
+          alert('Rollout error: ' + errMsg);
         }
       } catch (err) {
         alert('DevOps trigger connection timeout.');
@@ -533,4 +541,28 @@ document.addEventListener('DOMContentLoaded', () => {
     tick.style.height = `${heightPct}%`;
     telemetryTicks.appendChild(tick);
   }
+
+  // Expose global window helper for Code Generativeness & Dynamic Skills
+  window.CONCODE_BRAIN = {
+    generateCode: async function(prompt) {
+      const res = await fetch('/api/brain/generate-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt })
+      });
+      return await res.json();
+    },
+    createSkill: async function(prompt, customCode = '') {
+      const res = await fetch('/api/brain/skills/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt, customCode })
+      });
+      return await res.json();
+    },
+    getSkills: async function() {
+      const res = await fetch('/api/brain/skills');
+      return await res.json();
+    }
+  };
 });
