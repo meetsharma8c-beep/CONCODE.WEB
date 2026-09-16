@@ -63,15 +63,17 @@ class HardwareManager:
 
         # 1. Check Apple Silicon Metal Unified Memory Architecture
         if system == "Darwin" and machine in ["arm64", "aarch64"]:
-            logger.info("Hardware Auto-Detect: Apple Silicon Metal Unified RAM Architecture.")
+            chip_name, perf_cores = self._get_apple_silicon_info()
+            apple_threads = perf_cores if is_eco else min(logical_cores, perf_cores + 2)
+            logger.info(f"Hardware Auto-Detect: Apple Silicon Metal ({chip_name}, {apple_threads} Cores allocated).")
             return HardwareSpec(
                 backend="METAL",
-                threads=optimal_threads,
+                threads=apple_threads,
                 gpu_layers=99,  # Offload 100% of LLM layers into Apple Unified Memory
                 context_size=self.context_size,
                 total_ram_gb=total_ram_gb,
                 vram_allocated_gb=total_ram_gb,
-                device_name=f"Apple Silicon ({machine})",
+                device_name=chip_name,
                 flash_attention=True,
                 simd_instruction="ARM NEON / Metal Performance Shaders"
             )
@@ -134,6 +136,22 @@ class HardwareManager:
             flash_attention=False,
             simd_instruction=simd_type
         )
+
+    def _get_apple_silicon_info(self) -> Tuple[str, int]:
+        """Queries macOS sysctl for chip brand name (e.g. Apple M5) and performance core count."""
+        chip_name = "Apple Silicon"
+        perf_cores = 4
+        try:
+            brand = subprocess.check_output(["sysctl", "-n", "machdep.cpu.brand_string"], stderr=subprocess.DEVNULL).decode("utf-8").strip()
+            if brand:
+                chip_name = brand
+            
+            pcores_str = subprocess.check_output(["sysctl", "-n", "hw.perflevel0.logicalcpu"], stderr=subprocess.DEVNULL).decode("utf-8").strip()
+            if pcores_str.isdigit():
+                perf_cores = int(pcores_str)
+        except Exception:
+            pass
+        return chip_name, perf_cores
 
     def _check_nvidia_cuda(self) -> Tuple[Optional[str], float]:
         """Queries nvidia-smi for active GPU device name and VRAM capacity."""

@@ -96,6 +96,14 @@ class ConCodeBrainEngine {
       this.hardwareConfig.backend = 'METAL';
       this.hardwareConfig.gpuLayers = 99; // 100% Unified VRAM Offload
       this.hardwareConfig.vramAllocatedGB = totalMemGB;
+      try {
+        const chip = execSync('sysctl -n machdep.cpu.brand_string 2>/dev/null', { stdio: 'pipe' }).toString().trim();
+        if (chip) this.hardwareConfig.cpuModel = chip;
+        const pCores = parseInt(execSync('sysctl -n hw.perflevel0.logicalcpu 2>/dev/null', { stdio: 'pipe' }).toString().trim(), 10);
+        if (!isNaN(pCores) && pCores > 0 && isEcoMode) {
+          this.hardwareConfig.threads = pCores;
+        }
+      } catch (_) {}
     } else {
       try {
         const nvidiaInfo = execSync('nvidia-smi --query-gpu=name,memory.total --format=csv,noheader', { stdio: 'pipe' }).toString();
@@ -110,7 +118,8 @@ class ConCodeBrainEngine {
       }
     }
 
-    console.log(`[ConCodeBrainEngine v${this.version}] Hardware Gated: ${this.hardwareConfig.backend} (${this.hardwareConfig.threads} Cores, ${this.hardwareConfig.totalMemGB}GB Unified RAM, FlashAttention Active)`);
+    const modelLabel = this.hardwareConfig.cpuModel && this.hardwareConfig.cpuModel !== 'Unknown' ? `${this.hardwareConfig.cpuModel} - ` : '';
+    console.log(`[ConCodeBrainEngine v${this.version}] Hardware Gated: ${this.hardwareConfig.backend} (${modelLabel}${this.hardwareConfig.threads} Cores, ${this.hardwareConfig.totalMemGB}GB Unified RAM, FlashAttention Active)`);
   }
 
   // ═══════════════════════════════════════════════════════════════
