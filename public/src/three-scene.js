@@ -1935,12 +1935,25 @@ window.addEventListener('keydown', recordUserActivity, { passive: true });
 window.addEventListener('touchstart', recordUserActivity, { passive: true });
 
 // ==========================================
-// ANIMATION LOOP (Full GPU Hardware-Accelerated 60/120 FPS Rendering)
+// ANIMATION LOOP (Adaptive Thermal Eco-Capped 30/60 FPS GPU Rendering)
 // ==========================================
-function animate() {
+let lastRenderTimestamp = 0;
+function animate(timestamp) {
   animFrameId = requestAnimationFrame(animate);
   // Sleep GPU pipeline when tab is backgrounded
   if (!isTabVisible) return;
+
+  const now = timestamp || performance.now();
+  // On high-refresh displays (e.g. MacBook Pro M5 ProMotion 120Hz), cap rendering to 60 FPS when active,
+  // and smoothly drop to 30 FPS when user has been idle for > 8 seconds to prevent heat & fan spin.
+  const isIdle = (now - lastUserActivityTime) > 8000;
+  const targetFPS = isIdle ? 30 : 60;
+  const minInterval = 1000 / targetFPS;
+
+  if (now - lastRenderTimestamp < minInterval) {
+    return;
+  }
+  lastRenderTimestamp = now - ((now - lastRenderTimestamp) % minInterval);
 
   const delta = clock.getDelta();
   const elapsed = clock.getElapsedTime();

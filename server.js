@@ -4,7 +4,7 @@ let onRequest;
 if (process.env.FIREBASE_CONFIG || process.env.K_SERVICE) {
   try {
     onRequest = require('firebase-functions/v2/https').onRequest;
-  } catch (e) {}
+  } catch (e) { }
 }
 
 const express = require('express');
@@ -258,7 +258,7 @@ app.post('/api/chat', async (req, res) => {
     // 6. Deep Spoken Intent Evaluation & Voice Summary Generation
     const intentEvaluation = concodeBrainEngine.evaluateSpokenIntent(sanitizedInput, replyText);
     const voiceSummary = concodeBrainEngine.generateVoiceSummary(replyText, sanitizedInput);
-    
+
     // Prioritize routed specialist guild badge for domain queries; reserve social badges for greetings/gratitude
     let dynamicAgentBadge = guildInfo.agentBadge;
     if (intentEvaluation.intentCategory === 'SOCIAL') {
@@ -481,7 +481,7 @@ function mapEngineGuildToId(engineGuild, query) {
   if (q.includes('api') || q.includes('endpoint') || q.includes('rest') || q.includes('graphql') || q.includes('fastapi')) return 'api';
   if (q.includes('crypto') || q.includes('blockchain') || q.includes('solana') || q.includes('web3') || q.includes('smart-contract')) return 'blockchain';
   if (q.includes('mobile') || q.includes('ios') || q.includes('android') || q.includes('flutter')) return 'mobile';
-  
+
   const map = {
     // Canonical Brain Engine v12.0 Guild IDs
     'SELF_HEALING_DIAGNOSTIC': 'debugger',
@@ -537,7 +537,7 @@ const handleCognitiveEndpoint = async (req, res) => {
   let artifacts = null;
   try {
     artifacts = concodeBrainEngine.generateCodeArtifacts(sanitizedInput, { silent: true });
-  } catch (e) {}
+  } catch (e) { }
 
   const generatedCode = (artifacts && artifacts.files && artifacts.files[0] && artifacts.files[0].content)
     ? artifacts.files[0].content
@@ -1041,7 +1041,7 @@ app.get('/project/:projectId/*', async (req, res, next) => {
     const route = await gateway.resolveRoute(projectId);
     if (route) {
       let subpath = req.params[0] || 'index.html';
-      
+
       // Clean URLs support: Auto-resolve file without extension (e.g. /about -> about.html)
       if (subpath && !subpath.includes('.') && !subpath.endsWith('/')) {
         const htmlFilePath = path.join(route.localDir, subpath + '.html');
@@ -1049,7 +1049,7 @@ app.get('/project/:projectId/*', async (req, res, next) => {
           subpath += '.html';
         }
       }
-      
+
       const resolvedLocalDir = path.resolve(route.localDir);
       const filePath = path.resolve(route.localDir, subpath);
 
@@ -1131,7 +1131,7 @@ app.post('/api/auth/register', async (req, res) => {
     };
 
     const inserted = await db.insert('users', newUser);
-    
+
     // Generate signed JWT session token
     const token = jwt.sign(
       { id: inserted.id, email: inserted.email, role: inserted.role },
@@ -1153,7 +1153,7 @@ app.post('/api/auth/login', async (req, res) => {
   try {
     const users = await db.read('users');
     const user = users.find(u => u.email === email);
-    
+
     if (user && user.password) {
       // Secure hash comparison
       const isMatch = await bcrypt.compare(password, user.password);
@@ -1166,7 +1166,7 @@ app.post('/api/auth/login', async (req, res) => {
         return responses.success(res, { token, user: { name: user.name, email: user.email, role: user.role } });
       }
     }
-    
+
     responses.error(res, 'Invalid credentials', 401);
   } catch (e) {
     responses.error(res, 'Login failed: ' + e.message, 500);
@@ -1193,7 +1193,7 @@ app.post('/api/auth/phone/verify', async (req, res) => {
     const cleanPhone = otpService.normalizePhone(phone);
     const users = await db.read('users') || [];
     let user = users.find(u => u.phone === cleanPhone || u.email === `${cleanPhone.replace(/\+/g, '')}@phone.concode.io`);
-    
+
     if (!user) {
       user = {
         id: 'usr_' + Date.now().toString(36),
@@ -1247,7 +1247,7 @@ app.get('/api/auth/oauth/:provider', (req, res) => {
 // 4. OAuth Callback Handler
 app.all('/api/auth/callback/:provider', async (req, res) => {
   const provider = req.params.provider;
-  
+
   const code = req.query.code || req.body.code;
   const host = req.get('host');
   const protocol = req.protocol;
@@ -1328,7 +1328,7 @@ app.all('/api/auth/callback/:provider', async (req, res) => {
       });
       const emails = await emailsRes.json();
       const primaryEmail = (Array.isArray(emails) ? emails.find(e => e.primary) : null) || {};
-      
+
       email = primaryEmail.email || profile.email || `${profile.login}@users.noreply.github.com`;
       name = profile.name || profile.login;
       providerId = profile.id.toString();
@@ -1340,7 +1340,7 @@ app.all('/api/auth/callback/:provider', async (req, res) => {
 
       // Decode header to get kid for key lookup
       const header = JSON.parse(Buffer.from(idToken.split('.')[0], 'base64url').toString());
-      
+
       // Fetch Apple's public keys and verify signature
       let decoded;
       try {
@@ -1348,7 +1348,7 @@ app.all('/api/auth/callback/:provider', async (req, res) => {
         const appleKeys = await appleKeysRes.json();
         const signingKey = appleKeys.keys.find(k => k.kid === header.kid);
         if (!signingKey) throw new Error('Apple signing key not found for kid: ' + header.kid);
-        
+
         // Convert JWK to PEM and verify
         const crypto = require('crypto');
         const publicKey = crypto.createPublicKey({ key: signingKey, format: 'jwk' });
@@ -1367,7 +1367,7 @@ app.all('/api/auth/callback/:provider', async (req, res) => {
         try {
           const userObj = JSON.parse(userObjStr);
           name = `${userObj.name.firstName} ${userObj.name.lastName}`;
-        } catch (e) {}
+        } catch (e) { }
       }
       if (!name) name = email.split('@')[0];
     }
@@ -1611,7 +1611,7 @@ if (process.env.NODE_ENV !== 'test') {
 
       // 3. Automated self-testing of core code generation
       const selfTestResult = concodeBrainEngine.generateCodeArtifacts('Auto self-test ping', { silent: true });
-      
+
       console.log(`[CONCODE BRAIN AUTO-TRAINER] Background training cycle complete. Indexed ${concodeBrainEngine.symbolCache.size} files, ${obsidianVaultKnowledgeEngine.indexedNotes.length} Obsidian notes. Self-Test Score: ${selfTestResult.multiAgentAudit ? selfTestResult.multiAgentAudit.overallQaScore : 100}`);
     } catch (e) {
       console.warn('[CONCODE BRAIN AUTO-TRAINER] Background training loop warning:', e.message);

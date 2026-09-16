@@ -64,13 +64,21 @@ class HardwareManager:
         # 1. Check Apple Silicon Metal Unified Memory Architecture
         if system == "Darwin" and machine in ["arm64", "aarch64"]:
             chip_name, perf_cores = self._get_apple_silicon_info()
-            apple_threads = perf_cores if is_eco else min(logical_cores, perf_cores + 2)
-            logger.info(f"Hardware Auto-Detect: Apple Silicon Metal ({chip_name}, {apple_threads} Cores allocated).")
+            custom_threads = os.environ.get("CONCODE_THREADS") or os.environ.get("THERMAL_MAX_THREADS")
+            if custom_threads and custom_threads.isdigit():
+                apple_threads = max(1, int(custom_threads))
+            else:
+                apple_threads = min(4, perf_cores) if is_eco else min(logical_cores, perf_cores + 2)
+
+            # Cap context window in eco mode to reduce VRAM memory bandwidth & thermal footprint
+            effective_context = min(8192, self.context_size) if is_eco else self.context_size
+
+            logger.info(f"Hardware Auto-Detect: Apple Silicon Metal ({chip_name}, {apple_threads} Cores allocated, Eco-Mode: {is_eco}).")
             return HardwareSpec(
                 backend="METAL",
                 threads=apple_threads,
                 gpu_layers=99,  # Offload 100% of LLM layers into Apple Unified Memory
-                context_size=self.context_size,
+                context_size=effective_context,
                 total_ram_gb=total_ram_gb,
                 vram_allocated_gb=total_ram_gb,
                 device_name=chip_name,

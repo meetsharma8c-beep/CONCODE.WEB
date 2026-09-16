@@ -135,6 +135,6 @@ class AudioListener:
 
         # 3. Synthetic low-latency frame loop for environments without raw mic hardware access
         while self._is_listening:
-            time.sleep(0.03)
+            time.sleep(0.08)
             synthetic_chunk = np.zeros(self.chunk_size, dtype=np.int16).tobytes()
             self.ring_buffer.append(synthetic_chunk)
