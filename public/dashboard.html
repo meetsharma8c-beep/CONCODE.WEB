@@ -110,25 +110,12 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      // Check query parameter token first (if redirected from OAuth callback)
-      const urlParams = new URLSearchParams(window.location.search);
-      const queryToken = urlParams.get('token');
-      if (queryToken) {
-        localStorage.setItem('concode_admin_token', queryToken);
-        window.history.replaceState({}, document.title, window.location.pathname);
-      }
-
-      const token = localStorage.getItem('concode_admin_token');
       const container = document.getElementById('dashboard-container');
       const logoutBtn = document.getElementById('btn-logout');
 
-      // Fetch user profile from backend (using token header or cookie session)
-      const headers = {};
-      if (token) headers['x-admin-token'] = token;
-
+      // Fetch user profile from the same-origin HttpOnly session cookie.
       fetch('/api/user/profile', {
-        credentials: 'same-origin',
-        headers
+        credentials: 'same-origin'
       })
       .then(res => res.json())
       .then(data => {
@@ -147,14 +134,12 @@
         }
       })
       .catch(() => {
-        localStorage.removeItem('concode_admin_token');
         window.location.href = 'login.html';
       });
 
       if (logoutBtn) {
         logoutBtn.addEventListener('click', () => {
-          localStorage.removeItem('concode_admin_token');
-          document.cookie = 'concode_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+          fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin', keepalive: true }).catch(() => {});
           window.location.href = 'index.html';
         });
       }

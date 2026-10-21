@@ -146,7 +146,9 @@ describe('POST /api/auth/register', () => {
       });
     expect(res.statusCode).toBe(200);
     expect(res.body.success).toBe(true);
-    expect(res.body.data.token).toBeDefined();
+    expect(res.headers['set-cookie']).toBeDefined();
+    expect(res.headers['set-cookie'].join(';')).toMatch(/concode_token=.*HttpOnly/);
+    expect(res.body.data.token).toBeUndefined();
     expect(res.body.data.user.email).toBe(uniqueEmail);
   });
 });

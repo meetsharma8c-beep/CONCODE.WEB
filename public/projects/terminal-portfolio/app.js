@@ -77,8 +77,12 @@ document.addEventListener('DOMContentLoaded', () => {
     matrix: "Toggle the retro falling Matrix digital rain simulation."
   };
 
-  // Focus input initially
-  terminalInput.focus();
+  // An embedded terminal must not steal focus from the marketing page: doing
+  // so scrolls first-time visitors away from the hero. Keep auto-focus only
+  // when someone opens the terminal as its own page.
+  if (window.self === window.top) {
+    terminalInput.focus();
+  }
 
   // Listen for Enter key
   terminalInput.addEventListener('keydown', (e) => {

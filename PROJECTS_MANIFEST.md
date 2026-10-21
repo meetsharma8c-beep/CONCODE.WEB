@@ -27,6 +27,7 @@
 | 17 | `antigravity-dashboard` | Antigravity OS Desktop Software | [`25bt04065-hub/antigravity-dashboard`](https://github.com/25bt04065-hub/antigravity-dashboard) | `public/projects/antigravity-dashboard` | `/project/antigravity-dashboard/` | index, style, app | Active |
 | 18 | `ai-sigma-gateway` | AI Sigma (AI Σ) Mobile App | [`25bt04065-hub/ai-sigma-gateway`](https://github.com/25bt04065-hub/ai-sigma-gateway) | `public/projects/ai-sigma-gateway` | `/project/ai-sigma-gateway/` | index, style, app | Active |
 | 19 | `ai-idea-planner` | AI Idea Planner & Feasibility Validator | [`25bt04065-hub/ai-idea-planner`](https://github.com/25bt04065-hub/ai-idea-planner) | `public/projects/ai-idea-planner` | `/project/ai-idea-planner/` | index, style, app | Active |
+| 20 | `tripverse` | TripVerse — AI Travel & Road Trip Co-Pilot | `local/TripVerse` | `Downloads/TripVerse` | `http://localhost:5173` | React 19, Vite, Leaflet, Capacitor, Tailwind 4 | Active |
 
 ---
 

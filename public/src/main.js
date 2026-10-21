@@ -30,13 +30,15 @@ const navMenu = document.getElementById('nav-menu');
 
 if (navToggle) {
   navToggle.addEventListener('click', () => {
-    navMenu.classList.toggle('open');
+    const isOpen = navMenu.classList.toggle('open');
+    navToggle.setAttribute('aria-expanded', String(isOpen));
   });
 
   // Close menu when clicking a link
   navMenu.querySelectorAll('a').forEach(link => {
     link.addEventListener('click', () => {
       navMenu.classList.remove('open');
+      navToggle.setAttribute('aria-expanded', 'false');
     });
   });
 }
@@ -44,14 +46,17 @@ if (navToggle) {
 // Sync Navbar Auth Button with Login Session
 const navAuthBtn = document.getElementById('nav-btn-auth');
 if (navAuthBtn) {
-  const token = localStorage.getItem('concode_admin_token');
-  if (token) {
-    navAuthBtn.textContent = 'Workspace';
-    navAuthBtn.href = 'dashboard.html';
-    navAuthBtn.classList.add('authenticated');
-    navAuthBtn.style.color = '#00f0ff';
-    navAuthBtn.style.borderColor = 'rgba(0, 240, 255, 0.4)';
-  }
+  fetch('/api/user/profile', { credentials: 'same-origin' })
+    .then(res => res.ok ? res.json() : null)
+    .then(data => {
+      if (!data || !data.success) return;
+      navAuthBtn.textContent = 'Workspace';
+      navAuthBtn.href = data.data.role === 'admin' ? 'admin.html' : 'dashboard.html';
+      navAuthBtn.classList.add('authenticated');
+      navAuthBtn.style.color = '#00f0ff';
+      navAuthBtn.style.borderColor = 'rgba(0, 240, 255, 0.4)';
+    })
+    .catch(() => {});
 }
 
 
@@ -309,69 +314,12 @@ const line1 = document.getElementById('typewriter-line-1');
 const line2 = document.getElementById('typewriter-line-2');
 const cursor = document.getElementById('typewriter-cursor');
 
-const line1Text = "We Engineer Systems";
-const line2Text = "That Scale Revenue.";
-
-function typeWriter(el, text, speed, callback) {
-  let i = 0;
-  function type() {
-    if (i < text.length) {
-      el.textContent += text.charAt(i);
-      i++;
-      // Human-like typing rhythm (random variable timing)
-      const delay = speed + (Math.random() * 40 - 20);
-      setTimeout(type, Math.max(30, delay));
-    } else if (callback) {
-      callback();
-    }
-  }
-  type();
+// The headline is intentionally server-rendered and immediately visible. It
+// is the primary conversion message, so it must not wait for JavaScript or a
+// multi-second typewriter animation to become readable.
+if (cursor && line2) {
+  line2.parentNode.appendChild(cursor);
 }
-
-// Animate Hero badge, subtitle, actions
-gsap.from('.hero-badge', {
-  opacity: 0,
-  y: 20,
-  duration: 0.8,
-  delay: 0.3,
-  ease: 'power2.out'
-});
-
-// Trigger typewriter after badge mounts
-setTimeout(() => {
-  typeWriter(line1, line1Text, 70, () => {
-    // Move cursor to line 2
-    if (cursor && line2) {
-      line2.parentNode.appendChild(cursor);
-    }
-    setTimeout(() => {
-      typeWriter(line2, line2Text, 85);
-    }, 300);
-  });
-}, 700);
-
-gsap.from('.hero-subtitle', {
-  opacity: 0,
-  y: 20,
-  duration: 0.8,
-  delay: 0.8,
-  ease: 'power2.out'
-});
-
-gsap.from('.hero-actions', {
-  opacity: 0,
-  y: 20,
-  duration: 0.8,
-  delay: 1.0,
-  ease: 'power2.out'
-});
-
-gsap.from('.hero-scroll-indicator', {
-  opacity: 0,
-  duration: 1,
-  delay: 1.5,
-  ease: 'power2.out'
-});
 
 // 2. Setup Matrix Scramble for scrolling headings
 document.querySelectorAll('.scramble-text').forEach(el => {
@@ -426,28 +374,45 @@ const chatDrawer = document.getElementById('chat-drawer');
 
 // Open onboard modal from various CTAs
 function openOnboardModal() {
-  if (onboardModal) onboardModal.classList.add('open');
+  if (!onboardModal) return;
+  onboardModal.classList.add('open');
+  onboardModal.setAttribute('aria-hidden', 'false');
+  const firstInput = document.getElementById('client-name');
+  if (firstInput) firstInput.focus();
+}
+
+function closeOnboardModal() {
+  if (!onboardModal) return;
+  onboardModal.classList.remove('open');
+  onboardModal.setAttribute('aria-hidden', 'true');
 }
 
 const btnOnboard = document.getElementById('btn-onboard');
 if (btnOnboard) btnOnboard.addEventListener('click', openOnboardModal);
+
+const btnHeroOnboard = document.getElementById('btn-hero-onboard');
+if (btnHeroOnboard) btnHeroOnboard.addEventListener('click', openOnboardModal);
 
 const btnCtaOnboard = document.getElementById('btn-cta-onboard');
 if (btnCtaOnboard) btnCtaOnboard.addEventListener('click', openOnboardModal);
 
 const modalClose = document.getElementById('modal-close');
 if (modalClose) {
-  modalClose.addEventListener('click', () => {
-    if (onboardModal) onboardModal.classList.remove('open');
-  });
+  modalClose.addEventListener('click', closeOnboardModal);
 }
 
 // Close modal on backdrop click
 if (onboardModal) {
   onboardModal.addEventListener('click', (e) => {
-    if (e.target === onboardModal) onboardModal.classList.remove('open');
+    if (e.target === onboardModal) closeOnboardModal();
   });
 }
+
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && onboardModal && onboardModal.classList.contains('open')) {
+    closeOnboardModal();
+  }
+});
 
 // AI Chat drawer
 const openChatDrawer = () => {
@@ -501,6 +466,8 @@ if (onboardForm) {
     const email = document.getElementById('client-email') ? document.getElementById('client-email').value : '';
     const serviceType = document.getElementById('client-module') ? document.getElementById('client-module').value : 'Professional';
     const description = document.getElementById('project-desc') ? document.getElementById('project-desc').value : '';
+    const website = document.getElementById('client-website') ? document.getElementById('client-website').value : '';
+    const consent = document.getElementById('client-consent') ? document.getElementById('client-consent').checked : false;
 
     const consolePanel = document.getElementById('sync-console');
     const consoleOutput = consolePanel ? consolePanel.querySelector('.console-output') : null;
@@ -520,13 +487,13 @@ if (onboardForm) {
       const res = await fetch('/api/inquiry', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, serviceType, description })
+        body: JSON.stringify({ name, email, serviceType, description, website, consent })
       });
       const result = await res.json();
       if (result.success) {
         log('Inquiry submitted successfully! We\'ll be in touch soon.', '#22c55e');
         await new Promise(r => setTimeout(r, 1500));
-        if (onboardModal) onboardModal.classList.remove('open');
+        closeOnboardModal();
         if (consolePanel) consolePanel.classList.add('hidden');
         onboardForm.reset();
       } else {
@@ -534,7 +501,7 @@ if (onboardForm) {
         log(`Error: ${errMsg}`, '#ef4444');
       }
     } catch (err) {
-      log('Network error. Your inquiry has been saved locally.', '#f97316');
+      log('Network error. Please try again or email us directly.', '#f97316');
     }
   });
 }
@@ -550,6 +517,8 @@ if (contactForm) {
     const name = document.getElementById('contact-name') ? document.getElementById('contact-name').value : '';
     const email = document.getElementById('contact-email') ? document.getElementById('contact-email').value : '';
     const message = document.getElementById('contact-message') ? document.getElementById('contact-message').value : '';
+    const website = document.getElementById('contact-website') ? document.getElementById('contact-website').value : '';
+    const consent = document.getElementById('contact-consent') ? document.getElementById('contact-consent').checked : false;
 
     const consolePanel = document.getElementById('contact-console');
     const consoleOutput = consolePanel ? consolePanel.querySelector('.console-output') : null;
@@ -567,7 +536,7 @@ if (contactForm) {
       const res = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, message })
+        body: JSON.stringify({ name, email, message, website, consent })
       });
       const result = await res.json();
       if (result.success) {
@@ -992,13 +961,12 @@ async function handleCliCommand(cmd, logEl) {
         print('<span style="color: var(--orange)">Syntax Error</span>: Use <code>/delete [project-id]</code>');
         break;
       }
-      const adminToken = localStorage.getItem('concode_admin_token') || 'admin123';
       print(`Deleting project routing entry and files for ID: <code>${id}</code>...`);
       print(`<span style="color: var(--cyan)">→ DELETE /api/gateway/route/${id}</span>`);
       try {
         fetch(`/api/gateway/route/${id}`, {
           method: 'DELETE',
-          headers: { 'x-admin-token': adminToken }
+          credentials: 'same-origin'
         })
           .then(res => res.json())
           .then(data => {
@@ -1929,29 +1897,9 @@ function triggerInspectProjectModal(key) {
 }
 
 function filterProjects() {
-  const query = (searchInput ? searchInput.value : '').toLowerCase().trim();
-  const cards = document.querySelectorAll('.portfolio-card');
   const githubSection = document.getElementById('github-repos-section');
-
-  cards.forEach(card => {
-    const cat = card.getAttribute('data-category') || 'all';
-    const keywords = (card.getAttribute('data-keywords') || '') + ' ' + (card.innerText || '');
-    const matchesCat = (currentCategory === 'all' || cat.split(' ').includes(currentCategory));
-    const matchesQuery = !query || keywords.toLowerCase().includes(query);
-
-    if (matchesCat && matchesQuery) {
-      card.classList.remove('hidden');
-    } else {
-      card.classList.add('hidden');
-    }
-  });
-
   if (githubSection) {
-    if (currentCategory === 'all' || currentCategory === 'github') {
-      githubSection.classList.remove('hidden');
-    } else {
-      githubSection.classList.add('hidden');
-    }
+    githubSection.classList.remove('hidden');
   }
 
   if (typeof renderGithubRepoCards === 'function') {
@@ -2434,6 +2382,10 @@ function renderGithubRepoCards() {
       });
     });
   });
+
+  if (typeof initCardTiltEngine === 'function') {
+    initCardTiltEngine();
+  }
 }
 
 // Attach listener for Sync Button, CONCODE AI Circular Button & AI Quick Chips
@@ -2600,16 +2552,14 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btnSaveCode) {
     btnSaveCode.addEventListener('click', async () => {
       const content = codeEditor ? codeEditor.value : '';
-      const adminToken = localStorage.getItem('concode_admin_token') || 'admin123';
       printLog(`Saving file: ${currentActiveFile} for project ${activeProjectId}...`, 'system');
       try {
         const res = await fetch('/api/studio/savefile', {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
-            'x-admin-token': adminToken,
-            'Authorization': `Bearer ${adminToken}`
+            'Content-Type': 'application/json'
           },
+          credentials: 'same-origin',
           body: JSON.stringify({ projectId: activeProjectId, filename: currentActiveFile, content })
         });
         const data = await res.json();
@@ -2637,7 +2587,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      const adminToken = localStorage.getItem('concode_admin_token') || 'admin123';
       showView('terminal');
       printLog(`[CONCODE AI REFINEMENT v5.0] Processing instruction: "${instruction}"...`, 'system');
       if (statusIndicator) statusIndicator.className = 'status-indicator working';
@@ -2647,10 +2596,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const res = await fetch('/api/studio/refine', {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
-            'x-admin-token': adminToken,
-            'Authorization': `Bearer ${adminToken}`
+            'Content-Type': 'application/json'
           },
+          credentials: 'same-origin',
           body: JSON.stringify({ projectId: activeProjectId, instruction })
         });
         const data = await res.json();
@@ -3164,45 +3112,56 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ═══════════════════════════════════════
-// 3D CARD TILT & CURSOR SPOTLIGHT TRACKER
+// 3D CARD TILT & CURSOR SPOTLIGHT TRACKER (Thermal Eco-Optimized)
 // ═══════════════════════════════════════
-document.addEventListener('DOMContentLoaded', () => {
-  const initCardTiltEngine = () => {
-    const cards = document.querySelectorAll('.glass-card, .service-card, .portfolio-card, .pricing-card, .process-card, .stat-card, .card, .glass-panel');
-    
-    cards.forEach(card => {
-      if (card.dataset.tiltInitialized) return;
-      card.dataset.tiltInitialized = 'true';
+function initCardTiltEngine() {
+  const cards = document.querySelectorAll('.glass-card, .service-card, .github-repo-card, .pricing-card, .process-card, .stat-card, .card, .glass-panel');
+  
+  cards.forEach(card => {
+    if (card.dataset.tiltInitialized) return;
+    card.dataset.tiltInitialized = 'true';
 
-      card.addEventListener('mousemove', (e) => {
-        const rect = card.getBoundingClientRect();
+    let rect = null;
+    let rafId = null;
+
+    card.addEventListener('mouseenter', () => {
+      rect = card.getBoundingClientRect();
+    }, { passive: true });
+
+    card.addEventListener('mousemove', (e) => {
+      if (!rect) rect = card.getBoundingClientRect();
+      if (rafId) return;
+
+      rafId = requestAnimationFrame(() => {
+        rafId = null;
+        if (!rect) return;
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
-        
         const centerX = rect.width / 2;
         const centerY = rect.height / 2;
         
-        const rotateX = ((y - centerY) / centerY) * -7;
-        const rotateY = ((x - centerX) / centerX) * 7;
+        const rotateX = ((y - centerY) / centerY) * -5;
+        const rotateY = ((x - centerX) / centerX) * 5;
         
         card.style.setProperty('--mouse-x', `${(x / rect.width) * 100}%`);
         card.style.setProperty('--mouse-y', `${(y / rect.height) * 100}%`);
-        card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateZ(8px) scale(1.015)`;
+        card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateZ(6px) scale(1.01)`;
       });
-      
-      card.addEventListener('mouseleave', () => {
-        card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) translateZ(0px) scale(1)';
-      });
-    });
-  };
+    }, { passive: true });
+    
+    card.addEventListener('mouseleave', () => {
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+      rect = null;
+      card.style.transform = '';
+    }, { passive: true });
+  });
+}
 
+document.addEventListener('DOMContentLoaded', () => {
   initCardTiltEngine();
-  
-  // Re-initialize dynamic cards if DOM mutates
-  const observer = new MutationObserver(initCardTiltEngine);
-  observer.observe(document.body, { childList: true, subtree: true });
 });
-
-
-
+window.initCardTiltEngine = initCardTiltEngine;
 

@@ -177,22 +177,15 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      // Auto-redirect active session users
-      const existingToken = localStorage.getItem('concode_admin_token');
-      if (existingToken) {
-        fetch('/api/admin/dashboard', {
-          headers: { 'x-admin-token': existingToken }
-        })
+      // Auto-redirect users with a valid HttpOnly session cookie.
+      fetch('/api/user/profile', { credentials: 'same-origin' })
         .then(res => res.json())
         .then(data => {
           if (data.success) {
-            window.location.href = 'admin.html';
+            window.location.href = data.data.role === 'admin' ? 'admin.html' : 'dashboard.html';
           }
         })
-        .catch(() => {
-          localStorage.removeItem('concode_admin_token');
-        });
-      }
+        .catch(() => {});
 
       const loginCard = document.getElementById('login-card');
       const loginForm = document.getElementById('login-form');
@@ -412,7 +405,6 @@
             const data = await res.json();
             
             if (data.success) {
-              localStorage.setItem('concode_admin_token', data.data.token);
               const role = data.data.user.role || 'user';
               if (role === 'admin') {
                 window.location.href = 'admin.html';
@@ -445,7 +437,6 @@
             const data = await res.json();
 
             if (data.success) {
-              localStorage.setItem('concode_admin_token', data.data.token);
               const role = data.data.user.role || 'user';
               if (role === 'admin') {
                 window.location.href = 'admin.html';
@@ -477,7 +468,6 @@
             const data = await res.json();
             
             if (data.success) {
-              localStorage.setItem('concode_admin_token', data.data.token);
               const role = data.data.user.role || 'user';
               if (role === 'admin') {
                 window.location.href = 'admin.html';

@@ -20,15 +20,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const telemetryMemoryBar = document.getElementById('telemetry-memory-bar');
   const telemetryTicks = document.getElementById('telemetry-ticks');
 
-  // Check for redirect callback URL parameters token
-  const urlParams = new URLSearchParams(window.location.search);
-  const queryToken = urlParams.get('token');
-  if (queryToken) {
-    localStorage.setItem('concode_admin_token', queryToken);
-    window.history.replaceState({}, document.title, window.location.pathname);
-  }
-
-  let activeToken = localStorage.getItem('concode_admin_token') || '';
+  // Authentication is provided by the HttpOnly same-origin session cookie.
+  // A manually entered admin token remains supported for local operations,
+  // but normal browser sessions are never stored in localStorage or URLs.
+  let activeToken = '';
   let telemetryInterval = null;
 
   // ═══════════════════════════════════════
@@ -36,22 +31,19 @@ document.addEventListener('DOMContentLoaded', () => {
   // ═══════════════════════════════════════
 
   function redirectToLogin() {
-    localStorage.removeItem('concode_admin_token');
-    document.cookie = 'concode_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+    fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin', keepalive: true }).catch(() => {});
     if (telemetryInterval) clearInterval(telemetryInterval);
     window.location.href = 'login.html';
   }
 
   async function validateAndLoad(token) {
     try {
-      const res = await fetch('/api/admin/dashboard', {
-        headers: { 'x-admin-token': token }
-      });
+      const headers = token ? { 'x-admin-token': token } : {};
+      const res = await fetch('/api/admin/dashboard', { credentials: 'same-origin', headers });
       const data = await res.json();
 
       if (data.success) {
         activeToken = token;
-        localStorage.setItem('concode_admin_token', token);
         
         // Render all data tables
         renderDashboard(data.data);
@@ -74,19 +66,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (logoutBtn) {
     logoutBtn.addEventListener('click', () => {
-      localStorage.removeItem('concode_admin_token');
-      document.cookie = 'concode_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+      fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin', keepalive: true }).catch(() => {});
       if (telemetryInterval) clearInterval(telemetryInterval);
       window.location.href = 'index.html';
     });
   }
 
   // Init
-  if (activeToken) {
-    validateAndLoad(activeToken);
-  } else {
-    redirectToLogin();
-  }
+  validateAndLoad(activeToken);
 
   // ═══════════════════════════════════════
   // WORKSPACE TABS INTERACTION

@@ -42,6 +42,26 @@ const cookieParser = require('cookie-parser');
 const app = express();
 const db = new DatabaseManager();
 
+// Keep authentication details out of JavaScript-accessible storage.  Every
+// browser session uses the same cookie settings, whether it was created by a
+// password, phone OTP, or OAuth flow.
+function setSessionCookie(res, token) {
+  res.cookie('concode_token', token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 7 * 24 * 60 * 60 * 1000
+  });
+}
+
+function isValidEmail(value) {
+  return typeof value === 'string' && value.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+function isValidLeadText(value, maxLength) {
+  return typeof value === 'string' && value.trim().length > 0 && value.trim().length <= maxLength;
+}
+
 app.use(compression());
 app.use(cookieParser());
 
@@ -107,6 +127,17 @@ const apiLimiter = rateLimit({
   skip: (req) => process.env.NODE_ENV !== 'production' && (req.ip === '127.0.0.1' || req.ip === '::1' || req.ip === '::ffff:127.0.0.1')
 });
 app.use('/api/', apiLimiter);
+
+// Lead endpoints are public by design, so give them a tighter independent
+// limit than the workspace API. This reduces form spam without penalising
+// normal site visitors.
+const leadFormLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 8,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, error: { message: 'Too many submissions. Please try again shortly.' } }
+});
 
 // Health Check
 app.get('/api/health', (req, res) => {
@@ -583,7 +614,7 @@ app.get('/api/v1/idea-planner/presets', handleIdeaPlannerPresets);
 app.get('/api/brain/idea-planner/presets', handleIdeaPlannerPresets);
 
 // Train / Re-index AST Knowledge Matrix & Brain Engine
-app.post('/api/brain/train', async (req, res) => {
+app.post('/api/brain/train', verifyAdmin, async (req, res) => {
   try {
     const startTime = Date.now();
     concodeBrainEngine.indexWorkspaceASTGraph();
@@ -610,7 +641,7 @@ app.post('/api/brain/train', async (req, res) => {
 // ═══════════════════════════════════════════════════════════════
 
 // Generate multi-file code artifacts with self-healing validation
-app.post('/api/brain/generate-code', async (req, res) => {
+app.post('/api/brain/generate-code', verifyAuth, async (req, res) => {
   try {
     const { prompt, options } = req.body;
     if (!prompt) {
@@ -624,7 +655,7 @@ app.post('/api/brain/generate-code', async (req, res) => {
 });
 
 // Create and register a new dynamic skill
-app.post('/api/brain/skills/create', async (req, res) => {
+app.post('/api/brain/skills/create', verifyAdmin, async (req, res) => {
   try {
     const prompt = req.body.prompt || req.body.skillName || req.body.description;
     const customCode = req.body.customCode;
@@ -639,7 +670,7 @@ app.post('/api/brain/skills/create', async (req, res) => {
 });
 
 // Audit and self-refine any code snippet using the QA Sentinel Agent
-app.post('/api/brain/audit-code', async (req, res) => {
+app.post('/api/brain/audit-code', verifyAuth, async (req, res) => {
   try {
     const { code, language } = req.body;
     if (!code) {
@@ -704,7 +735,7 @@ app.post('/api/studio/refine', verifyAuth, async (req, res, next) => {
   }
 });
 
-app.get('/api/studio/files/:projectId', async (req, res, next) => {
+app.get('/api/studio/files/:projectId', verifyAuth, async (req, res, next) => {
   const { projectId } = req.params;
   try {
     const result = await studio.getProjectFiles(projectId);
@@ -727,7 +758,7 @@ app.delete('/api/studio/delete/:projectId', verifyAdmin, async (req, res, next) 
 // ═══════════════════════════════════════
 // API GATEWAY ENDPOINTS
 // ═══════════════════════════════════════
-app.get('/api/gateway/routes', async (req, res, next) => {
+app.get('/api/gateway/routes', verifyAuth, async (req, res, next) => {
   try {
     const activeRoutes = await gateway.getRoutes();
     responses.success(res, activeRoutes);
@@ -736,7 +767,7 @@ app.get('/api/gateway/routes', async (req, res, next) => {
   }
 });
 
-app.post('/api/gateway/register', async (req, res, next) => {
+app.post('/api/gateway/register', verifyAuth, async (req, res, next) => {
   const { projectId, customPath, customDomain, rateLimitRpm } = req.body;
   if (!projectId) return responses.error(res, 'Project ID is required');
 
@@ -748,7 +779,7 @@ app.post('/api/gateway/register', async (req, res, next) => {
   }
 });
 
-app.get('/api/gateway/analytics/:projectId', async (req, res, next) => {
+app.get('/api/gateway/analytics/:projectId', verifyAuth, async (req, res, next) => {
   const { projectId } = req.params;
   try {
     const analytics = await gateway.getRouteAnalytics(projectId);
@@ -758,7 +789,7 @@ app.get('/api/gateway/analytics/:projectId', async (req, res, next) => {
   }
 });
 
-app.get('/api/gateway/telemetry', (req, res) => {
+app.get('/api/gateway/telemetry', verifyAuth, (req, res) => {
   responses.success(res, gateway.getGatewayTelemetry());
 });
 
@@ -788,7 +819,7 @@ app.post('/api/devops/deploy', verifyAuth, async (req, res, next) => {
   }
 });
 
-app.get('/api/devops/logs/:projectId', async (req, res, next) => {
+app.get('/api/devops/logs/:projectId', verifyAuth, async (req, res, next) => {
   const { projectId } = req.params;
   try {
     const logs = await devops.getDeploymentLogs(projectId);
@@ -816,7 +847,7 @@ app.post('/api/migration/migrate', verifyAuth, async (req, res, next) => {
   }
 });
 
-app.get('/api/migration/export/:jobId', async (req, res, next) => {
+app.get('/api/migration/export/:jobId', verifyAuth, async (req, res, next) => {
   const { jobId } = req.params;
   try {
     const result = await migration.exportMigrationJob(jobId);
@@ -829,7 +860,7 @@ app.get('/api/migration/export/:jobId', async (req, res, next) => {
 // ═══════════════════════════════════════
 // AUTOMATED GROWTH & DATA ENGINEERING
 // ═══════════════════════════════════════
-app.get('/api/growth/telemetry', async (req, res, next) => {
+app.get('/api/growth/telemetry', verifyAuth, async (req, res, next) => {
   try {
     const telemetry = await growth.getGrowthTelemetry();
     responses.success(res, telemetry);
@@ -838,7 +869,7 @@ app.get('/api/growth/telemetry', async (req, res, next) => {
   }
 });
 
-app.post('/api/growth/campaign', async (req, res, next) => {
+app.post('/api/growth/campaign', verifyAuth, async (req, res, next) => {
   const { name, targetNiche, strategy } = req.body;
   try {
     const result = await growth.createGrowthCampaign(name, targetNiche, strategy);
@@ -848,7 +879,7 @@ app.post('/api/growth/campaign', async (req, res, next) => {
   }
 });
 
-app.get('/api/data/telemetry', async (req, res, next) => {
+app.get('/api/data/telemetry', verifyAuth, async (req, res, next) => {
   try {
     const telemetry = await dataEngine.getDataEngineTelemetry();
     responses.success(res, telemetry);
@@ -857,7 +888,7 @@ app.get('/api/data/telemetry', async (req, res, next) => {
   }
 });
 
-app.post('/api/data/index', async (req, res, next) => {
+app.post('/api/data/index', verifyAuth, async (req, res, next) => {
   const { docId, title, content, metadata } = req.body;
   try {
     const result = await dataEngine.indexVectorDocument(docId, title, content || '', metadata || {});
@@ -867,7 +898,7 @@ app.post('/api/data/index', async (req, res, next) => {
   }
 });
 
-app.get('/api/data/search', async (req, res, next) => {
+app.get('/api/data/search', verifyAuth, async (req, res, next) => {
   const query = req.query.q || '';
   try {
     const results = await dataEngine.searchVectorDocuments(query);
@@ -1071,27 +1102,39 @@ app.get('/project/:projectId/*', async (req, res, next) => {
 });
 
 // Contact Endpoint
-app.post('/api/contact', async (req, res) => {
-  const { name, email, message } = req.body;
-  if (!name || !email || !message) return responses.error(res, 'All fields are required');
-  if (message.length < 10) return responses.error(res, 'Message must be at least 10 characters');
+app.post('/api/contact', leadFormLimiter, async (req, res) => {
+  const { name, email, message, website, consent } = req.body;
+  // A hidden field catches basic automated form fills. Return a neutral
+  // response so bots cannot use it to tune their submissions.
+  if (website) return responses.success(res, { message: 'Message received' });
+  if (!isValidLeadText(name, 120) || !isValidEmail(email) || !isValidLeadText(message, 5000)) {
+    return responses.error(res, 'Please provide a valid name, email, and message (up to 5,000 characters).');
+  }
+  if (message.trim().length < 10) return responses.error(res, 'Message must be at least 10 characters');
+  if (consent !== true) return responses.error(res, 'Please confirm that we may contact you about this request.');
 
-  const lead = await db.insert('contacts', { name, email, message });
-  await notifications.sendLeadAlert('General Contact Inquiry', { name, email, message });
+  const lead = await db.insert('contacts', { name: name.trim(), email: email.trim().toLowerCase(), message: message.trim(), consent: true });
+  await notifications.sendLeadAlert('General Contact Inquiry', { name: lead.name, email: lead.email, message: lead.message });
   responses.success(res, { lead, message: 'Message stored successfully' });
 });
 
 // Inquiry Endpoint
-app.post('/api/inquiry', async (req, res) => {
+app.post('/api/inquiry', leadFormLimiter, async (req, res) => {
   const name = req.body.name;
   const email = req.body.email;
   const serviceType = req.body.serviceType || req.body.plan || req.body.module || 'Custom Solution';
   const description = req.body.description || req.body.projectDetails || req.body.message || '';
+  const website = req.body.website;
+  const consent = req.body.consent;
 
-  if (!name || !email || !serviceType || !description) return responses.error(res, 'All fields are required');
+  if (website) return responses.success(res, { message: 'Inquiry received' });
+  if (!isValidLeadText(name, 120) || !isValidEmail(email) || !isValidLeadText(serviceType, 120) || !isValidLeadText(description, 5000)) {
+    return responses.error(res, 'Please provide valid contact and project details.');
+  }
+  if (consent !== true) return responses.error(res, 'Please confirm that we may contact you about this request.');
 
-  const inquiry = await db.insert('inquiries', { name, email, serviceType, description });
-  await notifications.sendLeadAlert('New Project Brief / Proposal', { name, email, serviceType, description });
+  const inquiry = await db.insert('inquiries', { name: name.trim(), email: email.trim().toLowerCase(), serviceType: serviceType.trim(), description: description.trim(), consent: true });
+  await notifications.sendLeadAlert('New Project Brief / Proposal', { name: inquiry.name, email: inquiry.email, serviceType: inquiry.serviceType, description: inquiry.description });
   responses.success(res, { inquiry, message: 'Inquiry registered successfully' });
 });
 
@@ -1139,7 +1182,8 @@ app.post('/api/auth/register', async (req, res) => {
       { expiresIn: '7d' }
     );
 
-    responses.success(res, { token, user: { name: inserted.name, email: inserted.email, role: inserted.role } });
+    setSessionCookie(res, token);
+    responses.success(res, { user: { name: inserted.name, email: inserted.email, role: inserted.role } });
   } catch (e) {
     responses.error(res, 'Registration failed: ' + e.message, 500);
   }
@@ -1163,7 +1207,8 @@ app.post('/api/auth/login', async (req, res) => {
           getJwtSecret(),
           { expiresIn: '7d' }
         );
-        return responses.success(res, { token, user: { name: user.name, email: user.email, role: user.role } });
+        setSessionCookie(res, token);
+        return responses.success(res, { user: { name: user.name, email: user.email, role: user.role } });
       }
     }
 
@@ -1213,7 +1258,8 @@ app.post('/api/auth/phone/verify', async (req, res) => {
       { expiresIn: '7d' }
     );
 
-    responses.success(res, { token, user: { id: user.id, name: user.name, email: user.email, phone: user.phone, role: user.role } });
+    setSessionCookie(res, token);
+    responses.success(res, { user: { id: user.id, name: user.name, email: user.email, phone: user.phone, role: user.role } });
   } catch (err) {
     responses.error(res, 'Phone OTP verification failed: ' + err.message, 400);
   }
@@ -1405,25 +1451,30 @@ app.all('/api/auth/callback/:provider', async (req, res) => {
       { expiresIn: '7d' }
     );
 
-    // Security: Set token cookie
-    res.cookie('concode_token', token, {
-      httpOnly: false,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-    });
+    setSessionCookie(res, token);
 
-    // Redirect based on role (token passed so client can persist to localStorage & sanitize URL)
+    // The browser sends the HttpOnly cookie on the same-origin dashboard
+    // request. Keeping the token out of the URL prevents it leaking through
+    // browser history, logs, referrers, and screenshots.
     if (user.role === 'admin') {
-      res.redirect(`/admin.html?token=${encodeURIComponent(token)}`);
+      res.redirect('/admin.html');
     } else {
-      res.redirect(`/dashboard.html?token=${encodeURIComponent(token)}`);
+      res.redirect('/dashboard.html');
     }
   } catch (err) {
     console.error(`OAuth Callback Error (${provider}):`, err.message);
     // Graceful fallback to developer consent gateway on live credential/token failure
     res.redirect(`/oauth-mock.html?provider=${provider}&error=${encodeURIComponent(err.message)}`);
   }
+});
+
+app.post('/api/auth/logout', (req, res) => {
+  res.clearCookie('concode_token', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax'
+  });
+  responses.success(res, { message: 'Signed out' });
 });
 
 // 5. Protected User Profile Fetch
@@ -1654,5 +1705,4 @@ if (onRequest) {
   exports.api = onRequest({ cors: true }, app);
 }
 module.exports = app;
-
 

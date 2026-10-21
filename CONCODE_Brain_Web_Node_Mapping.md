@@ -43,7 +43,7 @@ graph TD
         ORCHESTRATOR["[[Master Orchestrator]]<br><code>orchestrator.py</code>"]:::python
         LOCAL_LLM["[[Local LLM Runner]]<br><code>llm_runner.py (GGUF)</code>"]:::python
         STT_ENGINE["[[Whisper STT Engine]]<br><code>stt_runner.py</code>"]:::python
-        TTS_ENGINE["[[Kokoro/Piper TTS Engine]]<br><code>tts_engine.py</code>"]:::python
+        TTS_ENGINE["[[Kokoro_TTS_Engine|Kokoro/Piper TTS Engine]]<br><code>tts_engine.py</code>"]:::python
         LANCE_DB["[[LanceDB Vector Indexer]]<br><code>vector_store.py</code>"]:::python
         AST_PARSER["[[AST Context Parser]]<br><code>ast_parser.py</code>"]:::python
         HUD_UI["[[Floating PyQT6 HUD]]<br><code>floating_hud.py</code>"]:::python

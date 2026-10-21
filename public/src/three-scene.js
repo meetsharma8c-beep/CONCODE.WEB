@@ -205,13 +205,13 @@ function init3DScene() {
     canvas, 
     antialias: true, 
     alpha: true,
-    powerPreference: 'high-performance',
-    precision: 'highp',
+    powerPreference: 'default',
+    precision: 'mediump',
     depth: true,
     stencil: false
   });
   renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2.0));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.25));
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -352,9 +352,10 @@ function buildGridFloor() {
 }
 
 // ==========================================
-// INTERACTIVE CURSOR-SENSITIVE FABRIC MESH
+// INTERACTIVE CURSOR-SENSITIVE SQUARE FABRIC
 // ==========================================
 let fabricMesh = null;
+let fabricHitPlane = null;
 let fabricGeometry = null;
 let fabricOriginalPositions = null;
 let fabricRaycaster = new THREE.Raycaster();
@@ -362,35 +363,100 @@ let fabricMouse2D = new THREE.Vector2(-999, -999);
 let fabricWorldMouse = new THREE.Vector3(0, -1.45, 0);
 
 function buildCursorFabricMesh() {
-  // Expanded 260x260 mesh with proportional subdivisions (120x120) to cover the full viewport
-  fabricGeometry = new THREE.PlaneGeometry(260, 260, 120, 120);
-  fabricGeometry.rotateX(-Math.PI / 2);
-  fabricGeometry.translate(0, -1.45, 0);
+  const size = 260;
+  const segments = 100; // 100x100 pure square cells
+  const halfSize = size / 2;
+  const step = size / segments;
+  const cols = segments;
+  const rows = segments;
+  const numVertices = (cols + 1) * (rows + 1);
 
-  const posAttr = fabricGeometry.attributes.position;
-  fabricOriginalPositions = new Float32Array(posAttr.array.length);
-  fabricOriginalPositions.set(posAttr.array);
+  const positions = new Float32Array(numVertices * 3);
+  let vIdx = 0;
+  for (let iz = 0; iz <= rows; iz++) {
+    const z = -halfSize + iz * step;
+    for (let ix = 0; ix <= cols; ix++) {
+      const x = -halfSize + ix * step;
+      positions[vIdx * 3] = x;
+      positions[vIdx * 3 + 1] = -1.45;
+      positions[vIdx * 3 + 2] = z;
+      vIdx++;
+    }
+  }
 
-  const fabricMaterial = new THREE.MeshStandardMaterial({
-    color: 0x22d3ee,
-    wireframe: true,
+  // Create PURE SQUARE GRID indices (Horizontal and Vertical line segments ONLY - NO DIAGONALS)
+  const indices = [];
+  const stride = cols + 1;
+
+  // 1. Horizontal lines (along X axis)
+  for (let iz = 0; iz <= rows; iz++) {
+    for (let ix = 0; ix < cols; ix++) {
+      const a = iz * stride + ix;
+      const b = a + 1;
+      indices.push(a, b);
+    }
+  }
+
+  // 2. Vertical lines (along Z axis)
+  for (let ix = 0; ix <= cols; ix++) {
+    for (let iz = 0; iz < rows; iz++) {
+      const a = iz * stride + ix;
+      const b = (iz + 1) * stride + ix;
+      indices.push(a, b);
+    }
+  }
+
+  fabricGeometry = new THREE.BufferGeometry();
+  fabricGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  fabricGeometry.setIndex(indices);
+
+  fabricOriginalPositions = new Float32Array(positions.length);
+  fabricOriginalPositions.set(positions);
+
+  // Soft radial fade shader so square grid edge softly dissolves into space
+  const fabricMaterial = new THREE.ShaderMaterial({
+    uniforms: {
+      uColor: { value: new THREE.Color(0x22d3ee) },
+      uRadius: { value: 125.0 }
+    },
+    vertexShader: `
+      varying vec3 vWorldPos;
+      void main() {
+        vWorldPos = (modelMatrix * vec4(position, 1.0)).xyz;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      uniform vec3 uColor;
+      uniform float uRadius;
+      varying vec3 vWorldPos;
+      void main() {
+        float dist = length(vWorldPos.xz);
+        float alpha = 1.0 - smoothstep(uRadius * 0.45, uRadius, dist);
+        if (alpha <= 0.005) discard;
+        gl_FragColor = vec4(uColor, alpha * 0.42);
+      }
+    `,
     transparent: true,
-    opacity: 0.32,
-    roughness: 0.2,
-    metalness: 0.8,
-    emissive: 0x030d22,
-    emissiveIntensity: 0.5,
-    alphaMap: createRadialFadeTexture(),
+    depthWrite: false,
     blending: THREE.AdditiveBlending
   });
 
-  fabricMesh = new THREE.Mesh(fabricGeometry, fabricMaterial);
+  fabricMesh = new THREE.LineSegments(fabricGeometry, fabricMaterial);
   scene.add(fabricMesh);
+
+  // Fast mathematical plane for zero-overhead mouse raycasting
+  const hitGeom = new THREE.PlaneGeometry(size, size);
+  hitGeom.rotateX(-Math.PI / 2);
+  hitGeom.translate(0, -1.45, 0);
+  const hitMat = new THREE.MeshBasicMaterial({ visible: false });
+  fabricHitPlane = new THREE.Mesh(hitGeom, hitMat);
+  scene.add(fabricHitPlane);
 
   window.addEventListener('mousemove', (e) => {
     fabricMouse2D.x = (e.clientX / window.innerWidth) * 2 - 1;
     fabricMouse2D.y = -(e.clientY / window.innerHeight) * 2 + 1;
-  });
+  }, { passive: true });
 
   document.addEventListener('mouseleave', () => {
     fabricMouse2D.set(-999, -999);
@@ -400,13 +466,18 @@ function buildCursorFabricMesh() {
 function updateCursorFabricPhysics(elapsed) {
   if (!fabricMesh || !fabricGeometry || !camera) return;
 
+  // Thermal optimization: skip raycasting & vertex physics if scrolled past hero
+  if (window.scrollY > window.innerHeight * 1.1) return;
+
   // Only perform vertex updates when mouse is actively inside window
   if (fabricMouse2D.x <= -900) return;
 
-  fabricRaycaster.setFromCamera(fabricMouse2D, camera);
-  const intersects = fabricRaycaster.intersectObject(fabricMesh);
-  if (intersects.length > 0) {
-    fabricWorldMouse.lerp(intersects[0].point, 0.1);
+  if (fabricHitPlane) {
+    fabricRaycaster.setFromCamera(fabricMouse2D, camera);
+    const intersects = fabricRaycaster.intersectObject(fabricHitPlane);
+    if (intersects.length > 0) {
+      fabricWorldMouse.lerp(intersects[0].point, 0.1);
+    }
   }
 
   const posAttr = fabricGeometry.attributes.position;
@@ -415,7 +486,7 @@ function updateCursorFabricPhysics(elapsed) {
   const count = posAttr.count;
   const mouseX = fabricWorldMouse.x;
   const mouseZ = fabricWorldMouse.z;
-  const radius = 18;
+  const radius = 22;
   const radiusSq = radius * radius;
 
   let hasChanges = false;
@@ -434,13 +505,13 @@ function updateCursorFabricPhysics(elapsed) {
     if (distSq < radiusSq) {
       const dist = Math.sqrt(distSq);
       const force = 1.0 - dist / radius;
-      // Gentle, dampened tactile wave interaction on mouse hover
-      targetY += Math.sin(dist * 0.45 - elapsed * 2.8) * (force * force) * 0.75;
+      // Gentle, tactile wave interaction across the square fabric
+      targetY += Math.sin(dist * 0.45 - elapsed * 2.8) * (force * force) * 0.85;
     }
 
     const currentY = positions[idx + 1];
     if (Math.abs(targetY - currentY) > 0.001) {
-      positions[idx + 1] = currentY + (targetY - currentY) * 0.07;
+      positions[idx + 1] = currentY + (targetY - currentY) * 0.08;
       hasChanges = true;
     }
   }
@@ -1944,10 +2015,19 @@ function animate(timestamp) {
   if (!isTabVisible) return;
 
   const now = timestamp || performance.now();
-  // On high-refresh displays (e.g. MacBook Pro M5 ProMotion 120Hz), cap rendering to 60 FPS when active,
-  // and smoothly drop to 30 FPS when user has been idle for > 8 seconds to prevent heat & fan spin.
-  const isIdle = (now - lastUserActivityTime) > 8000;
-  const targetFPS = isIdle ? 30 : 60;
+  const scrollY = window.scrollY;
+  const isDeepScrolled = scrollY > window.innerHeight * 1.5;
+  const isIdle = (now - lastUserActivityTime) > 4000;
+
+  // Adaptive Thermal Eco-Throttle:
+  // When user is reading content downpage, drop GPU to 15 FPS (or 10 FPS if idle)
+  // When near hero, run at 60 FPS when active and 30 FPS when idle.
+  let targetFPS = 60;
+  if (isDeepScrolled) {
+    targetFPS = isIdle ? 10 : 20;
+  } else if (isIdle) {
+    targetFPS = 30;
+  }
   const minInterval = 1000 / targetFPS;
 
   if (now - lastRenderTimestamp < minInterval) {

@@ -229,7 +229,8 @@ async function runAudit() {
       name: 'Sarah Connor',
       email: 'sarah@skynet-resistance.org',
       plan: 'Professional',
-      projectDetails: 'We need an autonomous AI defensive web shield with 3D telemetry.'
+      projectDetails: 'We need an autonomous AI defensive web shield with 3D telemetry.',
+      consent: true
     });
     if (inqRes.status === 200 && inqRes.data && inqRes.data.success) {
       report.passed.push(`Onboarding Inquiry: Submitted successfully (ID: ${inqRes.data.data?.id}).`);
@@ -241,7 +242,8 @@ async function runAudit() {
     const contactRes = await request('/api/contact', { method: 'POST' }, {
       name: 'John Tech',
       email: 'john@techcorp.io',
-      message: 'Looking to schedule an architecture design sprint.'
+      message: 'Looking to schedule an architecture design sprint.',
+      consent: true
     });
     if (contactRes.status === 200 && contactRes.data && contactRes.data.success) {
       report.passed.push(`Contact Form: Successfully accepted client strategy message.`);

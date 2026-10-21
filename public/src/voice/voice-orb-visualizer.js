@@ -30,7 +30,8 @@ class VoiceOrbVisualizer {
     this.initEnergyElements();
 
     this.initCanvasDpr();
-    this.startRenderLoop();
+    // Draw initial resting state once without spinning rAF continuously
+    this.drawGlowingPlasmaCore();
   }
 
   initCanvasDpr() {
@@ -47,6 +48,12 @@ class VoiceOrbVisualizer {
   setState(newState) {
     if (this.state === newState) return;
     this.state = newState;
+    if (newState === 'PASSIVE') {
+      this.stopRenderLoop();
+      this.drawGlowingPlasmaCore();
+    } else {
+      this.startRenderLoop();
+    }
   }
 
   setEmotion(emotionKey) {
@@ -98,12 +105,24 @@ class VoiceOrbVisualizer {
   }
 
   startRenderLoop() {
+    if (this.animFrameId) return;
     const render = () => {
       this.time += 0.03;
       this.drawGlowingPlasmaCore();
-      this.animFrameId = requestAnimationFrame(render);
+      if (this.state !== 'PASSIVE') {
+        this.animFrameId = requestAnimationFrame(render);
+      } else {
+        this.animFrameId = null;
+      }
     };
-    render();
+    this.animFrameId = requestAnimationFrame(render);
+  }
+
+  stopRenderLoop() {
+    if (this.animFrameId) {
+      cancelAnimationFrame(this.animFrameId);
+      this.animFrameId = null;
+    }
   }
 
   drawGlowingPlasmaCore() {

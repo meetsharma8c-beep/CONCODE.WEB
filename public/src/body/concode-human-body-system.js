@@ -49,19 +49,11 @@ class ConCodeHumanBodySystem {
   }
 
   /**
-   * Autonomic Heartbeat & Emotional Biological Pulse
+   * Autonomic Heartbeat & Emotional Biological Pulse (Thermal Optimized)
    */
   startAutonomicHeartbeat() {
+    // Keep internal physiological telemetry timer without thrashing document.body classes every second
     const pulse = () => {
-      // Trigger subtle biological heartbeat glow on website background
-      const container = this.bodyContainer || (typeof document !== 'undefined' ? document.body : null);
-      if (container) {
-        container.classList.add('body-pulse');
-        setTimeout(() => {
-          container.classList.remove('body-pulse');
-        }, 300);
-      }
-
       this.pulseTimer = setTimeout(pulse, this.heartbeatRateMs);
     };
 

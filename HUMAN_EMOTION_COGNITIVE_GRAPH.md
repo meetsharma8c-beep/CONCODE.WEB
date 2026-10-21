@@ -403,3 +403,213 @@ graph TD
 - **Empathetic AI Strategy**: *User is in an expansive creative mindset. Match their enthusiasm, suggest exciting possibilities, and encourage deep exploration.*
 - **Node Connections**: [[Human Psychology Profile - User]], [[Emotional State - Curiosity]]
 
+### 🕒 [01:37:13 AM] [CURIOSITY] Curiosity & Exploration ([[Emotional State - Curiosity]])
+- **Human Input**: "Hello, what is JavaScript?"
+- **Detected Emotion**: **Curiosity & Exploration** (`Valence: +0.5`, `Arousal: 0.6`)
+- **Empathetic AI Strategy**: *User is in an expansive creative mindset. Match their enthusiasm, suggest exciting possibilities, and encourage deep exploration.*
+- **Node Connections**: [[Human Psychology Profile - User]], [[Emotional State - Curiosity]]
+
+### 🕒 [01:37:14 AM] [CREATIVITY] Creativity & Inspiration ([[Emotional State - Creativity]])
+- **Human Input**: "How do I build a 3D WebGL particle scene with Three.js?"
+- **Detected Emotion**: **Creativity & Inspiration** (`Valence: +0.8`, `Arousal: 0.8`)
+- **Empathetic AI Strategy**: *User is in an expansive creative mindset. Match their enthusiasm, suggest exciting possibilities, and encourage deep exploration.*
+- **Node Connections**: [[Human Psychology Profile - User]], [[Emotional State - Creativity]], [[06_Creative_Design_Audio_3D]]
+
+### 🕒 [01:37:14 AM] [CURIOSITY] Curiosity & Exploration ([[Emotional State - Curiosity]])
+- **Human Input**: "How do I optimize MongoDB query indexing and schema design?"
+- **Detected Emotion**: **Curiosity & Exploration** (`Valence: +0.5`, `Arousal: 0.6`)
+- **Empathetic AI Strategy**: *User is in an expansive creative mindset. Match their enthusiasm, suggest exciting possibilities, and encourage deep exploration.*
+- **Node Connections**: [[Human Psychology Profile - User]], [[Emotional State - Curiosity]], [[06_Creative_Design_Audio_3D]]
+
+### 🕒 [01:37:14 AM] [CURIOSITY] Curiosity & Exploration ([[Emotional State - Curiosity]])
+- **Human Input**: "How do I deploy a containerized app with Docker and Kubernetes?"
+- **Detected Emotion**: **Curiosity & Exploration** (`Valence: +0.5`, `Arousal: 0.6`)
+- **Empathetic AI Strategy**: *User is in an expansive creative mindset. Match their enthusiasm, suggest exciting possibilities, and encourage deep exploration.*
+- **Node Connections**: [[Human Psychology Profile - User]], [[Emotional State - Curiosity]]
+
+### 🕒 [01:37:14 AM] [CURIOSITY] Curiosity & Exploration ([[Emotional State - Curiosity]])
+- **Human Input**: "How do I configure JWT auth tokens and defend against XSS security flaws?"
+- **Detected Emotion**: **Curiosity & Exploration** (`Valence: +0.5`, `Arousal: 0.6`)
+- **Empathetic AI Strategy**: *User is in an expansive creative mindset. Match their enthusiasm, suggest exciting possibilities, and encourage deep exploration.*
+- **Node Connections**: [[Human Psychology Profile - User]], [[Emotional State - Curiosity]], [[07_Cybersecurity_Cryptography]]
+
+### 🕒 [01:37:14 AM] [CURIOSITY] Curiosity & Exploration ([[Emotional State - Curiosity]])
+- **Human Input**: "How do I write unit tests and assertions with Jest?"
+- **Detected Emotion**: **Curiosity & Exploration** (`Valence: +0.5`, `Arousal: 0.6`)
+- **Empathetic AI Strategy**: *User is in an expansive creative mindset. Match their enthusiasm, suggest exciting possibilities, and encourage deep exploration.*
+- **Node Connections**: [[Human Psychology Profile - User]], [[Emotional State - Curiosity]]
+
+### 🕒 [01:37:14 AM] [CURIOSITY] Curiosity & Exploration ([[Emotional State - Curiosity]])
+- **Human Input**: "How do I build a rate limit REST API endpoint middleware?"
+- **Detected Emotion**: **Curiosity & Exploration** (`Valence: +0.5`, `Arousal: 0.6`)
+- **Empathetic AI Strategy**: *User is in an expansive creative mindset. Match their enthusiasm, suggest exciting possibilities, and encourage deep exploration.*
+- **Node Connections**: [[Human Psychology Profile - User]], [[Emotional State - Curiosity]], [[01_Systems_Software_Engineering]]
+
+### 🕒 [01:37:14 AM] [CURIOSITY] Curiosity & Exploration ([[Emotional State - Curiosity]])
+- **Human Input**: "How do I profile performance latency and reduce memory bottleneck?"
+- **Detected Emotion**: **Curiosity & Exploration** (`Valence: +0.5`, `Arousal: 0.6`)
+- **Empathetic AI Strategy**: *User is in an expansive creative mindset. Match their enthusiasm, suggest exciting possibilities, and encourage deep exploration.*
+- **Node Connections**: [[Human Psychology Profile - User]], [[Emotional State - Curiosity]]
+
+### 🕒 [01:37:16 AM] [CURIOSITY] Curiosity & Exploration ([[Emotional State - Curiosity]])
+- **Human Input**: "What services does CONCODE provide?"
+- **Detected Emotion**: **Curiosity & Exploration** (`Valence: +0.5`, `Arousal: 0.6`)
+- **Empathetic AI Strategy**: *User is in an expansive creative mindset. Match their enthusiasm, suggest exciting possibilities, and encourage deep exploration.*
+- **Node Connections**: [[Human Psychology Profile - User]], [[Emotional State - Curiosity]]
+
+### 🕒 [01:45:05 AM] [CURIOSITY] Curiosity & Exploration ([[Emotional State - Curiosity]])
+- **Human Input**: "Hello, what is JavaScript?"
+- **Detected Emotion**: **Curiosity & Exploration** (`Valence: +0.5`, `Arousal: 0.6`)
+- **Empathetic AI Strategy**: *User is in an expansive creative mindset. Match their enthusiasm, suggest exciting possibilities, and encourage deep exploration.*
+- **Node Connections**: [[Human Psychology Profile - User]], [[Emotional State - Curiosity]]
+
+### 🕒 [01:45:05 AM] [CREATIVITY] Creativity & Inspiration ([[Emotional State - Creativity]])
+- **Human Input**: "How do I build a 3D WebGL particle scene with Three.js?"
+- **Detected Emotion**: **Creativity & Inspiration** (`Valence: +0.8`, `Arousal: 0.8`)
+- **Empathetic AI Strategy**: *User is in an expansive creative mindset. Match their enthusiasm, suggest exciting possibilities, and encourage deep exploration.*
+- **Node Connections**: [[Human Psychology Profile - User]], [[Emotional State - Creativity]], [[06_Creative_Design_Audio_3D]]
+
+### 🕒 [01:45:05 AM] [CURIOSITY] Curiosity & Exploration ([[Emotional State - Curiosity]])
+- **Human Input**: "How do I optimize MongoDB query indexing and schema design?"
+- **Detected Emotion**: **Curiosity & Exploration** (`Valence: +0.5`, `Arousal: 0.6`)
+- **Empathetic AI Strategy**: *User is in an expansive creative mindset. Match their enthusiasm, suggest exciting possibilities, and encourage deep exploration.*
+- **Node Connections**: [[Human Psychology Profile - User]], [[Emotional State - Curiosity]], [[06_Creative_Design_Audio_3D]]
+
+### 🕒 [01:45:05 AM] [CURIOSITY] Curiosity & Exploration ([[Emotional State - Curiosity]])
+- **Human Input**: "How do I deploy a containerized app with Docker and Kubernetes?"
+- **Detected Emotion**: **Curiosity & Exploration** (`Valence: +0.5`, `Arousal: 0.6`)
+- **Empathetic AI Strategy**: *User is in an expansive creative mindset. Match their enthusiasm, suggest exciting possibilities, and encourage deep exploration.*
+- **Node Connections**: [[Human Psychology Profile - User]], [[Emotional State - Curiosity]]
+
+### 🕒 [01:45:05 AM] [CURIOSITY] Curiosity & Exploration ([[Emotional State - Curiosity]])
+- **Human Input**: "How do I configure JWT auth tokens and defend against XSS security flaws?"
+- **Detected Emotion**: **Curiosity & Exploration** (`Valence: +0.5`, `Arousal: 0.6`)
+- **Empathetic AI Strategy**: *User is in an expansive creative mindset. Match their enthusiasm, suggest exciting possibilities, and encourage deep exploration.*
+- **Node Connections**: [[Human Psychology Profile - User]], [[Emotional State - Curiosity]], [[07_Cybersecurity_Cryptography]]
+
+### 🕒 [01:45:05 AM] [CURIOSITY] Curiosity & Exploration ([[Emotional State - Curiosity]])
+- **Human Input**: "How do I write unit tests and assertions with Jest?"
+- **Detected Emotion**: **Curiosity & Exploration** (`Valence: +0.5`, `Arousal: 0.6`)
+- **Empathetic AI Strategy**: *User is in an expansive creative mindset. Match their enthusiasm, suggest exciting possibilities, and encourage deep exploration.*
+- **Node Connections**: [[Human Psychology Profile - User]], [[Emotional State - Curiosity]]
+
+### 🕒 [01:45:05 AM] [CURIOSITY] Curiosity & Exploration ([[Emotional State - Curiosity]])
+- **Human Input**: "How do I build a rate limit REST API endpoint middleware?"
+- **Detected Emotion**: **Curiosity & Exploration** (`Valence: +0.5`, `Arousal: 0.6`)
+- **Empathetic AI Strategy**: *User is in an expansive creative mindset. Match their enthusiasm, suggest exciting possibilities, and encourage deep exploration.*
+- **Node Connections**: [[Human Psychology Profile - User]], [[Emotional State - Curiosity]], [[01_Systems_Software_Engineering]]
+
+### 🕒 [01:45:05 AM] [CURIOSITY] Curiosity & Exploration ([[Emotional State - Curiosity]])
+- **Human Input**: "How do I profile performance latency and reduce memory bottleneck?"
+- **Detected Emotion**: **Curiosity & Exploration** (`Valence: +0.5`, `Arousal: 0.6`)
+- **Empathetic AI Strategy**: *User is in an expansive creative mindset. Match their enthusiasm, suggest exciting possibilities, and encourage deep exploration.*
+- **Node Connections**: [[Human Psychology Profile - User]], [[Emotional State - Curiosity]]
+
+### 🕒 [01:49:34 AM] [CURIOSITY] Curiosity & Exploration ([[Emotional State - Curiosity]])
+- **Human Input**: "Hello, what is JavaScript?"
+- **Detected Emotion**: **Curiosity & Exploration** (`Valence: +0.5`, `Arousal: 0.6`)
+- **Empathetic AI Strategy**: *User is in an expansive creative mindset. Match their enthusiasm, suggest exciting possibilities, and encourage deep exploration.*
+- **Node Connections**: [[Human Psychology Profile - User]], [[Emotional State - Curiosity]]
+
+### 🕒 [01:49:35 AM] [CREATIVITY] Creativity & Inspiration ([[Emotional State - Creativity]])
+- **Human Input**: "How do I build a 3D WebGL particle scene with Three.js?"
+- **Detected Emotion**: **Creativity & Inspiration** (`Valence: +0.8`, `Arousal: 0.8`)
+- **Empathetic AI Strategy**: *User is in an expansive creative mindset. Match their enthusiasm, suggest exciting possibilities, and encourage deep exploration.*
+- **Node Connections**: [[Human Psychology Profile - User]], [[Emotional State - Creativity]], [[06_Creative_Design_Audio_3D]]
+
+### 🕒 [01:49:35 AM] [CURIOSITY] Curiosity & Exploration ([[Emotional State - Curiosity]])
+- **Human Input**: "How do I optimize MongoDB query indexing and schema design?"
+- **Detected Emotion**: **Curiosity & Exploration** (`Valence: +0.5`, `Arousal: 0.6`)
+- **Empathetic AI Strategy**: *User is in an expansive creative mindset. Match their enthusiasm, suggest exciting possibilities, and encourage deep exploration.*
+- **Node Connections**: [[Human Psychology Profile - User]], [[Emotional State - Curiosity]], [[06_Creative_Design_Audio_3D]]
+
+### 🕒 [01:49:35 AM] [CURIOSITY] Curiosity & Exploration ([[Emotional State - Curiosity]])
+- **Human Input**: "How do I deploy a containerized app with Docker and Kubernetes?"
+- **Detected Emotion**: **Curiosity & Exploration** (`Valence: +0.5`, `Arousal: 0.6`)
+- **Empathetic AI Strategy**: *User is in an expansive creative mindset. Match their enthusiasm, suggest exciting possibilities, and encourage deep exploration.*
+- **Node Connections**: [[Human Psychology Profile - User]], [[Emotional State - Curiosity]]
+
+### 🕒 [01:49:35 AM] [CURIOSITY] Curiosity & Exploration ([[Emotional State - Curiosity]])
+- **Human Input**: "How do I configure JWT auth tokens and defend against XSS security flaws?"
+- **Detected Emotion**: **Curiosity & Exploration** (`Valence: +0.5`, `Arousal: 0.6`)
+- **Empathetic AI Strategy**: *User is in an expansive creative mindset. Match their enthusiasm, suggest exciting possibilities, and encourage deep exploration.*
+- **Node Connections**: [[Human Psychology Profile - User]], [[Emotional State - Curiosity]], [[07_Cybersecurity_Cryptography]]
+
+### 🕒 [01:49:35 AM] [CURIOSITY] Curiosity & Exploration ([[Emotional State - Curiosity]])
+- **Human Input**: "How do I write unit tests and assertions with Jest?"
+- **Detected Emotion**: **Curiosity & Exploration** (`Valence: +0.5`, `Arousal: 0.6`)
+- **Empathetic AI Strategy**: *User is in an expansive creative mindset. Match their enthusiasm, suggest exciting possibilities, and encourage deep exploration.*
+- **Node Connections**: [[Human Psychology Profile - User]], [[Emotional State - Curiosity]]
+
+### 🕒 [01:49:35 AM] [CURIOSITY] Curiosity & Exploration ([[Emotional State - Curiosity]])
+- **Human Input**: "How do I build a rate limit REST API endpoint middleware?"
+- **Detected Emotion**: **Curiosity & Exploration** (`Valence: +0.5`, `Arousal: 0.6`)
+- **Empathetic AI Strategy**: *User is in an expansive creative mindset. Match their enthusiasm, suggest exciting possibilities, and encourage deep exploration.*
+- **Node Connections**: [[Human Psychology Profile - User]], [[Emotional State - Curiosity]], [[01_Systems_Software_Engineering]]
+
+### 🕒 [01:49:35 AM] [CURIOSITY] Curiosity & Exploration ([[Emotional State - Curiosity]])
+- **Human Input**: "How do I profile performance latency and reduce memory bottleneck?"
+- **Detected Emotion**: **Curiosity & Exploration** (`Valence: +0.5`, `Arousal: 0.6`)
+- **Empathetic AI Strategy**: *User is in an expansive creative mindset. Match their enthusiasm, suggest exciting possibilities, and encourage deep exploration.*
+- **Node Connections**: [[Human Psychology Profile - User]], [[Emotional State - Curiosity]]
+
+### 🕒 [03:44:56 PM] [CALM] Calm & Focused Flow ([[Emotional State - Calm]])
+- **Human Input**: "Akon code"
+- **Detected Emotion**: **Calm & Focused Flow** (`Valence: +0.3`, `Arousal: 0.2`)
+- **Empathetic AI Strategy**: *Maintain friendly, helpful tone.*
+- **Node Connections**: [[Human Psychology Profile - User]], [[Emotional State - Calm]], [[01_Systems_Software_Engineering]]
+
+### 🕒 [03:45:13 PM] [CURIOSITY] Curiosity & Exploration ([[Emotional State - Curiosity]])
+- **Human Input**: "how are you hey"
+- **Detected Emotion**: **Curiosity & Exploration** (`Valence: +0.5`, `Arousal: 0.6`)
+- **Empathetic AI Strategy**: *User is in an expansive creative mindset. Match their enthusiasm, suggest exciting possibilities, and encourage deep exploration.*
+- **Node Connections**: [[Human Psychology Profile - User]], [[Emotional State - Curiosity]]
+
+### 🕒 [01:05:06 AM] [CURIOSITY] Curiosity & Exploration ([[Emotional State - Curiosity]])
+- **Human Input**: "Hello, what is JavaScript?"
+- **Detected Emotion**: **Curiosity & Exploration** (`Valence: +0.5`, `Arousal: 0.6`)
+- **Empathetic AI Strategy**: *User is in an expansive creative mindset. Match their enthusiasm, suggest exciting possibilities, and encourage deep exploration.*
+- **Node Connections**: [[Human Psychology Profile - User]], [[Emotional State - Curiosity]]
+
+### 🕒 [01:05:06 AM] [CREATIVITY] Creativity & Inspiration ([[Emotional State - Creativity]])
+- **Human Input**: "How do I build a 3D WebGL particle scene with Three.js?"
+- **Detected Emotion**: **Creativity & Inspiration** (`Valence: +0.8`, `Arousal: 0.8`)
+- **Empathetic AI Strategy**: *User is in an expansive creative mindset. Match their enthusiasm, suggest exciting possibilities, and encourage deep exploration.*
+- **Node Connections**: [[Human Psychology Profile - User]], [[Emotional State - Creativity]], [[06_Creative_Design_Audio_3D]]
+
+### 🕒 [01:05:06 AM] [CURIOSITY] Curiosity & Exploration ([[Emotional State - Curiosity]])
+- **Human Input**: "How do I optimize MongoDB query indexing and schema design?"
+- **Detected Emotion**: **Curiosity & Exploration** (`Valence: +0.5`, `Arousal: 0.6`)
+- **Empathetic AI Strategy**: *User is in an expansive creative mindset. Match their enthusiasm, suggest exciting possibilities, and encourage deep exploration.*
+- **Node Connections**: [[Human Psychology Profile - User]], [[Emotional State - Curiosity]], [[06_Creative_Design_Audio_3D]]
+
+### 🕒 [01:05:06 AM] [CURIOSITY] Curiosity & Exploration ([[Emotional State - Curiosity]])
+- **Human Input**: "How do I deploy a containerized app with Docker and Kubernetes?"
+- **Detected Emotion**: **Curiosity & Exploration** (`Valence: +0.5`, `Arousal: 0.6`)
+- **Empathetic AI Strategy**: *User is in an expansive creative mindset. Match their enthusiasm, suggest exciting possibilities, and encourage deep exploration.*
+- **Node Connections**: [[Human Psychology Profile - User]], [[Emotional State - Curiosity]]
+
+### 🕒 [01:05:06 AM] [CURIOSITY] Curiosity & Exploration ([[Emotional State - Curiosity]])
+- **Human Input**: "How do I configure JWT auth tokens and defend against XSS security flaws?"
+- **Detected Emotion**: **Curiosity & Exploration** (`Valence: +0.5`, `Arousal: 0.6`)
+- **Empathetic AI Strategy**: *User is in an expansive creative mindset. Match their enthusiasm, suggest exciting possibilities, and encourage deep exploration.*
+- **Node Connections**: [[Human Psychology Profile - User]], [[Emotional State - Curiosity]], [[07_Cybersecurity_Cryptography]]
+
+### 🕒 [01:05:06 AM] [CURIOSITY] Curiosity & Exploration ([[Emotional State - Curiosity]])
+- **Human Input**: "How do I write unit tests and assertions with Jest?"
+- **Detected Emotion**: **Curiosity & Exploration** (`Valence: +0.5`, `Arousal: 0.6`)
+- **Empathetic AI Strategy**: *User is in an expansive creative mindset. Match their enthusiasm, suggest exciting possibilities, and encourage deep exploration.*
+- **Node Connections**: [[Human Psychology Profile - User]], [[Emotional State - Curiosity]]
+
+### 🕒 [01:05:06 AM] [CURIOSITY] Curiosity & Exploration ([[Emotional State - Curiosity]])
+- **Human Input**: "How do I build a rate limit REST API endpoint middleware?"
+- **Detected Emotion**: **Curiosity & Exploration** (`Valence: +0.5`, `Arousal: 0.6`)
+- **Empathetic AI Strategy**: *User is in an expansive creative mindset. Match their enthusiasm, suggest exciting possibilities, and encourage deep exploration.*
+- **Node Connections**: [[Human Psychology Profile - User]], [[Emotional State - Curiosity]], [[01_Systems_Software_Engineering]]
+
+### 🕒 [01:05:06 AM] [CURIOSITY] Curiosity & Exploration ([[Emotional State - Curiosity]])
+- **Human Input**: "How do I profile performance latency and reduce memory bottleneck?"
+- **Detected Emotion**: **Curiosity & Exploration** (`Valence: +0.5`, `Arousal: 0.6`)
+- **Empathetic AI Strategy**: *User is in an expansive creative mindset. Match their enthusiasm, suggest exciting possibilities, and encourage deep exploration.*
+- **Node Connections**: [[Human Psychology Profile - User]], [[Emotional State - Curiosity]]
+
