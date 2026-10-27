@@ -60,3 +60,6 @@ __pycache__/
 .obsidian/appearance.json
 .obsidian/core-plugins.json
 Untitled.canvas
+
+!.env.example
+!.env.production.example
