@@ -242,12 +242,12 @@ class ObsidianEmotionalGraphSync {
 
 > **Affective Dimension Node**: Represents the human cognitive state of **${item.name}**.
 
-## 📊 Dimension Parameters
+## Dimension Parameters
 - **Color Accent**: \`${item.color}\`
 - **Primary Wikilink**: \`${item.wikilink}\`
 - **Associated Subsystems**: [[Human Psychology Profile - User]], [[HUMAN_EMOTION_COGNITIVE_GRAPH]]
 
-## 🧠 Behavioral Guidance for AI Core
+## Behavioral Guidance for AI Core
 Whenever this emotion is active, the CONCODE AI Neural Brain dynamically adapts its conversation cadence, voice pitch, and response structure.
 `;
           fs.writeFileSync(filePath, content, 'utf-8');
@@ -262,7 +262,7 @@ Whenever this emotion is active, the CONCODE AI Neural Brain dynamically adapts 
     const { emotion, userInput, timeShort } = turnData;
     try {
       const nodeLinks = ['[[Human Psychology Profile - User]]', emotion.wikilink, ...(emotion.referencedNodes || [])].join(', ');
-      const turnLog = `### 🕒 [${timeShort}] ${emotion.symbol} ${emotion.name} (${emotion.wikilink})
+      const turnLog = `### [${timeShort}] ${emotion.symbol} ${emotion.name} (${emotion.wikilink})
 - **Human Input**: "${userInput}"
 - **Detected Emotion**: **${emotion.name}** (\`Valence: ${emotion.valence > 0 ? '+' : ''}${emotion.valence}\`, \`Arousal: ${emotion.arousal}\`)
 - **Empathetic AI Strategy**: *${emotion.empatheticStrategy}*
@@ -271,8 +271,8 @@ Whenever this emotion is active, the CONCODE AI Neural Brain dynamically adapts 
 `;
 
       if (!fs.existsSync(graphFile)) {
-        const defaultHeader = `# 🧠 HUMAN EMOTION & COGNITIVE REASONING GRAPH
-## 🎭 Automated Obsidian Supervised Sentiment Matrix
+        const defaultHeader = `# HUMAN EMOTION & COGNITIVE REASONING GRAPH
+## Automated Obsidian Supervised Sentiment Matrix
 
 #concode/emotion-graph #psychology #ai-brain
 
@@ -280,7 +280,7 @@ This graph is **automatically supervised and updated in real-time** by the CONCO
 
 ---
 
-## 🗺️ Live Emotion Knowledge Graph
+## Live Emotion Knowledge Graph
 
 \`\`\`mermaid
 graph LR
@@ -302,7 +302,7 @@ graph LR
 
 ---
 
-## 📜 Supervised Automated Conversation & Sentiment Logs
+## Supervised Automated Conversation & Sentiment Logs
 
 `;
         fs.writeFileSync(graphFile, defaultHeader + turnLog, 'utf-8');
@@ -313,11 +313,11 @@ graph LR
       const stat = fs.statSync(graphFile);
       if (stat.size > 300 * 1024) {
         let content = fs.readFileSync(graphFile, 'utf-8');
-        const sections = content.split('### 🕒');
+        const sections = content.split('### [');
         if (sections.length > 30) {
           const header = sections[0];
           const recentSections = sections.slice(-25);
-          content = header + '### 🕒' + recentSections.join('### 🕒');
+          content = header + '### [' + recentSections.join('### [');
           fs.writeFileSync(graphFile, content + turnLog, 'utf-8');
           return;
         }
@@ -336,12 +336,12 @@ graph LR
         `- \`[${t.timeShort}]\` ${t.emotion.symbol} **${t.emotion.name}** — Valence: ${t.emotion.valence > 0 ? '+' : ''}${t.emotion.valence} | "${t.userInput.slice(0, 50)}..."`
       ).join('\n');
 
-      const content = `# 👤 Human Psychology Profile & Emotional Memory
+      const content = `# Human Psychology Profile & Emotional Memory
 #user/psychology #affective-computing #concode-brain
 
 > **Live Profile**: Supervised & updated automatically by CONCODE AI Affective Engine.
 
-## 🎭 Current Emotional Resonance
+## Current Emotional Resonance
 - **Active State**: ${emotion.symbol} **${emotion.name}** (${emotion.wikilink})
 - **Valence (Mood)**: \`${emotion.valence > 0 ? '+' : ''}${emotion.valence}\`
 - **Arousal (Energy)**: \`${emotion.arousal}\`
@@ -349,12 +349,12 @@ graph LR
 
 ---
 
-## 📈 Recent Sentiment Timeline
+## Recent Sentiment Timeline
 ${historySnippet}
 
 ---
 
-## 🧬 Emotion Node Network Connections
+## Emotion Node Network Connections
 - [[Emotional State - Joy]]
 - [[Emotional State - Frustration]]
 - [[Emotional State - Curiosity]]
@@ -376,10 +376,10 @@ ${historySnippet}
 
       const canvasObj = {
         nodes: [
-          { id: "user_profile", x: 0, y: 0, width: 300, height: 120, type: "text", text: `### 👤 User Profile\n**Current State**: ${emotion.symbol} ${emotion.name}\nValence: ${emotion.valence} | Arousal: ${emotion.arousal}` },
+          { id: "user_profile", x: 0, y: 0, width: 300, height: 120, type: "text", text: `### User Profile\n**Current State**: ${emotion.symbol} ${emotion.name}\nValence: ${emotion.valence} | Arousal: ${emotion.arousal}` },
           { id: "active_emotion", x: 400, y: -100, width: 280, height: 120, type: "text", text: `### ${emotion.symbol} ${emotion.name}\n${emotion.wikilink}\nStrategy: ${emotion.empatheticStrategy}` },
-          { id: "recent_prompt", x: 400, y: 120, width: 280, height: 120, type: "text", text: `### 💬 Last Spoken Input\n"${userInput.slice(0, 100)}..."` },
-          { id: "ai_brain", x: 800, y: 0, width: 280, height: 120, type: "text", text: "### 🧠 CONCODE Empathetic Brain\n- Voice Summary Adapter\n- Supervised Graph Sync" }
+          { id: "recent_prompt", x: 400, y: 120, width: 280, height: 120, type: "text", text: `### Last Spoken Input\n"${userInput.slice(0, 100)}..."` },
+          { id: "ai_brain", x: 800, y: 0, width: 280, height: 120, type: "text", text: "### CONCODE Empathetic Brain\n- Voice Summary Adapter\n- Supervised Graph Sync" }
         ],
         edges: [
           { id: "e1", fromNode: "user_profile", fromSide: "right", toNode: "active_emotion", toSide: "left", label: "Sentiment Vector" },

@@ -1,11 +1,11 @@
-# 🐍 FastAPI Core Server
+# FastAPI Core Server
 #layer/python #fastapi #neural-brain
 
 **File Path**: `concode_engine/main.py`
 
 > High-performance bare-metal Python engine listening on port `:8000`.
 
-## 📌 Outgoing Connections
+## Outgoing Connections
 - [[Hardware_Manager]]
 - [[Master_Orchestrator]]
 - [[Local_LLM_Runner]]

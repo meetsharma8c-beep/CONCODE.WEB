@@ -2161,7 +2161,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (contactForm) {
     contactForm.addEventListener('submit', (e) => {
       e.preventDefault();
-      feedback.textContent = '✓ Message transmitted successfully to CONCODE AI.';
+      feedback.textContent = 'Message transmitted successfully to CONCODE AI.';
       contactForm.reset();
       setTimeout(() => { feedback.textContent = ''; }, 4000);
     });

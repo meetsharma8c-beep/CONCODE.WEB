@@ -1,14 +1,14 @@
-# 🌐 Terminal Portfolio
+# Terminal Portfolio
 
 > CONCODE.WEB AI Studio generated workspace project repository.
 
-## 🚀 Repository & Project Details
+## Repository & Project Details
 - **Project ID**: `terminal-portfolio`
 - **Repository Remote**: [https://github.com/25bt04065-hub/terminal-portfolio.git](https://github.com/25bt04065-hub/terminal-portfolio.git)
 - **Workspace Directory**: `public/projects/terminal-portfolio`
 - **Preview Endpoint**: `http://localhost:3001/project/terminal-portfolio/`
 
-## 🛠️ Quick Start
+## Quick Start
 Run locally using `serve` or any static HTTP server:
 ```bash
 npm start
@@ -16,7 +16,7 @@ npm start
 npx serve .
 ```
 
-## 📁 File Structure
+## File Structure
 - `app.js`
 - `index.html`
 - `style.css`

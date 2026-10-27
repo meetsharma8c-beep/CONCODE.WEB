@@ -1,11 +1,11 @@
-# 🎭 Obsidian Emotional Graph Sync
+# Obsidian Emotional Graph Sync
 #layer/backend #affective #obsidian #supervision
 
 **File Path**: `utils/obsidianEmotionalGraphSync.js`
 
 > Affective computing & sentiment classifier engine automatically updating Obsidian markdown notes and canvas node maps in real-time.
 
-## 📌 Outgoing Connections
+## Outgoing Connections
 - [[HUMAN_EMOTION_COGNITIVE_GRAPH]]
 - [[Human_Psychology_Profile_User]]
 - [[Emotional_State_Joy]]

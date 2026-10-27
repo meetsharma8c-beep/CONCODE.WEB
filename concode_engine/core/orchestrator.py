@@ -173,7 +173,7 @@ class ConCodeOrchestrator:
     ):
         """
         Executes end-to-end hands-free voice loop through CONCODE Neural Brain:
-        Audio ➔ Local STT ➔ CONCODE Neural Brain ➔ Local TTS ➔ Editor Buffer Write
+        Audio -> Local STT -> CONCODE Neural Brain -> Local TTS -> Editor Buffer Write
         """
         if self._is_interrupted or self._is_speaking:
             return

@@ -69,7 +69,7 @@ def main():
 
     # 6. Audio Listener with Silero VAD and Wake-Word Engine
     def on_wake_word_triggered(phrase: str):
-        logger.info(f"\n⚡ [WAKE WORD EVENT TRIGGERED]: '{phrase}' ⚡")
+        logger.info(f"\n[WAKE WORD EVENT TRIGGERED]: '{phrase}'")
         # Run async state machine wake-word handler
         try:
             loop = asyncio.get_event_loop()

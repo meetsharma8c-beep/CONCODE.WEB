@@ -1,28 +1,28 @@
-# 🧠 CONCODE.WEB — Neural Brain Integrated Web Platform
+# CONCODE.WEB — Neural Brain Integrated Web Platform
 
 > A multi-layered AI-powered web platform combining a Node.js/Express backend, a Python bare-metal neural engine, a rich 3D frontend, and an Obsidian cognitive knowledge graph.
 
-## ⚡ Architecture Overview
+## Architecture Overview
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│  🌐 Frontend Layer (Browser)                                       │
+│  Frontend Layer (Browser)                                           │
 │  index.html │ Three.js 3D │ Voice Agent │ Monaco Editor │ HUD      │
 └──────────────────────────────┬──────────────────────────────────────┘
                                │ POST /api/chat
 ┌──────────────────────────────▼──────────────────────────────────────┐
-│  ⚡ Express Backend (server.js :3000)                               │
+│  Express Backend (server.js :3000)                                  │
 │  Auth │ Studio │ DevOps │ Gateway │ Brain Engine │ Emotional Graph  │
 └──────────┬──────────────────────────────────────┬───────────────────┘
            │ HTTP :8000 (Primary)                 │ Cloud API (Fallback)
 ┌──────────▼──────────────┐          ┌────────────▼──────────────────┐
-│  🐍 Python Neural Brain  │          │  🤖 AI Providers              │
-│  FastAPI │ CodeLlama-7B  │          │  Gemini Pro │ Ollama Local    │
-│  Metal GPU │ LanceDB RAG │          │  CONCODE Native Synthesizer   │
-└──────────────────────────┘          └─────────────────────────────┘
+│  Python Neural Brain    │          │  AI Providers                 │
+│  FastAPI │ CodeLlama-7B │          │  Gemini Pro │ Ollama Local    │
+│  Metal GPU │ LanceDB    │          │  CONCODE Native Synthesizer   │
+└─────────────────────────┘          └───────────────────────────────┘
 ```
 
-## ✨ Features
+## Features
 
 ### AI & Brain Engine
 - **4-Tier AI Failover**: Python Neural Brain → JS Brain Engine → Google Gemini → Ollama Local
@@ -49,7 +49,7 @@
 - **Multi-Target Deploy**: AWS, Vercel, Firebase Functions support
 - **Data Migration Engine**: JSON/CSV/SQL import with field mapping
 
-## 🐳 Quick Start — Docker (Primary)
+## Quick Start — Docker (Primary)
 
 ```bash
 # 1. Clone and configure
@@ -68,7 +68,7 @@ npm run docker:logs
 # API Docs:  http://localhost:8000/docs (Python Neural Brain)
 ```
 
-## 🛠️ Local Development
+## Local Development
 
 ### Node.js Server
 ```bash
@@ -85,7 +85,7 @@ python -m concode_engine.api_server
 # FastAPI runs on http://localhost:8000
 ```
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 CONCODE.WEB/
@@ -116,7 +116,7 @@ CONCODE.WEB/
 └── *.md                       # Obsidian knowledge graph nodes
 ```
 
-## 🔑 Environment Variables
+## Environment Variables
 
 See [`.env.example`](.env.example) for the full list. Key variables:
 
@@ -128,6 +128,6 @@ See [`.env.example`](.env.example) for the full list. Key variables:
 | `MONGO_URI` | No | MongoDB connection string |
 | `USE_FIRESTORE` | No | Enable Cloud Firestore (`true`/`false`) |
 
-## 📄 License
+## License
 
 [MIT](LICENSE) © 2026 ConCode Agency / Meet Sharma

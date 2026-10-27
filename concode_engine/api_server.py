@@ -67,7 +67,7 @@ class CognitiveRequest(BaseModel):
 class CognitiveResponse(BaseModel):
     code: str = ""
     guild: str = "fullstack"
-    guild_icon: str = "⚡"
+    guild_icon: str = "[FULLSTACK]"
     confidence: float = 0.85
     repair_applied: bool = False
     session_id: str = "default_session"
@@ -95,25 +95,25 @@ class Guild:
 
 
 GUILDS: List[Guild] = [
-    Guild("Fullstack Architect", "⚡", "fullstack",
+    Guild("Fullstack Architect", "[FULLSTACK]", "fullstack",
           ["build", "create", "make", "develop", "app", "website", "project", "full", "stack"]),
-    Guild("Frontend Artisan", "🎨", "frontend",
+    Guild("Frontend Artisan", "[FRONTEND]", "frontend",
           ["css", "html", "style", "layout", "responsive", "ui", "ux", "design", "color", "font", "animation"]),
-    Guild("Backend Engineer", "🔧", "backend",
+    Guild("Backend Engineer", "[BACKEND]", "backend",
           ["api", "server", "database", "endpoint", "route", "express", "fastapi", "django", "rest"]),
-    Guild("DevOps Commander", "🚀", "devops",
+    Guild("DevOps Commander", "[DEVOPS]", "devops",
           ["deploy", "docker", "kubernetes", "ci", "cd", "pipeline", "nginx", "terraform", "cloud"]),
-    Guild("Data Scientist", "📊", "data",
+    Guild("Data Scientist", "[DATA]", "data",
           ["data", "analytics", "chart", "graph", "statistics", "pandas", "numpy", "visualization"]),
-    Guild("Security Sentinel", "🛡️", "security",
+    Guild("Security Sentinel", "[SECURITY]", "security",
           ["security", "auth", "encrypt", "ssl", "tls", "vulnerability", "xss", "csrf", "injection"]),
-    Guild("AI Engineer", "🧠", "ai",
+    Guild("AI Engineer", "[AI]", "ai",
           ["ai", "machine learning", "neural", "model", "train", "inference", "llm", "gpt", "transformer"]),
-    Guild("Mobile Specialist", "📱", "mobile",
+    Guild("Mobile Specialist", "[MOBILE]", "mobile",
           ["mobile", "ios", "android", "react native", "flutter", "swift", "kotlin"]),
-    Guild("Debug Detective", "🔍", "debug",
+    Guild("Debug Detective", "[DEBUG]", "debug",
           ["fix", "bug", "error", "debug", "crash", "issue", "broken", "not working", "fail"]),
-    Guild("Performance Tuner", "⚙️", "performance",
+    Guild("Performance Tuner", "[PERFORMANCE]", "performance",
           ["optimize", "performance", "speed", "latency", "memory", "cache", "profil"]),
 ]
 

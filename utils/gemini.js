@@ -20,7 +20,7 @@ if (USE_EXTERNAL_LLM) {
     console.log('[CONCODE Brain] Gemini API client not available:', e.message);
   }
 } else {
-  console.log('[CONCODE Brain] ★ Native Cognitive Brain v3.0 — Running 100% self-sufficient. No external LLMs.');
+  console.log('[CONCODE Brain] Native Cognitive Brain v3.0 — Running 100% self-sufficient. No external LLMs.');
 }
 
 // Lazy-load code synthesizer for code generation
@@ -158,8 +158,8 @@ async function callGeminiApi(contents, systemInstruction, customApiKey = null) {
  * Primary entry point for generating chatbot responses.
  *
  * v3.0 NATIVE BRAIN ARCHITECTURE:
- *  ★ PRIMARY: External Generative LLM (Gemini / Ollama) when configured
- *  ★ FALLBACK: CONCODE Native Cognitive Brain (TF-IDF + Markov + Reasoning Chain)
+ *  - PRIMARY: External Generative LLM (Gemini / Ollama) when configured
+ *  - FALLBACK: CONCODE Native Cognitive Brain (TF-IDF + Markov + Reasoning Chain)
  */
 async function generateReply(message, history = []) {
   // Always run native brain to compute workspace context, thought trace, and fallback output

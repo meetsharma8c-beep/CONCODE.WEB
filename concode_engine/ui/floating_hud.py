@@ -103,7 +103,7 @@ class HUDVisualizerWidget(QWidget if PYQT6_AVAILABLE else object):
         else:
             self.status_text = clean_state
 
-        logger.info(f"[HUD Visualizer] State ➔ {clean_state}")
+        logger.info(f"[HUD Visualizer] State -> {clean_state}")
         if PYQT6_AVAILABLE:
             self.update()
         else:

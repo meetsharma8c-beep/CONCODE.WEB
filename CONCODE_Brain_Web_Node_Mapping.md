@@ -1,11 +1,11 @@
-# 🧠 CONCODE.WEB — Neural Brain Integrated Web Architecture
-## 🌐 Obsidian Web Node Mapping & Knowledge Graph
+# CONCODE.WEB — Neural Brain Integrated Web Architecture
+## Obsidian Web Node Mapping & Knowledge Graph
 
 > **Obsidian Integration**: This document is formatted natively for **Obsidian Graph View**. All nodes use Obsidian bi-directional wikilinks (`[[Node]]`), hierarchical tags (`#type/component`), dynamic state indicators, and inline Mermaid graph visualization.
 
 ---
 
-## 🗺️ Master Obsidian Graph Diagram
+## Master Obsidian Graph Diagram
 
 ```mermaid
 graph TD
@@ -16,7 +16,7 @@ graph TD
     classDef ai fill:#701a75,stroke:#f472b6,stroke-width:2px,color:#fff
     classDef storage fill:#7c2d12,stroke:#fb923c,stroke-width:2px,color:#fff
 
-    subgraph FRONTEND_LAYER ["🌐 Frontend Web UI Layer (Port 3000)"]
+ subgraph FRONTEND_LAYER [" Frontend Web UI Layer (Port 3000)"]
         UI_INDEX["[[Index Web Portal]]<br><code>public/index.html</code>"]:::client
         UI_DASH["[[Dashboard Analytics UI]]<br><code>public/dashboard.html</code>"]:::client
         UI_ADMIN["[[Admin Console UI]]<br><code>public/admin.html</code>"]:::client
@@ -26,7 +26,7 @@ graph TD
         VOICE_DISPATCH["[[Voice Command Dispatcher]]<br><code>voice-command-dispatcher.js</code>"]:::client
     end
 
-    subgraph EXPRESS_BACKEND ["⚡ Express API Middleware Layer (server.js)"]
+ subgraph EXPRESS_BACKEND [" Express API Middleware Layer (server.js)"]
         SERVER_CORE["[[Express Server Core]]<br><code>server.js</code>"]:::express
         CHAT_API["[[Chat Router Endpoint]]<br><code>POST /api/chat</code>"]:::express
         BRAIN_GW["[[Brain Gateway Controller]]<br><code>concodeBrainEngine.js</code>"]:::express
@@ -37,7 +37,7 @@ graph TD
         AUTH_SERVICE["[[Auth & JWT Middleware]]<br><code>auth.js</code>"]:::express
     end
 
-    subgraph PYTHON_ENGINE ["🐍 Python Bare-Metal Neural Brain (FastAPI :8000)"]
+ subgraph PYTHON_ENGINE [" Python Bare-Metal Neural Brain (FastAPI :8000)"]
         FASTAPI_CORE["[[FastAPI Core Server]]<br><code>concode_engine/main.py</code>"]:::python
         HW_MGR["[[Hardware Manager]]<br><code>hardware_manager.py</code>"]:::python
         ORCHESTRATOR["[[Master Orchestrator]]<br><code>orchestrator.py</code>"]:::python
@@ -49,13 +49,13 @@ graph TD
         HUD_UI["[[Floating PyQT6 HUD]]<br><code>floating_hud.py</code>"]:::python
     end
 
-    subgraph AI_PROVIDERS ["🤖 AI Inference & Neural Cloud"]
+ subgraph AI_PROVIDERS [" AI Inference & Neural Cloud"]
         GEMINI_API["[[Google Gemini Pro API]]<br><code>utils/gemini.js</code>"]:::ai
         OLLAMA_LOCAL["[[Ollama Local LLM]]<br><code>localhost:11434</code>"]:::ai
         ANTIGRAVITY_SDK["[[Antigravity Agentic SDK]]<br><code>antigravity-ide</code>"]:::ai
     end
 
-    subgraph STORAGE_LAYER ["💾 Data & Persistence Storage"]
+ subgraph STORAGE_LAYER [" Data & Persistence Storage"]
         FILE_CHATS["[[Chats Storage]]<br><code>data/chats.json</code>"]:::storage
         FILE_ANALYTICS["[[Analytics Storage]]<br><code>data/analytics.json</code>"]:::storage
         FILE_VECTORS["[[Vector Embeddings Store]]<br><code>data/vector_embeddings.json</code>"]:::storage
@@ -98,9 +98,9 @@ graph TD
 
 ---
 
-## 📌 Node Directory & Bi-Directional WikiLinks
+## Node Directory & Bi-Directional WikiLinks
 
-### 1. 🌐 Frontend Web UI Nodes (`#layer/frontend`)
+### 1.  Frontend Web UI Nodes (`#layer/frontend`)
 
 * [[Index Web Portal]]
   * **File Path**: `public/index.html`
@@ -140,7 +140,7 @@ graph TD
 
 ---
 
-### 2. ⚡ Express API Middleware Nodes (`#layer/backend`)
+### 2.  Express API Middleware Nodes (`#layer/backend`)
 
 * [[Express Server Core]]
   * **File Path**: `server.js`
@@ -180,7 +180,7 @@ graph TD
 
 ---
 
-### 3. 🐍 Python Bare-Metal Neural Brain Nodes (`#layer/python`)
+### 3.  Python Bare-Metal Neural Brain Nodes (`#layer/python`)
 
 * [[FastAPI Core Server]]
   * **File Path**: `concode_engine/main.py`
@@ -214,7 +214,7 @@ graph TD
 
 ---
 
-### 4. 🤖 AI Inference & Neural Cloud Nodes (`#layer/ai`)
+### 4.  AI Inference & Neural Cloud Nodes (`#layer/ai`)
 
 * [[Google Gemini Pro API]]
   * **Integration Path**: `utils/gemini.js`
@@ -230,7 +230,7 @@ graph TD
 
 ---
 
-### 5. 💾 Data & Storage Nodes (`#layer/storage`)
+### 5.  Data & Storage Nodes (`#layer/storage`)
 
 * [[Chats Storage]]
   * **Path**: `data/chats.json`

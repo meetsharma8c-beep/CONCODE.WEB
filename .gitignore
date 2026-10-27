@@ -53,3 +53,10 @@ __pycache__/
 *.pyc
 **/*.pyc
 .pytest_cache/
+
+# Obsidian workspace & user preferences
+.obsidian/workspace*.json
+.obsidian/app.json
+.obsidian/appearance.json
+.obsidian/core-plugins.json
+Untitled.canvas

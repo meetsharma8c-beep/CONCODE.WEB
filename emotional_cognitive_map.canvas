@@ -7,7 +7,7 @@
       "width": 300,
       "height": 120,
       "type": "text",
-      "text": "### 👤 User Profile\n**Current State**: [CURIOSITY] Curiosity & Exploration\nValence: 0.5 | Arousal: 0.6"
+      "text": "### User Profile\n**Current State**: [CURIOSITY] Curiosity & Exploration\nValence: 0.5 | Arousal: 0.6"
     },
     {
       "id": "active_emotion",
@@ -25,7 +25,7 @@
       "width": 280,
       "height": 120,
       "type": "text",
-      "text": "### 💬 Last Spoken Input\n\"How do I profile performance latency and reduce memory bottleneck?...\""
+      "text": "### Last Spoken Input\n\"How do I profile performance latency and reduce memory bottleneck?...\""
     },
     {
       "id": "ai_brain",
@@ -34,7 +34,7 @@
       "width": 280,
       "height": 120,
       "type": "text",
-      "text": "### 🧠 CONCODE Empathetic Brain\n- Voice Summary Adapter\n- Supervised Graph Sync"
+      "text": "### CONCODE Empathetic Brain\n- Voice Summary Adapter\n- Supervised Graph Sync"
     }
   ],
   "edges": [
